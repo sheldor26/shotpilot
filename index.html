@@ -442,7 +442,33 @@
   .cw-chip:hover{background:#fbd9d2}
   .cw-cta{color:var(--accent-deep);font-weight:700;text-decoration:underline}
   @media(max-width:480px){.cw-panel{right:12px;left:12px;width:auto;bottom:84px}.cw-toggle{right:14px;bottom:14px}}
+
+  /* FAQ estático (sin JS, accesible) */
+  .faq-list{max-width:760px;margin:var(--space-4) auto 0;display:flex;flex-direction:column;gap:.7rem}
+  .faq-item{border:1px solid var(--line);border-radius:var(--radius);background:var(--white);overflow:hidden;transition:border-color .2s,box-shadow .2s}
+  .faq-item[open]{border-color:var(--accent);box-shadow:var(--shadow-sm)}
+  .faq-item summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.05rem 1.2rem;font-weight:700;color:var(--ink);font-size:1.05rem}
+  .faq-item summary::-webkit-details-marker{display:none}
+  .faq-item summary:hover{color:var(--accent-deep)}
+  .faq-item summary .faq-ic{flex:0 0 auto;width:22px;height:22px;color:var(--accent);transition:transform .25s ease}
+  .faq-item[open] summary .faq-ic{transform:rotate(45deg)}
+  .faq-item .faq-a{padding:0 1.2rem 1.15rem;color:var(--ink-soft);line-height:1.6;max-width:62ch}
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"¿Cómo funciona?","acceptedAnswer":{"@type":"Answer","text":"Subís la foto desde el celular, elegís dónde vendés (MercadoLibre, Tienda Nube o Instagram) y te la devolvemos con fondo blanco y en la medida exacta. Vos no tocás ningún editor."}},
+    {"@type":"Question","name":"¿Cuánto cuesta?","acceptedAnswer":{"@type":"Answer","text":"Empezás gratis con 5 fotos. Después: plan Vendedor US$19/mes (150 fotos) o Negocio US$49/mes (500 fotos). Pagás por foto, no por sufrir."}},
+    {"@type":"Question","name":"¿Puedo probar gratis?","acceptedAnswer":{"@type":"Answer","text":"Sí. Las primeras 5 fotos son gratis al registrarte y no te pedimos tarjeta."}},
+    {"@type":"Question","name":"¿Para qué plataformas sirve?","acceptedAnswer":{"@type":"Answer","text":"MercadoLibre, Tienda Nube e Instagram, cada una con su medida justa y el producto bien centrado."}},
+    {"@type":"Question","name":"¿Cuánto tarda?","acceptedAnswer":{"@type":"Answer","text":"Unos 3 segundos por foto. Podés subir varias juntas y bajarlas todas en un ZIP."}},
+    {"@type":"Question","name":"¿Necesito saber editar?","acceptedAnswer":{"@type":"Answer","text":"No. Nada de Photoshop ni tutoriales. Subís, elegís y descargás."}},
+    {"@type":"Question","name":"¿Cómo empiezo?","acceptedAnswer":{"@type":"Answer","text":"Tocá “Quiero mis 5 fotos gratis” acá arriba o dejanos tus datos en Contacto y te escribimos."}}
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -459,7 +485,7 @@
         <a href="index.html" aria-current="true">ES</a>
         <a href="en.html" hreflang="en">EN</a>
       </span>
-      <a href="/editor.html" class="btn btn-primary">Empezar gratis</a>
+      <a href="/editor.html" class="btn btn-primary">Quiero mis 5 fotos gratis</a>
     </div>
   </div>
 </header>
@@ -659,7 +685,7 @@
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Todos los formatos de plataforma</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Descarga foto por foto</li>
           </ul>
-          <a href="/editor.html" class="btn btn-ghost">Empezar gratis</a>
+          <a href="/editor.html" class="btn btn-ghost">Quiero mis 5 fotos gratis</a>
         </div>
 
         <div class="tier feat reveal d2">
@@ -745,6 +771,49 @@
             <span><b>Valeria C.</b><span>Deco hogar · Instagram Shop</span></span>
           </figcaption>
         </figure>
+      </div>
+    </div>
+  </section>
+
+  <div class="scan-divider" aria-hidden="true"></div>
+
+  <!-- ===== FAQ (estático, sin JS) ===== -->
+  <section id="faq">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Preguntas</span>
+        <h2>Lo que todos preguntan antes de arrancar.</h2>
+        <p>Si te queda una duda más, abrí el chat de abajo y te la respondemos al toque.</p>
+      </div>
+      <div class="faq-list reveal d1">
+        <details class="faq-item">
+          <summary>¿Cómo funciona?<svg class="faq-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary>
+          <div class="faq-a">Subís la foto desde el celular, elegís dónde vendés (MercadoLibre, Tienda Nube o Instagram) y te la devolvemos con fondo blanco y en la medida exacta. Vos no tocás ningún editor.</div>
+        </details>
+        <details class="faq-item">
+          <summary>¿Cuánto cuesta?<svg class="faq-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary>
+          <div class="faq-a">Empezás gratis con 5 fotos. Después: plan Vendedor US$19/mes (150 fotos) o Negocio US$49/mes (500 fotos). Pagás por foto, no por sufrir.</div>
+        </details>
+        <details class="faq-item">
+          <summary>¿Puedo probar gratis?<svg class="faq-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary>
+          <div class="faq-a">Sí. Las primeras 5 fotos son gratis al registrarte y no te pedimos tarjeta.</div>
+        </details>
+        <details class="faq-item">
+          <summary>¿Para qué plataformas sirve?<svg class="faq-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary>
+          <div class="faq-a">MercadoLibre, Tienda Nube e Instagram, cada una con su medida justa y el producto bien centrado.</div>
+        </details>
+        <details class="faq-item">
+          <summary>¿Cuánto tarda?<svg class="faq-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary>
+          <div class="faq-a">Unos 3 segundos por foto. Podés subir varias juntas y bajarlas todas en un ZIP.</div>
+        </details>
+        <details class="faq-item">
+          <summary>¿Necesito saber editar?<svg class="faq-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary>
+          <div class="faq-a">No. Nada de Photoshop ni tutoriales. Subís, elegís y descargás.</div>
+        </details>
+        <details class="faq-item">
+          <summary>¿Cómo empiezo?<svg class="faq-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary>
+          <div class="faq-a">Tocá “Quiero mis 5 fotos gratis” acá arriba o dejanos tus datos en Contacto y te escribimos.</div>
+        </details>
       </div>
     </div>
   </section>
@@ -1017,7 +1086,7 @@
       {q:"¿Para qué plataformas sirve?", a:"MercadoLibre, Tienda Nube e Instagram, cada una con su medida justa y el producto bien centrado."},
       {q:"¿Cuánto tarda?", a:"Unos 3 segundos por foto. Podés subir varias juntas y bajarlas todas en un ZIP."},
       {q:"¿Necesito saber editar?", a:"No. Nada de Photoshop ni tutoriales. Subís, elegís y descargás."},
-      {q:"¿Cómo empiezo?", a:"Tocá “Empezar gratis” arriba o dejanos tus datos en Contacto y te escribimos.", cta:{href:"#contacto", label:"Ir a Contacto"}}
+      {q:"¿Cómo empiezo?", a:"Tocá “Quiero mis 5 fotos gratis” arriba o dejanos tus datos en Contacto y te escribimos.", cta:{href:"#contacto", label:"Ir a Contacto"}}
     ];
     var root = document.getElementById('chat');
     if(!root) return;
@@ -1074,7 +1143,7 @@
   </button>
 </div>
   <div class="mcta">
-    <a href="/editor.html" class="btn btn-primary">Probá gratis · 5 fotos</a>
+    <a href="/editor.html" class="btn btn-primary">Quiero mis 5 fotos gratis</a>
   </div>
 
   <!-- Vercel Web Analytics (activar en el dashboard de Vercel → Analytics) -->

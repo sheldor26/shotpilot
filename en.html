@@ -442,7 +442,33 @@
   .cw-chip:hover{background:#fbd9d2}
   .cw-cta{color:var(--accent-deep);font-weight:700;text-decoration:underline}
   @media(max-width:480px){.cw-panel{right:12px;left:12px;width:auto;bottom:84px}.cw-toggle{right:14px;bottom:14px}}
+
+  /* Static FAQ (no JS, accessible) */
+  .faq-list{max-width:760px;margin:var(--space-4) auto 0;display:flex;flex-direction:column;gap:.7rem}
+  .faq-item{border:1px solid var(--line);border-radius:var(--radius);background:var(--white);overflow:hidden;transition:border-color .2s,box-shadow .2s}
+  .faq-item[open]{border-color:var(--accent);box-shadow:var(--shadow-sm)}
+  .faq-item summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.05rem 1.2rem;font-weight:700;color:var(--ink);font-size:1.05rem}
+  .faq-item summary::-webkit-details-marker{display:none}
+  .faq-item summary:hover{color:var(--accent-deep)}
+  .faq-item summary .faq-ic{flex:0 0 auto;width:22px;height:22px;color:var(--accent);transition:transform .25s ease}
+  .faq-item[open] summary .faq-ic{transform:rotate(45deg)}
+  .faq-item .faq-a{padding:0 1.2rem 1.15rem;color:var(--ink-soft);line-height:1.6;max-width:62ch}
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"How does it work?","acceptedAnswer":{"@type":"Answer","text":"Upload the photo from your phone, choose where you sell (Amazon, Etsy or eBay) and we send it back on a clean white background, sized exactly. You never open an editor."}},
+    {"@type":"Question","name":"How much is it?","acceptedAnswer":{"@type":"Answer","text":"Start free with 5 photos. After that: Seller US$19/mo (150 photos) or Business US$49/mo (500 photos). You pay per photo, not per headache."}},
+    {"@type":"Question","name":"Can I try it free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Your first 5 photos are free when you sign up — no card needed."}},
+    {"@type":"Question","name":"Which platforms?","acceptedAnswer":{"@type":"Answer","text":"Amazon, Etsy and eBay, each with its exact size and the product nicely centered."}},
+    {"@type":"Question","name":"How long does it take?","acceptedAnswer":{"@type":"Answer","text":"About 3 seconds per photo. Upload many at once and download them all in a ZIP."}},
+    {"@type":"Question","name":"Do I need editing skills?","acceptedAnswer":{"@type":"Answer","text":"No. No Photoshop, no tutorials. Upload, choose, download."}},
+    {"@type":"Question","name":"How do I start?","acceptedAnswer":{"@type":"Answer","text":"Tap “Get my 5 free photos” up top or drop your details in Contact and we'll reach out."}}
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -459,7 +485,7 @@
         <a href="index.html" hreflang="es-AR">ES</a>
         <a href="en.html" aria-current="true">EN</a>
       </span>
-      <a href="/editor.html?lang=en" class="btn btn-primary">Start free</a>
+      <a href="/editor.html?lang=en" class="btn btn-primary">Get my 5 free photos</a>
     </div>
   </div>
 </header>
@@ -657,7 +683,7 @@
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Every marketplace size</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Download photo by photo</li>
           </ul>
-          <a href="/editor.html?lang=en" class="btn btn-ghost">Start free</a>
+          <a href="/editor.html?lang=en" class="btn btn-ghost">Get my 5 free photos</a>
         </div>
 
         <div class="tier feat reveal d2">
@@ -743,6 +769,49 @@
             <span><b>Mike T.</b><span>Auto parts · eBay</span></span>
           </figcaption>
         </figure>
+      </div>
+    </div>
+  </section>
+
+  <div class="scan-divider" aria-hidden="true"></div>
+
+  <!-- ===== FAQ (static, no JS) ===== -->
+  <section id="faq">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">FAQ</span>
+        <h2>What everyone asks before starting.</h2>
+        <p>Still have a question? Open the chat below and we'll answer right away.</p>
+      </div>
+      <div class="faq-list reveal d1">
+        <details class="faq-item">
+          <summary>How does it work?<svg class="faq-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary>
+          <div class="faq-a">Upload the photo from your phone, choose where you sell (Amazon, Etsy or eBay) and we send it back on a clean white background, sized exactly. You never open an editor.</div>
+        </details>
+        <details class="faq-item">
+          <summary>How much is it?<svg class="faq-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary>
+          <div class="faq-a">Start free with 5 photos. After that: Seller US$19/mo (150 photos) or Business US$49/mo (500 photos). You pay per photo, not per headache.</div>
+        </details>
+        <details class="faq-item">
+          <summary>Can I try it free?<svg class="faq-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary>
+          <div class="faq-a">Yes. Your first 5 photos are free when you sign up — no card needed.</div>
+        </details>
+        <details class="faq-item">
+          <summary>Which platforms?<svg class="faq-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary>
+          <div class="faq-a">Amazon, Etsy and eBay, each with its exact size and the product nicely centered.</div>
+        </details>
+        <details class="faq-item">
+          <summary>How long does it take?<svg class="faq-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary>
+          <div class="faq-a">About 3 seconds per photo. Upload many at once and download them all in a ZIP.</div>
+        </details>
+        <details class="faq-item">
+          <summary>Do I need editing skills?<svg class="faq-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary>
+          <div class="faq-a">No. No Photoshop, no tutorials. Upload, choose, download.</div>
+        </details>
+        <details class="faq-item">
+          <summary>How do I start?<svg class="faq-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary>
+          <div class="faq-a">Tap “Get my 5 free photos” up top or drop your details in Contact and we'll reach out.</div>
+        </details>
       </div>
     </div>
   </section>
@@ -1015,7 +1084,7 @@
       {q:"Which platforms?", a:"Amazon, Etsy and eBay, each with its exact size and the product nicely centered."},
       {q:"How long does it take?", a:"About 3 seconds per photo. Upload many at once and download them all in a ZIP."},
       {q:"Do I need editing skills?", a:"No. No Photoshop, no tutorials. Upload, choose, download."},
-      {q:"How do I start?", a:"Tap “Start free” up top or drop your details in Contact and we'll reach out.", cta:{href:"#contact", label:"Go to Contact"}}
+      {q:"How do I start?", a:"Tap “Get my 5 free photos” up top or drop your details in Contact and we'll reach out.", cta:{href:"#contact", label:"Go to Contact"}}
     ];
     var root = document.getElementById('chat');
     if(!root) return;
@@ -1072,7 +1141,7 @@
   </button>
 </div>
   <div class="mcta">
-    <a href="/editor.html?lang=en" class="btn btn-primary">Try it free · 5 photos</a>
+    <a href="/editor.html?lang=en" class="btn btn-primary">Get my 5 free photos</a>
   </div>
 
   <!-- Vercel Web Analytics (activar en el dashboard de Vercel → Analytics) -->
