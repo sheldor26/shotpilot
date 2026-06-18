@@ -255,6 +255,10 @@
 
   /* ---------- logos strip ---------- */
   .strip{padding-block:var(--space-4);border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--white)}
+  /* firma visual: línea de escaneo como divisor entre secciones */
+  .scan-divider{position:relative;height:1px;max-width:var(--maxw);margin-inline:auto;margin-block:var(--space-1);background:linear-gradient(90deg,transparent,var(--line) 22%,var(--line) 78%,transparent)}
+  .scan-divider::before{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:140px;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);box-shadow:0 0 14px 1px rgba(244,81,60,.4)}
+  .scan-divider::after{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px 2px rgba(244,81,60,.55)}
   .strip-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:clamp(1.5rem,5vw,3.5rem)}
   .strip span{font-size:.82rem;color:var(--ink-faint);font-weight:500}
   .strip .plat{font-weight:700;font-family:"Bricolage Grotesque";font-size:1.1rem;color:var(--ink-soft);opacity:.8}
@@ -284,7 +288,7 @@
   @media(min-width:780px){.steps{grid-template-columns:repeat(3,1fr);gap:var(--space-4)}}
   .step{position:relative;background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:var(--space-4);transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
   .step:hover{transform:translateY(-6px);box-shadow:var(--shadow-md)}
-  .step .num{font-family:"Bricolage Grotesque";font-weight:800;font-size:.95rem;color:var(--ink-faint);letter-spacing:.05em}
+  .step-node{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;font-family:"Bricolage Grotesque";font-weight:800;font-size:1.15rem;line-height:1;box-shadow:0 8px 18px -8px rgba(216,56,31,.55)}
   .step .ico{width:54px;height:54px;border-radius:14px;background:var(--cream-2);color:var(--ink);display:grid;place-items:center;margin:var(--space-2) 0}
   .step .ico svg{width:28px;height:28px}
   .step h3{font-size:1.3rem;margin-bottom:.5rem}
@@ -570,7 +574,7 @@
       </div>
       <div class="steps">
         <article class="step reveal d1">
-          <span class="num">PASO 01</span>
+          <span class="step-node" aria-hidden="true">1</span>
           <div class="ico" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 9 5-5 5 5"/><path d="M12 4v12"/></svg>
           </div>
@@ -578,7 +582,7 @@
           <p>Arrastrás las fotos del celular, todas juntas. No importa que tengan el fondo de tu casa o del depósito.</p>
         </article>
         <article class="step reveal d2">
-          <span class="num">PASO 02</span>
+          <span class="step-node" aria-hidden="true">2</span>
           <div class="ico" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
           </div>
@@ -586,7 +590,7 @@
           <p>MercadoLibre, Tienda Nube o Instagram. Cada uno con su medida justa y el producto bien centrado.</p>
         </article>
         <article class="step reveal d3">
-          <span class="num">PASO 03</span>
+          <span class="step-node" aria-hidden="true">3</span>
           <div class="ico" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
           </div>
@@ -630,6 +634,8 @@
       </div>
     </div>
   </section>
+
+  <div class="scan-divider" aria-hidden="true"></div>
 
   <!-- ===== PRICING ===== -->
   <section id="precios">
@@ -738,6 +744,8 @@
       </div>
     </div>
   </section>
+
+  <div class="scan-divider" aria-hidden="true"></div>
 
   <!-- ===== CONTACT ===== -->
   <section id="contacto">
