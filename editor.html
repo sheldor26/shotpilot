@@ -347,6 +347,7 @@
         $('compare').style.setProperty('--x', '50%');
         renderResult();
         setUsed(used() + 1);
+        if (window.va) window.va('event', { name: 'convert' });
         show('result');
       } catch (e){
         show('drop');
@@ -443,6 +444,7 @@
 
     $('download').addEventListener('click', () => {
       compose(currentSize, shadowOn);
+      if (window.va) window.va('event', { name: 'download', size: String(currentSize) });
       canvas.toBlob(blob => {
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -462,5 +464,8 @@
     refreshQuota();
     if (used() >= FREE_LIMIT) show('limit');
   </script>
+  <!-- Vercel Web Analytics (activar en el dashboard de Vercel → Analytics) -->
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
+  <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

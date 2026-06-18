@@ -12,13 +12,14 @@
 <meta property="og:title" content="shotpilot — Subí la foto fea. Bajá la foto que vende.">
 <meta property="og:description" content="Fotos de producto con fondo blanco, listas para MercadoLibre, Tienda Nube e Instagram. Subís la foto del celular y la bajás lista para publicar.">
 <meta property="og:url" content="https://shotpilot.app/">
-<meta property="og:image" content="https://shotpilot.app/logo-shotpilot.png">
-<meta property="og:image:width" content="500">
-<meta property="og:image:height" content="500">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://shotpilot.app/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Antes y después: foto de producto con fondo cargado convertida a fondo blanco.">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="shotpilot — Subí la foto fea. Bajá la foto que vende.">
 <meta name="twitter:description" content="Fotos de producto con fondo blanco, listas para MercadoLibre, Tienda Nube e Instagram.">
-<meta name="twitter:image" content="https://shotpilot.app/logo-shotpilot.png">
+<meta name="twitter:image" content="https://shotpilot.app/og-image.png">
 <link rel="canonical" href="https://shotpilot.app/">
 <link rel="alternate" hreflang="es-AR" href="https://shotpilot.app/">
 <link rel="alternate" hreflang="en" href="https://shotpilot.app/en">
@@ -854,17 +855,31 @@
     stage.addEventListener('pointercancel', function(){ dragging = false; });
   })();
 
-  // Confirmación del formulario de contacto (por ahora solo muestra el cartel)
+  // Formulario de contacto: envía el lead a /api/contact (Resend) y muestra el cartel.
   (function(){
     var f = document.getElementById('lead-form');
     var ok = document.getElementById('form-ok');
     if(!f || !ok) return;
-    f.addEventListener('submit', function(e){
-      e.preventDefault();
-      if(!f.checkValidity()){ f.reportValidity(); return; }
+    function done(){
       f.style.display = 'none';
       ok.style.display = 'block';
       ok.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+    f.addEventListener('submit', function(e){
+      e.preventDefault();
+      if(!f.checkValidity()){ f.reportValidity(); return; }
+      var fd = new FormData(f);
+      var payload = {
+        name: fd.get('nombre') || fd.get('name') || '',
+        email: fd.get('email') || '',
+        sells: fd.get('vende') || fd.get('sell') || '',
+        msg: fd.get('msg') || ''
+      };
+      var btn = f.querySelector('[type=submit]');
+      if(btn) btn.disabled = true;
+      fetch('/api/contact', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) })
+        .then(function(r){ if(!r.ok) throw new Error('send'); if(window.va) window.va('event', {name:'lead'}); done(); })
+        .catch(function(){ console.warn('shotpilot: lead no entregado (revisá RESEND_API_KEY / LEAD_TO en Vercel)'); done(); });
     });
   })();
 
@@ -1036,5 +1051,8 @@
     <svg class="cw-ic-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
   </button>
 </div>
+  <!-- Vercel Web Analytics (activar en el dashboard de Vercel → Analytics) -->
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
+  <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
