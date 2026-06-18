@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>shotpilot — Editor: probá gratis</title>
+<title>shotpilot — Editor</title>
 <meta name="description" content="Subí la foto de tu producto y bajala con fondo blanco, en la medida exacta de MercadoLibre, Tienda Nube e Instagram.">
 <meta name="robots" content="noindex">
 <link rel="icon" type="image/png" href="/logo-shotpilot.png">
@@ -31,13 +31,13 @@
   ::selection{background:var(--accent);color:#fff}
   .wrap{max-width:760px;margin-inline:auto;padding-inline:clamp(20px,5vw,32px)}
 
-  /* header */
   header{border-bottom:1px solid var(--line);background:rgba(251,247,242,.86);backdrop-filter:blur(8px);position:sticky;top:0;z-index:10}
   .head-inner{display:flex;align-items:center;justify-content:space-between;height:64px;max-width:760px;margin-inline:auto;padding-inline:clamp(20px,5vw,32px)}
   .brand{display:flex;align-items:center;gap:.5rem;font-family:"Bricolage Grotesque";font-weight:800;font-size:1.2rem;letter-spacing:-.03em}
   .brand .mark{width:30px;height:30px;border-radius:9px;flex:none;background:#fff no-repeat url("/logo-shotpilot.png");background-size:182%;background-position:50% 20%}
   .back{font-size:.92rem;font-weight:500;color:var(--ink-soft);display:inline-flex;align-items:center;gap:.35rem}
   .back:hover{color:var(--ink)}
+  .back svg{width:18px;height:18px}
 
   main{padding-block:clamp(2rem,6vw,3.5rem) 5rem}
   .eyebrow{display:inline-flex;align-items:center;gap:.6rem;font-size:.8rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:.6rem}
@@ -46,13 +46,11 @@
   .lede{color:var(--ink-soft);font-size:1.05rem;margin-bottom:1.6rem}
   .lede strong{color:var(--ink);font-weight:600}
 
-  /* contador gratis */
   .quota{display:inline-flex;align-items:center;gap:.5rem;font-size:.85rem;font-weight:600;color:var(--ink-soft);background:var(--white);border:1px solid var(--line);border-radius:999px;padding:.4rem .85rem;margin-bottom:1.4rem}
   .quota .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
 
   .card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);padding:clamp(1.1rem,4vw,1.6rem)}
 
-  /* dropzone */
   .drop{display:block;border:2px dashed var(--line);border-radius:var(--radius);padding:clamp(2rem,9vw,3.4rem) 1.5rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
   .drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-tint)}
   .drop .ic{width:54px;height:54px;border-radius:14px;background:var(--accent-tint);color:var(--accent);display:grid;place-items:center;margin:0 auto .9rem}
@@ -61,11 +59,8 @@
   .drop p{color:var(--ink-faint);font-size:.92rem}
   .drop input{display:none}
 
-  /* estados */
   .hidden{display:none!important}
-  .center{text-align:center}
 
-  /* processing */
   .proc{text-align:center;padding:2.4rem 1rem}
   .scanbox{position:relative;width:min(260px,70%);aspect-ratio:3/4;margin:0 auto 1.3rem;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#f3ece2}
   .scanbox img{width:100%;height:100%;object-fit:cover}
@@ -73,20 +68,36 @@
   @keyframes scan{0%{left:0}50%{left:100%}100%{left:0}}
   .proc p{color:var(--ink-soft);font-weight:500}
 
-  /* resultado */
-  .ba{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
-  .shot{position:relative;aspect-ratio:1;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#fff;display:grid;place-items:center}
-  .shot img{width:100%;height:100%;object-fit:contain}
-  .shot.before img{object-fit:cover}
-  .shot .tag{position:absolute;top:.55rem;left:.55rem;font-size:.66rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#fff;padding:.24rem .55rem;border-radius:999px}
-  .shot.before .tag{background:rgba(26,22,20,.55)}
-  .shot.after .tag{background:var(--accent)}
-  .shot.after{background:repeating-conic-gradient(#f6f6f6 0% 25%,#fff 0% 50%) 50% / 18px 18px}
+  /* ---- comparador antes/después arrastrable ---- */
+  .compare{position:relative;aspect-ratio:1;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#fff;user-select:none;touch-action:none;cursor:ew-resize}
+  .cmp-layer{position:absolute;inset:0;width:100%;height:100%}
+  .cmp-after{background:#fff;display:grid;place-items:center}
+  .cmp-after img{width:100%;height:100%;object-fit:contain;padding:4%}
+  .cmp-before{object-fit:contain;background:#fff;clip-path:inset(0 calc(100% - var(--x,50%)) 0 0)}
+  .cmp-tag{position:absolute;top:.6rem;z-index:4;font-size:.66rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#fff;padding:.24rem .55rem;border-radius:999px}
+  .cmp-tag.tl{left:.6rem;background:rgba(26,22,20,.55)}
+  .cmp-tag.tr{right:.6rem;background:var(--accent)}
+  .cmp-divider{position:absolute;top:0;bottom:0;left:var(--x,50%);width:2px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.08);z-index:5}
+  .cmp-knob{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;background:#fff;box-shadow:var(--shadow-md);display:grid;place-items:center;color:var(--ink);cursor:ew-resize}
+  .cmp-knob svg{width:20px;height:20px}
+  .cmp-hint{position:absolute;bottom:.6rem;left:50%;transform:translateX(-50%);z-index:4;font-size:.74rem;font-weight:500;color:#fff;background:rgba(26,22,20,.5);padding:.2rem .6rem;border-radius:999px;pointer-events:none}
 
-  .seg{display:flex;flex-wrap:wrap;gap:.5rem;margin:1.2rem 0 .4rem}
-  .seg .chip{font-size:.85rem;font-weight:600;color:var(--ink-soft);background:var(--cream);border:1.5px solid var(--line);border-radius:999px;padding:.42rem .9rem;cursor:pointer;transition:all .15s var(--ease)}
+  /* ---- descarga: preview + controles ---- */
+  .dl{display:flex;gap:1rem;align-items:center;margin:1.2rem 0 .2rem;flex-wrap:wrap}
+  .dl-prev{flex:none;width:104px;height:104px;border-radius:12px;border:1px solid var(--line);overflow:hidden;background:#fff}
+  .dl-prev img{width:100%;height:100%;object-fit:contain}
+  .dl-ctrl{flex:1;min-width:220px}
+  .seg{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.7rem}
+  .seg .chip{font-size:.85rem;font-weight:600;color:var(--ink-soft);background:var(--cream);border:1.5px solid var(--line);border-radius:999px;padding:.4rem .85rem;cursor:pointer;transition:all .15s var(--ease)}
   .seg .chip[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
-  .seg-note{font-size:.82rem;color:var(--ink-faint);margin-bottom:1.1rem}
+  .toggle{display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.9rem;font-weight:500;color:var(--ink-soft)}
+  .toggle input{position:absolute;opacity:0;width:0;height:0}
+  .toggle .sw{width:40px;height:24px;border-radius:999px;background:var(--line);position:relative;transition:background .2s;flex:none}
+  .toggle .sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:var(--shadow-sm);transition:transform .2s}
+  .toggle input:checked + .sw{background:var(--accent)}
+  .toggle input:checked + .sw::after{transform:translateX(16px)}
+  .toggle input:focus-visible + .sw{outline:2px solid var(--accent);outline-offset:2px}
+  .seg-note{font-size:.82rem;color:var(--ink-faint);margin-top:.6rem}
 
   .row{display:flex;flex-wrap:wrap;gap:.7rem;margin-top:1.2rem}
   .btn{flex:1;min-width:160px;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;font-family:"Inter",sans-serif;font-weight:600;font-size:1rem;padding:.85rem 1.4rem;border-radius:999px;border:0;cursor:pointer;transition:transform .2s var(--ease),box-shadow .2s,background .2s}
@@ -98,120 +109,190 @@
 
   .err{background:var(--accent-tint);border:1px solid #f3c6bd;color:var(--accent-deep);border-radius:14px;padding:.85rem 1rem;font-size:.92rem;font-weight:500;margin-top:1rem}
 
-  /* limite */
   .limit{text-align:center;padding:2rem 1rem}
   .limit h2{font-size:1.5rem;margin-bottom:.5rem}
   .limit p{color:var(--ink-soft);margin-bottom:1.3rem}
 
   .foot{text-align:center;color:var(--ink-faint);font-size:.82rem;margin-top:1.6rem}
 
-  @media(max-width:560px){
-    .row .btn{min-width:100%}
-  }
-  @media(prefers-reduced-motion:reduce){
-    .scanbox .ln{animation:none;left:50%;opacity:.6}
-  }
+  @media(max-width:560px){.row .btn{min-width:100%}}
+  @media(prefers-reduced-motion:reduce){.scanbox .ln{animation:none;left:50%;opacity:.6}}
 </style>
 </head>
 <body>
   <header>
     <div class="head-inner">
-      <a href="/" class="brand" aria-label="shotpilot inicio">
-        <span class="mark" aria-hidden="true"></span>shotpilot
-      </a>
-      <a href="/" class="back">
+      <a href="/" class="brand" id="brand-link" aria-label="shotpilot"><span class="mark" aria-hidden="true"></span>shotpilot</a>
+      <a href="/" class="back" id="back-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-        Inicio
+        <span id="t-back">Inicio</span>
       </a>
     </div>
   </header>
 
   <main>
     <div class="wrap">
-      <span class="eyebrow">Editor</span>
-      <h1>Probá gratis</h1>
-      <p class="lede">Subí la foto de tu producto y bajala con <strong>fondo blanco</strong>, en la medida exacta de cada plataforma. No tocás un editor.</p>
+      <span class="eyebrow" id="t-eyebrow">Editor</span>
+      <h1 id="t-title">Probá gratis</h1>
+      <p class="lede" id="t-lede">Subí la foto de tu producto y bajala con <strong>fondo blanco</strong>, en la medida exacta de cada plataforma. No tocás un editor.</p>
 
-      <div class="quota" id="quota"><span class="dot"></span><span id="quota-text">Te quedan 5 de 5 gratis</span></div>
+      <div class="quota"><span class="dot"></span><span id="quota-text">Te quedan 5 de 5 gratis</span></div>
 
       <div class="card">
-        <!-- ESTADO 1: subir -->
+        <!-- subir -->
         <label class="drop" id="drop" for="file">
-          <span class="ic" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m6 10 6-6 6 6"/><path d="M4 20h16"/></svg>
-          </span>
-          <h2>Arrastrá tu foto o tocá para elegir</h2>
-          <p>JPG o PNG · una foto del celular sirve · la primera puede tardar unos segundos</p>
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m6 10 6-6 6 6"/><path d="M4 20h16"/></svg></span>
+          <h2 id="t-drop-title">Arrastrá tu foto o tocá para elegir</h2>
+          <p id="t-drop-hint">JPG o PNG · una foto del celular sirve · la primera puede tardar unos segundos</p>
           <input type="file" id="file" accept="image/png,image/jpeg,image/webp">
         </label>
 
-        <!-- ESTADO 2: procesando -->
+        <!-- procesando -->
         <div class="proc hidden" id="proc">
           <div class="scanbox"><img id="proc-img" alt=""><span class="ln" aria-hidden="true"></span></div>
-          <p>Sacando el fondo…</p>
+          <p id="t-proc">Sacando el fondo…</p>
         </div>
 
-        <!-- ESTADO 3: resultado -->
+        <!-- resultado -->
         <div class="result hidden" id="result">
-          <div class="ba">
-            <div class="shot before"><span class="tag">Antes</span><img id="img-before" alt="Foto original"></div>
-            <div class="shot after"><span class="tag">Después</span><img id="img-after" alt="Producto sobre fondo blanco"></div>
+          <div class="compare" id="compare">
+            <div class="cmp-layer cmp-after"><img id="img-cutout" alt=""></div>
+            <img class="cmp-layer cmp-before" id="img-before" alt="">
+            <span class="cmp-tag tl" id="tag-before">Antes</span>
+            <span class="cmp-tag tr" id="tag-after">Después</span>
+            <div class="cmp-divider" id="handle" tabindex="0" role="slider" aria-label="Comparar antes y después" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+              <span class="cmp-knob" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18-6-6 6-6"/><path d="m15 6 6 6-6 6"/></svg></span>
+            </div>
+            <span class="cmp-hint" id="t-slider-hint">Arrastrá para comparar</span>
           </div>
 
-          <div class="seg" role="group" aria-label="Elegí la plataforma">
-            <button type="button" class="chip" data-size="1200" aria-pressed="true">MercadoLibre</button>
-            <button type="button" class="chip" data-size="1024" aria-pressed="false">Tienda Nube</button>
-            <button type="button" class="chip" data-size="1080" aria-pressed="false">Instagram</button>
+          <div class="dl">
+            <div class="dl-prev"><img id="preview" alt=""></div>
+            <div class="dl-ctrl">
+              <div class="seg" role="group" aria-label="Plataforma">
+                <button type="button" class="chip" data-size="1200" aria-pressed="true">MercadoLibre</button>
+                <button type="button" class="chip" data-size="1024" aria-pressed="false">Tienda Nube</button>
+                <button type="button" class="chip" data-size="1080" aria-pressed="false">Instagram</button>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="shadow">
+                <span class="sw" aria-hidden="true"></span>
+                <span id="t-shadow">Sombra suave</span>
+              </label>
+              <p class="seg-note" id="seg-note">Se descarga · fondo blanco · 1200 × 1200 px · centrado</p>
+            </div>
           </div>
-          <p class="seg-note" id="seg-note">Fondo blanco · 1200 × 1200 px · centrado</p>
 
           <div class="row">
             <button type="button" class="btn btn-primary" id="download">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12"/><path d="m6 12 6 6 6-6"/><path d="M4 20h16"/></svg>
-              Descargar
+              <span id="t-download">Descargar</span>
             </button>
-            <button type="button" class="btn btn-ghost" id="another">Otra foto</button>
+            <button type="button" class="btn btn-ghost" id="another"><span id="t-another">Otra foto</span></button>
           </div>
         </div>
 
-        <!-- ESTADO 4: límite -->
+        <!-- límite -->
         <div class="limit hidden" id="limit">
-          <h2>Usaste tus 5 fotos gratis 🎉</h2>
-          <p>¿Te sirvió? Escribinos y seguimos con tu catálogo completo.</p>
-          <a href="/#precios" class="btn btn-primary" style="display:inline-flex;flex:none">Ver planes</a>
+          <h2 id="t-limit-title">Usaste tus 5 fotos gratis 🎉</h2>
+          <p id="t-limit-text">¿Te sirvió? Escribinos y seguimos con tu catálogo completo.</p>
+          <a href="/#precios" class="btn btn-primary" id="plans" style="display:inline-flex;flex:none">Ver planes</a>
         </div>
 
         <div class="err hidden" id="err"></div>
       </div>
 
-      <p class="foot">Las primeras 5 fotos son gratis. Sin tarjeta.</p>
+      <p class="foot" id="t-foot">Las primeras 5 fotos son gratis. Sin tarjeta.</p>
     </div>
   </main>
 
   <canvas id="canvas" class="hidden"></canvas>
 
   <script>
-    const FREE_LIMIT = 5;
-    const QUOTA_KEY = 'sp_free_used';
-    const MAX_UPLOAD_PX = 1600; // redimensionamos antes de subir (menos peso, más rápido)
+    // ---------- idioma ----------
+    const lang = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'es';
+    const T = {
+      es: {
+        back:'Inicio', eyebrow:'Editor', title:'Probá gratis',
+        lede:'Subí la foto de tu producto y bajala con <strong>fondo blanco</strong>, en la medida exacta de cada plataforma. No tocás un editor.',
+        dropTitle:'Arrastrá tu foto o tocá para elegir',
+        dropHint:'JPG o PNG · una foto del celular sirve · la primera puede tardar unos segundos',
+        proc:'Sacando el fondo…', before:'Antes', after:'Después',
+        sliderHint:'Arrastrá para comparar', shadow:'Sombra suave',
+        note:(s)=>`Se descarga · fondo blanco · ${s} × ${s} px · centrado`,
+        download:'Descargar', another:'Otra foto',
+        limitTitle:'Usaste tus 5 fotos gratis 🎉',
+        limitText:'¿Te sirvió? Escribinos y seguimos con tu catálogo completo.',
+        plans:'Ver planes', plansHref:'/#precios', home:'/',
+        foot:'Las primeras 5 fotos son gratis. Sin tarjeta.',
+        quota:(l,t)=>`Te quedan ${l} de ${t} gratis`,
+        errType:'Subí una imagen JPG o PNG.',
+        errKey:'Falta configurar la API key en el servidor.',
+        errGeneric:'No pudimos procesar la foto. Probá de nuevo en un momento.',
+        errRead:'No pudimos leer la imagen.',
+      },
+      en: {
+        back:'Home', eyebrow:'Editor', title:'Try it free',
+        lede:'Upload your product photo and get it back on a <strong>white background</strong>, sized exactly for each platform. You never open an editor.',
+        dropTitle:'Drag your photo or tap to choose',
+        dropHint:'JPG or PNG · a phone photo works · the first one may take a few seconds',
+        proc:'Removing the background…', before:'Before', after:'After',
+        sliderHint:'Drag to compare', shadow:'Soft shadow',
+        note:(s)=>`Download · white background · ${s} × ${s} px · centered`,
+        download:'Download', another:'Another photo',
+        limitTitle:'You used your 5 free photos 🎉',
+        limitText:'Did it help? Write us and we keep going with your full catalog.',
+        plans:'See plans', plansHref:'/en#pricing', home:'/en',
+        foot:'The first 5 photos are free. No card.',
+        quota:(l,t)=>`${l} of ${t} free left`,
+        errType:'Upload a JPG or PNG image.',
+        errKey:'The API key is not set on the server.',
+        errGeneric:'We couldn’t process the photo. Try again in a moment.',
+        errRead:'We couldn’t read the image.',
+      },
+    }[lang];
 
     const $ = (id) => document.getElementById(id);
+
+    function applyStrings(){
+      document.documentElement.lang = lang === 'en' ? 'en' : 'es-AR';
+      $('t-back').textContent = T.back;
+      $('t-eyebrow').textContent = T.eyebrow;
+      $('t-title').textContent = T.title;
+      $('t-lede').innerHTML = T.lede;
+      $('t-drop-title').textContent = T.dropTitle;
+      $('t-drop-hint').textContent = T.dropHint;
+      $('t-proc').textContent = T.proc;
+      $('tag-before').textContent = T.before;
+      $('tag-after').textContent = T.after;
+      $('t-slider-hint').textContent = T.sliderHint;
+      $('t-shadow').textContent = T.shadow;
+      $('t-download').textContent = T.download;
+      $('t-another').textContent = T.another;
+      $('t-limit-title').textContent = T.limitTitle;
+      $('t-limit-text').textContent = T.limitText;
+      $('plans').textContent = T.plans; $('plans').href = T.plansHref;
+      $('t-foot').textContent = T.foot;
+      $('brand-link').href = T.home; $('back-link').href = T.home;
+    }
+
+    // ---------- estado / cuota ----------
+    const FREE_LIMIT = 5;
+    const QUOTA_KEY = 'sp_free_used';
+    const MAX_UPLOAD_PX = 1600;
+
     const drop = $('drop'), fileInput = $('file');
     const procEl = $('proc'), resultEl = $('result'), limitEl = $('limit'), errEl = $('err');
-    const procImg = $('proc-img'), imgBefore = $('img-before'), imgAfter = $('img-after');
+    const procImg = $('proc-img'), imgBefore = $('img-before'), imgCutout = $('img-cutout');
     const canvas = $('canvas');
 
-    let cutout = null;       // Image del PNG recortado (transparente)
-    let currentSize = 1200;  // medida cuadrada elegida
-    let originalUrl = null;
+    let cutout = null, cutoutBox = null, cutoutUrl = null, originalUrl = null;
+    let currentSize = 1200, shadowOn = false;
 
-    function used(){ return parseInt(localStorage.getItem(QUOTA_KEY) || '0', 10); }
+    const used = () => parseInt(localStorage.getItem(QUOTA_KEY) || '0', 10);
     function setUsed(n){ localStorage.setItem(QUOTA_KEY, String(n)); refreshQuota(); }
-    function refreshQuota(){
-      const left = Math.max(0, FREE_LIMIT - used());
-      $('quota-text').textContent = `Te quedan ${left} de ${FREE_LIMIT} gratis`;
-    }
-    function show(state){ // 'drop' | 'proc' | 'result' | 'limit'
+    function refreshQuota(){ $('quota-text').textContent = T.quota(Math.max(0, FREE_LIMIT - used()), FREE_LIMIT); }
+    function show(state){
       drop.classList.toggle('hidden', state !== 'drop');
       procEl.classList.toggle('hidden', state !== 'proc');
       resultEl.classList.toggle('hidden', state !== 'result');
@@ -220,13 +301,12 @@
     }
     function showError(msg){ errEl.textContent = msg; errEl.classList.remove('hidden'); }
 
-    // ---- dropzone ----
+    // ---------- dropzone ----------
     ;['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
     ;['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
     drop.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) handleFile(f); });
     fileInput.addEventListener('change', e => { const f = e.target.files[0]; if (f) handleFile(f); });
 
-    // ---- redimensionar antes de subir ----
     function resizeForUpload(file){
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -238,14 +318,14 @@
           c.getContext('2d').drawImage(img, 0, 0, w, h);
           c.toBlob(b => b ? resolve(b) : reject(new Error('resize')), 'image/jpeg', 0.92);
         };
-        img.onerror = () => reject(new Error('No pudimos leer la imagen.'));
+        img.onerror = () => reject(new Error(T.errRead));
         img.src = URL.createObjectURL(file);
       });
     }
 
     async function handleFile(file){
       if (used() >= FREE_LIMIT){ show('limit'); return; }
-      if (!/^image\/(png|jpe?g|webp)$/.test(file.type)){ show('drop'); showError('Subí una imagen JPG o PNG.'); return; }
+      if (!/^image\/(png|jpe?g|webp)$/.test(file.type)){ show('drop'); showError(T.errType); return; }
 
       if (originalUrl) URL.revokeObjectURL(originalUrl);
       originalUrl = URL.createObjectURL(file);
@@ -258,51 +338,99 @@
         if (!resp.ok){
           let detail = '';
           try { detail = (await resp.json()).error || ''; } catch {}
-          throw new Error(detail === 'missing_api_key'
-            ? 'Falta configurar la API key en el servidor.'
-            : 'No pudimos procesar la foto. Probá de nuevo en un momento.');
+          throw new Error(detail === 'missing_api_key' ? T.errKey : T.errGeneric);
         }
-        const outBlob = await resp.blob();
-        await loadCutout(outBlob);
+        await loadCutout(await resp.blob());
 
         imgBefore.src = originalUrl;
+        imgCutout.src = cutoutUrl;
+        $('compare').style.setProperty('--x', '50%');
         renderResult();
         setUsed(used() + 1);
         show('result');
       } catch (e){
         show('drop');
-        showError(e.message || 'Algo salió mal. Probá de nuevo.');
+        showError(e.message || T.errGeneric);
       }
     }
 
     function loadCutout(blob){
       return new Promise((resolve, reject) => {
+        if (cutoutUrl) URL.revokeObjectURL(cutoutUrl);
+        cutoutUrl = URL.createObjectURL(blob);
         const img = new Image();
-        img.onload = () => { cutout = img; resolve(); };
-        img.onerror = () => reject(new Error('No pudimos leer el resultado.'));
-        img.src = URL.createObjectURL(blob);
+        img.onload = () => { cutout = img; cutoutBox = computeBox(img); resolve(); };
+        img.onerror = () => reject(new Error(T.errRead));
+        img.src = cutoutUrl;
       });
     }
 
-    // ---- componer producto centrado sobre blanco ----
-    function compose(size){
+    // bounding box del producto a partir del canal alfa (recorta márgenes transparentes)
+    function computeBox(img){
+      const w = img.naturalWidth, h = img.naturalHeight;
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+      let data;
+      try { data = x.getImageData(0, 0, w, h).data; }
+      catch { return { x:0, y:0, w, h }; }
+      const step = Math.max(1, Math.floor(Math.max(w, h) / 600));
+      let minX = w, minY = h, maxX = 0, maxY = 0, found = false;
+      for (let yy = 0; yy < h; yy += step){
+        for (let xx = 0; xx < w; xx += step){
+          if (data[(yy * w + xx) * 4 + 3] > 12){
+            found = true;
+            if (xx < minX) minX = xx; if (xx > maxX) maxX = xx;
+            if (yy < minY) minY = yy; if (yy > maxY) maxY = yy;
+          }
+        }
+      }
+      if (!found) return { x:0, y:0, w, h };
+      return { x:minX, y:minY, w:(maxX - minX + 1), h:(maxY - minY + 1) };
+    }
+
+    // ---------- componer cuadrado centrado sobre blanco ----------
+    function compose(size, shadow){
       canvas.width = size; canvas.height = size;
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, size, size);
-      if (!cutout) return;
-      const pad = 0.84; // el producto ocupa ~84% (deja margen prolijo)
-      const scale = (size * pad) / Math.max(cutout.width, cutout.height);
-      const w = cutout.width * scale, h = cutout.height * scale;
-      ctx.drawImage(cutout, (size - w) / 2, (size - h) / 2, w, h);
+      if (!cutout || !cutoutBox) return;
+      const b = cutoutBox, pad = 0.82;
+      const scale = (size * pad) / Math.max(b.w, b.h);
+      const w = b.w * scale, h = b.h * scale;
+      const dx = (size - w) / 2, dy = (size - h) / 2;
+      if (shadow){ ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.20)'; ctx.shadowBlur = size * 0.045; ctx.shadowOffsetY = size * 0.03; }
+      ctx.drawImage(cutout, b.x, b.y, b.w, b.h, dx, dy, w, h);
+      if (shadow) ctx.restore();
     }
 
     function renderResult(){
-      compose(currentSize);
-      imgAfter.src = canvas.toDataURL('image/png');
-      $('seg-note').textContent = `Fondo blanco · ${currentSize} × ${currentSize} px · centrado`;
+      compose(currentSize, shadowOn);
+      $('preview').src = canvas.toDataURL('image/png');
+      $('seg-note').textContent = T.note(currentSize);
     }
 
+    // ---------- slider arrastrable ----------
+    const compare = $('compare'), handle = $('handle');
+    let dragging = false;
+    function setX(clientX){
+      const r = compare.getBoundingClientRect();
+      let p = ((clientX - r.left) / r.width) * 100;
+      p = Math.max(0, Math.min(100, p));
+      compare.style.setProperty('--x', p + '%');
+      handle.setAttribute('aria-valuenow', Math.round(p));
+    }
+    compare.addEventListener('pointerdown', e => { dragging = true; compare.setPointerCapture(e.pointerId); setX(e.clientX); });
+    compare.addEventListener('pointermove', e => { if (dragging) setX(e.clientX); });
+    compare.addEventListener('pointerup', () => { dragging = false; });
+    compare.addEventListener('pointercancel', () => { dragging = false; });
+    handle.addEventListener('keydown', e => {
+      const cur = parseFloat(compare.style.getPropertyValue('--x')) || 50;
+      if (e.key === 'ArrowLeft'){ e.preventDefault(); compare.style.setProperty('--x', Math.max(0, cur - 4) + '%'); handle.setAttribute('aria-valuenow', Math.round(Math.max(0, cur - 4))); }
+      if (e.key === 'ArrowRight'){ e.preventDefault(); compare.style.setProperty('--x', Math.min(100, cur + 4) + '%'); handle.setAttribute('aria-valuenow', Math.round(Math.min(100, cur + 4))); }
+    });
+
+    // ---------- controles ----------
     document.querySelectorAll('.seg .chip').forEach(c => {
       c.addEventListener('click', () => {
         document.querySelectorAll('.seg .chip').forEach(x => x.setAttribute('aria-pressed','false'));
@@ -311,9 +439,10 @@
         renderResult();
       });
     });
+    $('shadow').addEventListener('change', e => { shadowOn = e.target.checked; renderResult(); });
 
     $('download').addEventListener('click', () => {
-      compose(currentSize);
+      compose(currentSize, shadowOn);
       canvas.toBlob(blob => {
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -325,9 +454,11 @@
 
     $('another').addEventListener('click', () => {
       fileInput.value = '';
-      if (used() >= FREE_LIMIT) show('limit'); else show('drop');
+      show(used() >= FREE_LIMIT ? 'limit' : 'drop');
     });
 
+    // ---------- init ----------
+    applyStrings();
     refreshQuota();
     if (used() >= FREE_LIMIT) show('limit');
   </script>

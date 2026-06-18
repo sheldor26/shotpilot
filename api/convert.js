@@ -27,7 +27,9 @@ export default async function handler(request) {
     const form = new FormData();
     form.append('image_file', new Blob([bytes]), 'upload');
     form.append('size', size);
-    form.append('crop', 'true');  // recorta justo al producto → queda centrable
+    // SIN crop: devolvemos el sujeto en su posición original (mismo encuadre que
+    // la foto subida) para que el slider antes/después quede alineado. El recorte
+    // y centrado a cuadrado los hace el navegador (bbox del canal alfa).
     form.append('format', 'png'); // transparente; el cliente lo pone sobre blanco
     return fetch('https://api.remove.bg/v1.0/removebg', {
       method: 'POST',
