@@ -21,7 +21,9 @@ export default async function handler(request) {
   if (!bytes || bytes.byteLength === 0) return json({ error: 'no_image' }, 400);
   if (bytes.byteLength > 10 * 1024 * 1024) return json({ error: 'too_large' }, 413);
 
-  const wanted = process.env.RBG_SIZE || 'auto';
+  // 'full' = máxima resolución (1 crédito). Si la cuenta no tiene créditos,
+  // remove.bg responde 402 y abajo caemos a 'preview' (gratis, baja resolución).
+  const wanted = process.env.RBG_SIZE || 'full';
 
   const call = (size) => {
     const form = new FormData();

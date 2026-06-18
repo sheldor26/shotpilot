@@ -393,6 +393,8 @@
     function compose(size, shadow){
       canvas.width = size; canvas.height = size;
       const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, size, size);
       if (!cutout || !cutoutBox) return;
