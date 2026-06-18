@@ -56,12 +56,13 @@ export default async function handler(req) {
 }
 
 async function sendWelcome({ name, email, lang }) {
-  const apiKey = process.env.BREVO_API_KEY;
+  // .trim() saca espacios/saltos de línea que se cuelan al pegar la clave en Vercel.
+  const apiKey = (process.env.BREVO_API_KEY || '').trim();
   if (!apiKey) return; // sin clave, no mandamos nada (el lead ya está guardado)
 
-  const fromEmail = process.env.MAIL_FROM_EMAIL || 'hola@shotpilot.app';
-  const fromName = process.env.MAIL_FROM_NAME || 'shotpilot';
-  const replyTo = process.env.MAIL_REPLY_TO || undefined;
+  const fromEmail = (process.env.MAIL_FROM_EMAIL || 'hola@shotpilot.app').trim();
+  const fromName = (process.env.MAIL_FROM_NAME || 'shotpilot').trim();
+  const replyTo = (process.env.MAIL_REPLY_TO || '').trim() || undefined;
   const firstName = (name || '').split(' ')[0];
   const copy = welcomeCopy(lang, firstName);
 
