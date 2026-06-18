@@ -268,7 +268,8 @@
 
   /* ---------- by the numbers (banda estática, sin animación) ---------- */
   .bynum{position:relative;background:var(--ink);color:#fff;padding-block:var(--space-5);overflow:hidden}
-  .bynum::before{content:"";position:absolute;inset:0;background:radial-gradient(58% 120% at 50% -10%,rgba(244,81,60,.24),transparent 68%);pointer-events:none}
+  .bynum::before{content:"";position:absolute;inset:0;background:radial-gradient(58% 120% at 50% -10%,rgba(244,81,60,.16),transparent 68%);pointer-events:none}
+  .bynum-glow{position:absolute;z-index:0;width:min(52vw,460px);aspect-ratio:1;border-radius:50%;top:-30%;left:52%;background:radial-gradient(circle,rgba(244,81,60,.22),transparent 68%);filter:blur(8px);pointer-events:none;will-change:transform}
   .bynum .wrap{position:relative;z-index:1}
   .bynum-eyebrow{display:flex;align-items:center;justify-content:center;gap:.7rem;text-align:center;font-size:.76rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:var(--space-3)}
   .bynum-eyebrow::before,.bynum-eyebrow::after{content:"";width:26px;height:1px;background:rgba(255,150,133,.55)}
@@ -502,7 +503,7 @@
           <button type="button" class="chip" data-size="1024 × 1024" aria-pressed="false">Tienda Nube</button>
           <button type="button" class="chip" data-size="1080 × 1080" aria-pressed="false">Instagram</button>
         </div>
-        <div class="ba-card">
+        <div class="ba-card" data-px="0.05">
           <div class="ba-stage">
             <img class="ba-after" src="vestido.webp" alt="El mismo vestido sobre fondo blanco, listo para publicar" width="600" height="800" loading="lazy" decoding="async">
             <img class="ba-before" src="vestido-fiesta.png" alt="Vestido colgado en una fiesta, con fondo cargado y luces de colores" width="600" height="800" loading="lazy" decoding="async">
@@ -537,6 +538,7 @@
 
   <!-- ===== BY THE NUMBERS (banda estática) ===== -->
   <section class="bynum" aria-label="En números">
+    <div class="bynum-glow" data-px="0.12" aria-hidden="true"></div>
     <div class="wrap">
       <p class="bynum-eyebrow">En números</p>
       <div class="bynum-grid">
@@ -942,6 +944,30 @@
       var onPx = function(){ if(!pxTicking){ pxTicking = true; requestAnimationFrame(pxUpdate); } };
       window.addEventListener('scroll', onPx, {passive:true});
       pxUpdate();
+    }
+  }
+
+  // Parallax relativo: cualquier elemento con data-px flota según su posición
+  // en pantalla (funciona en cualquier punto de la página, no solo el hero).
+  if(!reduceMotion){
+    var flEls = [].slice.call(document.querySelectorAll('[data-px]')).map(function(el){
+      return { el: el, speed: parseFloat(el.getAttribute('data-px')) || 0.1 };
+    });
+    if(flEls.length){
+      var flTicking = false;
+      var flUpdate = function(){
+        var vh = window.innerHeight || document.documentElement.clientHeight;
+        flEls.forEach(function(p){
+          var r = p.el.getBoundingClientRect();
+          var off = ((r.top + r.height / 2) - vh / 2) * p.speed;
+          p.el.style.transform = 'translate3d(0,' + off.toFixed(1) + 'px,0)';
+        });
+        flTicking = false;
+      };
+      var onFl = function(){ if(!flTicking){ flTicking = true; requestAnimationFrame(flUpdate); } };
+      window.addEventListener('scroll', onFl, {passive:true});
+      window.addEventListener('resize', flUpdate, {passive:true});
+      flUpdate();
     }
   }
 
