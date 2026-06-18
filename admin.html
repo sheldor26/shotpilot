@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Leads · shotpilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1A1614; --ink-soft:#5C524B; --ink-faint:#8A7F77;
+    --cream:#FBF7F2; --cream-2:#F4ECE2; --white:#FFFFFF; --line:#E9DFD3;
+    --accent:#F4513C; --accent-deep:#D8381F; --accent-tint:#FDE7E2;
+    --radius:14px; --radius-lg:22px;
+    --shadow-sm:0 1px 2px rgba(26,22,20,.06); --shadow-md:0 8px 30px rgba(26,22,20,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Manrope",system-ui,sans-serif;background:var(--cream);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+  h1,h2{font-family:"Space Grotesk","Manrope",sans-serif;letter-spacing:-.02em;font-weight:700}
+  a{color:var(--accent-deep);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1100px;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+
+  /* ---- Login ---- */
+  .gate{min-height:100dvh;display:grid;place-items:center;padding:1.2rem}
+  .gate-card{width:100%;max-width:380px;background:var(--white);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);padding:2rem 1.6rem;text-align:center}
+  .gate-card h1{font-size:1.5rem;margin-bottom:.3rem}
+  .gate-card p{color:var(--ink-soft);font-size:.95rem;margin-bottom:1.4rem}
+  .gate-card input{width:100%;padding:.8rem .9rem;border:1.5px solid var(--line);border-radius:var(--radius);font:inherit;font-size:1rem;margin-bottom:.8rem;background:var(--cream)}
+  .gate-card input:focus{outline:none;border-color:var(--accent)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;font-family:"Manrope",sans-serif;font-weight:700;font-size:1rem;padding:.75rem 1.2rem;border-radius:999px;border:none;cursor:pointer;transition:transform .15s,background .2s,border-color .2s}
+  .btn-primary{background:var(--accent);color:#fff;width:100%}
+  .btn-primary:hover{background:var(--accent-deep);transform:translateY(-1px)}
+  .btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+  .btn-ghost:hover{border-color:var(--ink)}
+  .err{color:var(--accent-deep);font-size:.9rem;font-weight:600;min-height:1.2em;margin-top:.2rem}
+
+  /* ---- Panel ---- */
+  .top{display:flex;flex-wrap:wrap;align-items:center;gap:1rem;justify-content:space-between;margin-bottom:1.4rem}
+  .top h1{font-size:1.6rem}
+  .top .count{color:var(--ink-soft);font-weight:600;font-size:.95rem}
+  .tools{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+  .tools input[type=search]{padding:.55rem .8rem;border:1.5px solid var(--line);border-radius:999px;font:inherit;font-size:.92rem;background:var(--white);min-width:180px}
+  .tools input[type=search]:focus{outline:none;border-color:var(--accent)}
+  .tools .btn{padding:.55rem 1rem;font-size:.9rem}
+
+  .table-card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:auto}
+  table{width:100%;border-collapse:collapse;font-size:.92rem}
+  thead th{text-align:left;font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:.78rem;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-faint);padding:.85rem 1rem;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--cream-2)}
+  tbody td{padding:.8rem 1rem;border-bottom:1px solid var(--line);vertical-align:top}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:var(--cream)}
+  .c-date{white-space:nowrap;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+  .c-name{font-weight:700}
+  .c-msg{color:var(--ink-soft);max-width:320px}
+  .tag{display:inline-block;font-size:.72rem;font-weight:700;padding:.18rem .5rem;border-radius:999px;background:var(--accent-tint);color:var(--accent-deep);white-space:nowrap}
+  .lang{display:inline-block;font-size:.7rem;font-weight:700;padding:.15rem .45rem;border-radius:6px;border:1px solid var(--line);color:var(--ink-faint);text-transform:uppercase}
+  .empty{padding:3rem 1rem;text-align:center;color:var(--ink-soft)}
+  .hidden{display:none!important}
+  @media(max-width:560px){ .c-msg{max-width:160px} .top h1{font-size:1.35rem} }
+</style>
+</head>
+<body>
+
+<!-- ===== Login ===== -->
+<div class="gate" id="gate">
+  <form class="gate-card" id="gate-form">
+    <h1>Panel de leads</h1>
+    <p>Ingresá la contraseña para ver los contactos.</p>
+    <input type="password" id="token" placeholder="Contraseña" autocomplete="current-password" autofocus>
+    <button type="submit" class="btn btn-primary">Entrar</button>
+    <p class="err" id="gate-err"></p>
+  </form>
+</div>
+
+<!-- ===== Panel ===== -->
+<main class="wrap hidden" id="panel">
+  <div class="top">
+    <div>
+      <h1>Leads</h1>
+      <span class="count" id="count">—</span>
+    </div>
+    <div class="tools">
+      <input type="search" id="search" placeholder="Buscar nombre o email…">
+      <button class="btn btn-ghost" id="csv">Exportar CSV</button>
+      <button class="btn btn-ghost" id="logout">Salir</button>
+    </div>
+  </div>
+  <div class="table-card">
+    <table id="table">
+      <thead>
+        <tr><th>Fecha</th><th>Nombre</th><th>Email</th><th>Vende</th><th>Mensaje</th><th>Idioma</th></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty hidden" id="empty">Todavía no hay leads. Cuando alguien complete el formulario, aparece acá.</div>
+  </div>
+</main>
+
+<script>
+(function(){
+  var KEY = 'sp_admin_token';
+  var gate = document.getElementById('gate');
+  var panel = document.getElementById('panel');
+  var gateForm = document.getElementById('gate-form');
+  var gateErr = document.getElementById('gate-err');
+  var rowsEl = document.getElementById('rows');
+  var countEl = document.getElementById('count');
+  var emptyEl = document.getElementById('empty');
+  var searchEl = document.getElementById('search');
+  var all = [];
+
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  function fmtDate(iso){
+    try{
+      var d = new Date(iso);
+      return d.toLocaleString('es-AR', {day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+    }catch(_){ return iso || '—'; }
+  }
+
+  function render(list){
+    rowsEl.innerHTML = '';
+    if(!list.length){ emptyEl.classList.remove('hidden'); return; }
+    emptyEl.classList.add('hidden');
+    list.forEach(function(l){
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td class="c-date">' + esc(fmtDate(l.created_at)) + '</td>' +
+        '<td class="c-name">' + (esc(l.name) || '—') + '</td>' +
+        '<td><a href="mailto:' + esc(l.email) + '">' + esc(l.email) + '</a></td>' +
+        '<td>' + (l.sells ? '<span class="tag">' + esc(l.sells) + '</span>' : '—') + '</td>' +
+        '<td class="c-msg">' + (esc(l.msg) || '—') + '</td>' +
+        '<td>' + (l.lang ? '<span class="lang">' + esc(l.lang) + '</span>' : '—') + '</td>';
+      rowsEl.appendChild(tr);
+    });
+  }
+
+  function applySearch(){
+    var q = searchEl.value.trim().toLowerCase();
+    if(!q){ render(all); return; }
+    render(all.filter(function(l){
+      return (String(l.name||'') + ' ' + String(l.email||'')).toLowerCase().indexOf(q) !== -1;
+    }));
+  }
+
+  function toCsv(list){
+    var head = ['fecha','nombre','email','vende','mensaje','idioma'];
+    var rows = list.map(function(l){
+      return [l.created_at, l.name, l.email, l.sells, l.msg, l.lang].map(function(v){
+        var s = String(v == null ? '' : v).replace(/"/g, '""');
+        return '"' + s + '"';
+      }).join(',');
+    });
+    return head.join(',') + '\n' + rows.join('\n');
+  }
+
+  function load(token){
+    return fetch('/api/leads', { headers: { Authorization: 'Bearer ' + token } })
+      .then(function(r){
+        if(r.status === 401) throw new Error('unauthorized');
+        if(!r.ok) throw new Error('server');
+        return r.json();
+      })
+      .then(function(d){
+        all = (d.leads || []);
+        countEl.textContent = all.length + (all.length === 1 ? ' lead' : ' leads');
+        render(all);
+        gate.classList.add('hidden');
+        panel.classList.remove('hidden');
+      });
+  }
+
+  // Submit del login
+  gateForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    gateErr.textContent = '';
+    var token = document.getElementById('token').value.trim();
+    if(!token) return;
+    load(token)
+      .then(function(){ sessionStorage.setItem(KEY, token); })
+      .catch(function(err){
+        gateErr.textContent = err.message === 'unauthorized'
+          ? 'Contraseña incorrecta.'
+          : 'No se pudo cargar. Probá de nuevo.';
+      });
+  });
+
+  document.getElementById('logout').addEventListener('click', function(){
+    sessionStorage.removeItem(KEY);
+    location.reload();
+  });
+
+  document.getElementById('csv').addEventListener('click', function(){
+    var blob = new Blob([toCsv(all)], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'leads-shotpilot.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  searchEl.addEventListener('input', applySearch);
+
+  // Auto-login si ya hay token guardado en esta sesión
+  var saved = sessionStorage.getItem(KEY);
+  if(saved){
+    load(saved).catch(function(){ sessionStorage.removeItem(KEY); });
+  }
+})();
+</script>
+</body>
+</html>
