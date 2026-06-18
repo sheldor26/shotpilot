@@ -412,7 +412,15 @@
   }
 
   /* ---------- chat de dudas frecuentes ---------- */
-  .cw-toggle{position:fixed;right:20px;bottom:20px;z-index:60;width:56px;height:56px;border-radius:50%;border:0;cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 12px 30px -8px rgba(244,81,60,.55);display:grid;place-items:center;transition:transform .2s var(--ease)}
+  /* barra CTA fija en mobile (aparece al pasar el hero) */
+  .mcta{display:none}
+  @media(max-width:760px){
+    .mcta{display:block;position:fixed;left:0;right:0;bottom:0;z-index:54;padding:.7rem clamp(16px,4vw,20px);padding-bottom:calc(.7rem + env(safe-area-inset-bottom));background:rgba(251,247,242,.93);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--line);box-shadow:0 -8px 24px -12px rgba(40,24,16,.18);transform:translateY(125%);transition:transform .32s var(--ease)}
+    .mcta.show{transform:translateY(0)}
+    .mcta .btn{width:100%}
+    .cta-on .cw-toggle{bottom:calc(82px + env(safe-area-inset-bottom))}
+  }
+  .cw-toggle{position:fixed;right:20px;bottom:20px;z-index:60;width:56px;height:56px;border-radius:50%;border:0;cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 12px 30px -8px rgba(244,81,60,.55);display:grid;place-items:center;transition:transform .2s var(--ease),bottom .3s var(--ease)}
   .cw-toggle:hover{transform:translateY(-2px) scale(1.04)}
   .cw-toggle svg{width:26px;height:26px}
   .cw-toggle .cw-ic-close{display:none}
@@ -883,6 +891,19 @@
     });
   })();
 
+  // Barra CTA fija en mobile: aparece al pasar el hero
+  (function(){
+    var bar = document.querySelector('.mcta');
+    if(!bar) return;
+    var onS = function(){
+      var show = window.scrollY > 620;
+      bar.classList.toggle('show', show);
+      document.body.classList.toggle('cta-on', show);
+    };
+    window.addEventListener('scroll', onS, {passive:true});
+    onS();
+  })();
+
   var chips = document.querySelectorAll('.plat-select .chip');
   var sizeEl = document.getElementById('ba-size');
   chips.forEach(function(c){
@@ -1051,6 +1072,10 @@
     <svg class="cw-ic-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
   </button>
 </div>
+  <div class="mcta">
+    <a href="/editor.html" class="btn btn-primary">Probá gratis · 5 fotos</a>
+  </div>
+
   <!-- Vercel Web Analytics (activar en el dashboard de Vercel → Analytics) -->
   <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
   <script defer src="/_vercel/insights/script.js"></script>
