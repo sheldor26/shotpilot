@@ -4,7 +4,7 @@
 //   SUPABASE_SERVICE_ROLE_KEY  → service_role key (Supabase → Settings → API)
 //   BREVO_API_KEY              → clave de Brevo (Brevo → SMTP & API → API Keys)
 //   MAIL_FROM_EMAIL (opcional) → remitente; default "hola@shotpilot.app"
-//   MAIL_FROM_NAME  (opcional) → nombre del remitente; default "shotpilot"
+//   MAIL_FROM_NAME  (opcional) → nombre del remitente; default "Shotpilot"
 //   MAIL_REPLY_TO   (opcional) → a dónde van las respuestas del lead (tu mail real)
 export const config = { runtime: 'edge' };
 
@@ -61,7 +61,7 @@ async function sendWelcome({ name, email, lang }) {
   if (!apiKey) return; // sin clave, no mandamos nada (el lead ya está guardado)
 
   const fromEmail = (process.env.MAIL_FROM_EMAIL || 'hola@shotpilot.app').trim();
-  const fromName = (process.env.MAIL_FROM_NAME || 'shotpilot').trim();
+  const fromName = (process.env.MAIL_FROM_NAME || 'Shotpilot').trim();
   const replyTo = (process.env.MAIL_REPLY_TO || '').trim() || undefined;
   const firstName = (name || '').split(' ')[0];
   const copy = welcomeCopy(lang, firstName);
@@ -91,64 +91,94 @@ function welcomeCopy(lang, firstName) {
     const hi = firstName ? `Hi ${firstName},` : 'Hi,';
     const editorUrl = 'https://shotpilot.app/editor.html?lang=en';
     return {
-      subject: 'Your 5 free photos are ready — shotpilot',
+      subject: 'Your 5 free photos are ready — Shotpilot',
       text:
         `${hi}\n\n` +
         `You're in. Filling out the form is all it takes — your first 5 photos are free, no card needed.\n\n` +
         `Redeem them here:\n` +
         `${editorUrl}\n\n` +
-        `Snap the photo with your phone and we send it back on a clean white background, ` +
-        `sized for wherever you sell. You never open an editor.\n\n` +
-        `Any questions, just reply to this email.\n\n` +
-        `Cheers,\nJuan — shotpilot`,
+        `How it works:\n` +
+        `1. Snap the photo with your phone.\n` +
+        `2. We send it back on a clean white background, sized for wherever you sell.\n` +
+        `3. Download it, ready to post. You never open an editor.\n\n` +
+        `Any questions, just reply to this email — a real person reads it.\n\n` +
+        `Cheers,\nJuan — Shotpilot`,
       html: emailHtml({
+        lang: 'en',
+        preheader: 'Your first 5 photos are free — no card needed. Redeem them whenever you want.',
         greeting: hi,
         heading: 'Your 5 free photos are ready',
         lead: `You're in. Filling out the form is all it takes — your first <strong style="color:#1A1614;">5 photos are free</strong>, no card needed.`,
         cta: 'Upload my first photo',
         editorUrl,
-        body: `Snap the photo with your phone and we send it back on a clean white background, sized for wherever you sell. You never open an editor.`,
-        reply: 'Any questions, just reply to this email.',
+        stepsTitle: 'How it works',
+        steps: [
+          'Snap the photo with your phone.',
+          'We send it back on a clean white background, sized for wherever you sell.',
+          'Download it, ready to post. You never open an editor.',
+        ],
+        reply: 'Any questions, just reply to this email — a real person reads it.',
         signoff: 'Cheers,',
         tagline: 'Product photos on autopilot',
+        footerNote: 'You\'re getting this because you signed up at shotpilot.app.',
       }),
     };
   }
   const hola = firstName ? `Hola ${firstName},` : 'Hola,';
   const editorUrl = 'https://shotpilot.app/editor.html';
   return {
-    subject: 'Tus 5 fotos gratis ya están listas — shotpilot',
+    subject: 'Tus 5 fotos gratis ya están listas — Shotpilot',
     text:
       `${hola}\n\n` +
       `Listo, quedaste registrado. Con completar el formulario ya tenés tus primeras 5 fotos gratis, sin tarjeta.\n\n` +
       `Usalas acá:\n` +
       `${editorUrl}\n\n` +
-      `Sacás la foto con el celular y te la devolvemos con fondo blanco, en la medida exacta ` +
-      `de donde vendas. Vos no tocás ningún editor.\n\n` +
-      `Cualquier duda, respondé este mail.\n\n` +
-      `Abrazo,\nJuan — shotpilot`,
+      `Cómo funciona:\n` +
+      `1. Sacás la foto con el celular.\n` +
+      `2. Te la devolvemos con fondo blanco, en la medida exacta de donde vendas.\n` +
+      `3. La descargás lista para publicar. Vos no tocás ningún editor.\n\n` +
+      `Cualquier duda, respondé este mail — lo lee una persona de verdad.\n\n` +
+      `Abrazo,\nJuan — Shotpilot`,
     html: emailHtml({
+      lang: 'es',
+      preheader: 'Tus primeras 5 fotos son gratis, sin tarjeta. Usalas cuando quieras.',
       greeting: hola,
       heading: 'Tus 5 fotos gratis ya están listas',
       lead: `Listo, quedaste registrado. Con completar el formulario ya tenés tus primeras <strong style="color:#1A1614;">5 fotos gratis</strong>, sin tarjeta.`,
       cta: 'Subir mi primera foto',
       editorUrl,
-      body: `Sacás la foto con el celular y te la devolvemos con fondo blanco, en la medida exacta de donde vendas. Vos no tocás ningún editor.`,
-      reply: 'Cualquier duda, respondé este mail.',
+      stepsTitle: 'Cómo funciona',
+      steps: [
+        'Sacás la foto con el celular.',
+        'Te la devolvemos con fondo blanco, en la medida exacta de donde vendas.',
+        'La descargás lista para publicar. Vos no tocás ningún editor.',
+      ],
+      reply: 'Cualquier duda, respondé este mail — lo lee una persona de verdad.',
       signoff: 'Un abrazo,',
       tagline: 'Fotos de producto en piloto automático',
+      footerNote: 'Recibís este mail porque te registraste en shotpilot.app.',
     }),
   };
 }
 
 // Plantilla HTML del mail (tablas + estilos inline = compatible con Gmail/Outlook).
 function emailHtml(c) {
+  const steps = (c.steps || [])
+    .map(
+      (s, i) =>
+        `<tr><td valign="top" style="padding:0 12px 12px 0;width:28px;">` +
+        `<table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" valign="middle" style="width:26px;height:26px;border-radius:999px;background:#FCE9E4;font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;font-weight:800;color:#D8381F;line-height:26px;">${i + 1}</td></tr></table>` +
+        `</td><td valign="middle" style="padding:0 0 12px 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.5;color:#5C524B;">${s}</td></tr>`
+    )
+    .join('');
+
   return `<!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="x-ua-compatible" content="ie=edge"></head>
+<html lang="${c.lang || 'es'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"></head>
 <body style="margin:0;padding:0;background:#FBF7F2;">
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#FBF7F2;opacity:0;">${c.preheader || ''}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FBF7F2;"><tr><td align="center" style="padding:32px 16px;">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#FFFFFF;border:1px solid #E9DFD3;border-radius:16px;">
-<tr><td style="padding:28px 32px 0 32px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:20px;font-weight:800;color:#1A1614;letter-spacing:-0.02em;">shotpilot<span style="color:#F4513C;">.</span></td></tr>
+<tr><td style="padding:28px 32px 0 32px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:20px;font-weight:800;color:#1A1614;letter-spacing:-0.02em;">Shotpilot<span style="color:#F4513C;">.</span></td></tr>
 <tr><td style="padding:20px 32px 4px 32px;font-family:'Helvetica Neue',Arial,sans-serif;">
 <h1 style="margin:0 0 18px 0;font-size:24px;line-height:1.25;color:#1A1614;font-weight:800;letter-spacing:-0.02em;">${c.heading}</h1>
 <p style="margin:0 0 14px 0;font-size:16px;line-height:1.6;color:#5C524B;">${c.greeting}</p>
@@ -160,12 +190,18 @@ function emailHtml(c) {
 </td></tr></table>
 </td></tr>
 <tr><td style="padding:0 32px 8px 32px;font-family:'Helvetica Neue',Arial,sans-serif;">
-<p style="margin:0 0 18px 0;font-size:16px;line-height:1.6;color:#5C524B;">${c.body}</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FBF7F2;border:1px solid #EFE6DA;border-radius:12px;"><tr><td style="padding:20px 22px 8px 22px;">
+<p style="margin:0 0 14px 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:#8A7F77;">${c.stepsTitle}</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${steps}</table>
+</td></tr></table>
+</td></tr>
+<tr><td style="padding:18px 32px 8px 32px;font-family:'Helvetica Neue',Arial,sans-serif;">
 <p style="margin:0 0 26px 0;font-size:16px;line-height:1.6;color:#5C524B;">${c.reply}</p>
-<p style="margin:0;font-size:16px;line-height:1.6;color:#1A1614;">${c.signoff}<br><strong>Juan</strong> &mdash; shotpilot</p>
+<p style="margin:0;font-size:16px;line-height:1.6;color:#1A1614;">${c.signoff}<br><strong>Juan</strong> &mdash; Shotpilot</p>
 </td></tr>
 <tr><td style="padding:24px 32px;border-top:1px solid #E9DFD3;font-family:'Helvetica Neue',Arial,sans-serif;">
-<p style="margin:0;font-size:13px;line-height:1.5;color:#8A7F77;">shotpilot &middot; ${c.tagline}<br><a href="https://shotpilot.app" style="color:#D8381F;text-decoration:none;">shotpilot.app</a></p>
+<p style="margin:0 0 6px 0;font-size:13px;line-height:1.5;color:#8A7F77;">Shotpilot &middot; ${c.tagline}<br><a href="https://shotpilot.app" style="color:#D8381F;text-decoration:none;">shotpilot.app</a></p>
+<p style="margin:0;font-size:12px;line-height:1.5;color:#B0A79E;">${c.footerNote}</p>
 </td></tr>
 </table></td></tr></table>
 </body></html>`;
