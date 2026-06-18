@@ -65,6 +65,10 @@ async function sendWelcome({ name, email, lang }) {
   const firstName = (name || '').split(' ')[0];
   const copy = welcomeCopy(lang, firstName);
 
+  // DIAGNÓSTICO TEMPORAL: muestra el prefijo y largo de la key (no la clave entera)
+  // y el remitente, para detectar pegados mal / tipo de key equivocado. Sacar luego.
+  console.log('brevo-diag: keyPrefix=' + apiKey.slice(0, 9) + ' keyLen=' + apiKey.length + ' from=' + fromEmail);
+
   const body = {
     sender: { name: fromName, email: fromEmail },
     to: [{ email, name: name || undefined }],
