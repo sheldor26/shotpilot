@@ -454,6 +454,51 @@
   .faq-item summary .faq-ic{flex:0 0 auto;width:22px;height:22px;color:var(--accent);transition:transform .25s ease}
   .faq-item[open] summary .faq-ic{transform:rotate(45deg)}
   .faq-item .faq-a{padding:0 1.2rem 1.15rem;color:var(--ink-soft);line-height:1.6;max-width:62ch}
+
+  /* ---------- demo magnet (probalo con tu foto → email gate) ---------- */
+  #probar{background:var(--cream-2)}
+  .demo-card{max-width:560px;margin:var(--space-4) auto 0;background:var(--white);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);padding:clamp(1.1rem,4vw,1.6rem)}
+  .demo .hidden{display:none!important}
+  .demo .drop{display:block;border:2px dashed var(--line);border-radius:var(--radius);padding:clamp(2rem,9vw,3.2rem) 1.5rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
+  .demo .drop:hover,.demo .drop.over{border-color:var(--accent);background:var(--accent-tint)}
+  .demo .drop .ic{width:54px;height:54px;border-radius:14px;background:var(--accent-tint);color:var(--accent);display:grid;place-items:center;margin:0 auto .9rem}
+  .demo .drop .ic svg{width:26px;height:26px}
+  .demo .drop h3{font-size:1.2rem;margin-bottom:.3rem}
+  .demo .drop p{color:var(--ink-faint);font-size:.9rem}
+  .demo .drop input{display:none}
+  .demo .proc{text-align:center;padding:2rem 1rem}
+  .demo .scanbox{position:relative;width:min(240px,70%);aspect-ratio:3/4;margin:0 auto 1.2rem;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#f3ece2}
+  .demo .scanbox img{width:100%;height:100%;object-fit:cover}
+  .demo .scanbox .ln{position:absolute;top:0;bottom:0;left:0;width:3px;transform:translateX(-50%);background:linear-gradient(180deg,rgba(244,81,60,0),var(--accent) 50%,rgba(244,81,60,0));box-shadow:0 0 16px 3px rgba(244,81,60,.6);animation:demo-scan 1.5s ease-in-out infinite}
+  @keyframes demo-scan{0%{left:0}50%{left:100%}100%{left:0}}
+  .demo .proc p{color:var(--ink-soft);font-weight:500}
+  .demo .compare{position:relative;aspect-ratio:1;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#fff;user-select:none;touch-action:none;cursor:ew-resize}
+  .demo .cmp-layer{position:absolute;inset:0;width:100%;height:100%}
+  .demo .cmp-after{background:#fff;display:grid;place-items:center}
+  .demo .cmp-after img{width:100%;height:100%;object-fit:contain;padding:4%}
+  .demo .cmp-before{object-fit:contain;background:#fff;clip-path:inset(0 calc(100% - var(--x,50%)) 0 0)}
+  .demo .cmp-tag{position:absolute;top:.6rem;z-index:4;font-size:.66rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#fff;padding:.24rem .55rem;border-radius:999px}
+  .demo .cmp-tag.tl{left:.6rem;background:rgba(26,22,20,.55)}
+  .demo .cmp-tag.tr{right:.6rem;background:var(--accent)}
+  .demo .cmp-divider{position:absolute;top:0;bottom:0;left:var(--x,50%);width:2px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.08);z-index:5}
+  .demo .cmp-knob{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;background:#fff;box-shadow:var(--shadow-md);display:grid;place-items:center;color:var(--ink)}
+  .demo .cmp-knob svg{width:20px;height:20px}
+  /* marca de agua sobre el resultado hasta destrabar con email */
+  .demo .cmp-after::after{content:"shotpilot · vista previa";position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:1rem;letter-spacing:.04em;color:rgba(26,22,20,.18);transform:rotate(-18deg);background:repeating-linear-gradient(-18deg,transparent,transparent 38px,rgba(26,22,20,.045) 38px,rgba(26,22,20,.045) 76px);pointer-events:none;z-index:3}
+  .demo-card.locked .cmp-after::after{display:flex}
+  /* gate de email */
+  .demo-gate{margin-top:1.2rem}
+  .demo-gate-row{display:flex;gap:.6rem;flex-wrap:wrap}
+  .demo-gate input[type=email]{flex:1;min-width:200px;font-family:inherit;font-size:1rem;color:var(--ink);padding:.8rem .95rem;border:1.5px solid var(--line);border-radius:12px;background:var(--cream);transition:border-color .2s,box-shadow .2s}
+  .demo-gate input[type=email]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-tint);background:#fff}
+  .demo-gate .btn{flex:none}
+  .demo-gate p{font-size:.82rem;color:var(--ink-faint);margin-top:.6rem}
+  .demo-dl{margin-top:1.2rem;display:flex;gap:.7rem;flex-wrap:wrap}
+  .demo-dl .btn{flex:1;min-width:160px}
+  .demo-unlocked{margin-top:.9rem;font-size:.9rem;color:var(--ink-soft);text-align:center}
+  .demo .err{background:var(--accent-tint);border:1px solid #f3c6bd;color:var(--accent-deep);border-radius:14px;padding:.85rem 1rem;font-size:.9rem;font-weight:500;margin-top:1rem}
+  @media(max-width:560px){.demo-gate .btn,.demo-dl .btn{flex:1;min-width:100%}}
+  @media(prefers-reduced-motion:reduce){.demo .scanbox .ln{animation:none;left:50%;opacity:.6}}
 </style>
 <script type="application/ld+json">
 {
@@ -547,6 +592,69 @@
             <span>3 seg</span>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== DEMO MAGNET (probalo con tu foto → email gate) ===== -->
+  <section id="probar" class="demo">
+    <div class="wrap">
+      <div class="section-head reveal" style="margin-inline:auto;text-align:center">
+        <span class="eyebrow" style="justify-content:center">Probalo ahora</span>
+        <h2>Probalo con tu propia foto.</h2>
+        <p style="margin-inline:auto">Subí una foto de tu producto y miralo con fondo blanco al toque. Sin instalar nada, gratis.</p>
+      </div>
+
+      <div class="demo-card reveal d1 locked" id="demo-card">
+        <!-- subir -->
+        <label class="drop" id="demo-drop" for="demo-file">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m6 10 6-6 6 6"/><path d="M4 20h16"/></svg></span>
+          <h3>Arrastrá tu foto o tocá para elegir</h3>
+          <p>JPG o PNG · una foto del celular sirve · la primera puede tardar unos segundos</p>
+          <input type="file" id="demo-file" accept="image/png,image/jpeg,image/webp">
+        </label>
+
+        <!-- procesando -->
+        <div class="proc hidden" id="demo-proc">
+          <div class="scanbox"><img id="demo-proc-img" alt=""><span class="ln" aria-hidden="true"></span></div>
+          <p>Sacando el fondo…</p>
+        </div>
+
+        <!-- resultado -->
+        <div class="result hidden" id="demo-result">
+          <div class="compare" id="demo-compare">
+            <div class="cmp-layer cmp-after"><img id="demo-cutout" alt="Tu producto sobre fondo blanco"></div>
+            <img class="cmp-layer cmp-before" id="demo-before" alt="Tu foto original">
+            <span class="cmp-tag tl">Antes</span>
+            <span class="cmp-tag tr">Después</span>
+            <div class="cmp-divider" id="demo-handle" tabindex="0" role="slider" aria-label="Comparar antes y después" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+              <span class="cmp-knob" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18-6-6 6-6"/><path d="m15 6 6 6-6 6"/></svg></span>
+            </div>
+          </div>
+
+          <!-- gate de email -->
+          <form class="demo-gate" id="demo-gate" novalidate>
+            <div class="demo-gate-row">
+              <input type="email" id="demo-email" placeholder="tu@email.com" autocomplete="email" required aria-label="Tu email">
+              <button type="submit" class="btn btn-primary" id="demo-unlock">Destrabar descarga</button>
+            </div>
+            <input type="text" id="demo-hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden">
+            <p>Te la llevás sin marca de agua + 4 fotos más gratis. Sin tarjeta.</p>
+          </form>
+
+          <!-- descarga (post-unlock) -->
+          <div class="demo-dl hidden" id="demo-dl">
+            <button type="button" class="btn btn-primary" id="demo-download">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M12 4v12"/><path d="m6 12 6 6 6-6"/><path d="M4 20h16"/></svg>
+              Descargar mi foto
+            </button>
+            <a href="/editor.html" class="btn btn-ghost">Seguí con 4 gratis</a>
+          </div>
+          <p class="demo-unlocked hidden" id="demo-unlocked">Listo, te mandamos el acceso por mail. Descargala y seguí en el editor.</p>
+          <button type="button" class="btn btn-ghost" id="demo-another" style="margin-top:.7rem;width:100%">Probar con otra foto</button>
+        </div>
+
+        <div class="err hidden" id="demo-err"></div>
       </div>
     </div>
   </section>
@@ -979,6 +1087,143 @@
     };
     window.addEventListener('scroll', onS, {passive:true});
     onS();
+  })();
+
+  // ----- Demo magnet: probá con tu foto → email destraba la descarga -----
+  (function(){
+    var card = document.getElementById('demo-card');
+    if(!card) return;
+    var drop = document.getElementById('demo-drop'), file = document.getElementById('demo-file');
+    var proc = document.getElementById('demo-proc'), procImg = document.getElementById('demo-proc-img');
+    var result = document.getElementById('demo-result'), err = document.getElementById('demo-err');
+    var compare = document.getElementById('demo-compare'), handle = document.getElementById('demo-handle');
+    var before = document.getElementById('demo-before'), cutoutImg = document.getElementById('demo-cutout');
+    var gate = document.getElementById('demo-gate'), dl = document.getElementById('demo-dl'), unlockedMsg = document.getElementById('demo-unlocked');
+    var MAX = 1600;
+    var cutout = null, box = null, cutoutUrl = null, originalUrl = null, unlocked = false;
+
+    function show(state){
+      drop.classList.toggle('hidden', state !== 'drop');
+      proc.classList.toggle('hidden', state !== 'proc');
+      result.classList.toggle('hidden', state !== 'result');
+      if(state !== 'err') err.classList.add('hidden');
+    }
+    function showErr(m){ err.textContent = m; err.classList.remove('hidden'); }
+
+    ;['dragenter','dragover'].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add('over'); }); });
+    ;['dragleave','drop'].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove('over'); }); });
+    drop.addEventListener('drop', function(e){ var f = e.dataTransfer.files[0]; if(f) handleFile(f); });
+    file.addEventListener('change', function(e){ var f = e.target.files[0]; if(f) handleFile(f); });
+
+    function resizeForUpload(f){
+      return new Promise(function(resolve, reject){
+        var img = new Image();
+        img.onload = function(){
+          var w = img.width, h = img.height, scale = Math.min(1, MAX / Math.max(w, h));
+          w = Math.round(w * scale); h = Math.round(h * scale);
+          var c = document.createElement('canvas'); c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          c.toBlob(function(b){ b ? resolve(b) : reject(new Error('resize')); }, 'image/jpeg', 0.92);
+        };
+        img.onerror = function(){ reject(new Error('No pudimos leer la imagen.')); };
+        img.src = URL.createObjectURL(f);
+      });
+    }
+    function computeBox(img){
+      var w = img.naturalWidth, h = img.naturalHeight;
+      var c = document.createElement('canvas'); c.width = w; c.height = h;
+      var x = c.getContext('2d'); x.drawImage(img, 0, 0);
+      var data; try{ data = x.getImageData(0, 0, w, h).data; }catch(_){ return { x:0, y:0, w:w, h:h }; }
+      var step = Math.max(1, Math.floor(Math.max(w, h) / 600));
+      var minX = w, minY = h, maxX = 0, maxY = 0, found = false;
+      for(var yy = 0; yy < h; yy += step){ for(var xx = 0; xx < w; xx += step){
+        if(data[(yy * w + xx) * 4 + 3] > 12){ found = true; if(xx < minX) minX = xx; if(xx > maxX) maxX = xx; if(yy < minY) minY = yy; if(yy > maxY) maxY = yy; }
+      }}
+      if(!found) return { x:0, y:0, w:w, h:h };
+      return { x:minX, y:minY, w:(maxX - minX + 1), h:(maxY - minY + 1) };
+    }
+    function loadCutout(blob){
+      return new Promise(function(resolve, reject){
+        if(cutoutUrl) URL.revokeObjectURL(cutoutUrl);
+        cutoutUrl = URL.createObjectURL(blob);
+        var img = new Image();
+        img.onload = function(){ cutout = img; box = computeBox(img); resolve(); };
+        img.onerror = function(){ reject(new Error('No pudimos leer la imagen.')); };
+        img.src = cutoutUrl;
+      });
+    }
+    function resetGate(){
+      unlocked = false; card.classList.add('locked');
+      gate.classList.remove('hidden'); dl.classList.add('hidden'); unlockedMsg.classList.add('hidden');
+      var btn = document.getElementById('demo-unlock'); if(btn) btn.disabled = false;
+    }
+    function handleFile(f){
+      if(!/^image\/(png|jpe?g|webp)$/.test(f.type)){ show('drop'); showErr('Subí una imagen JPG o PNG.'); return; }
+      if(originalUrl) URL.revokeObjectURL(originalUrl);
+      originalUrl = URL.createObjectURL(f); procImg.src = originalUrl; show('proc');
+      resizeForUpload(f)
+        .then(function(blob){ return fetch('/api/convert', { method:'POST', headers:{ 'Content-Type':'image/jpeg' }, body: blob }); })
+        .then(function(resp){
+          if(!resp.ok){ return resp.json().catch(function(){ return {}; }).then(function(j){ throw new Error(j.error === 'missing_api_key' ? 'Falta configurar la API key en el servidor.' : 'No pudimos procesar la foto. Probá de nuevo en un momento.'); }); }
+          return resp.blob();
+        })
+        .then(function(blob){ return loadCutout(blob); })
+        .then(function(){
+          before.src = originalUrl; cutoutImg.src = cutoutUrl;
+          compare.style.setProperty('--x', '50%'); handle.setAttribute('aria-valuenow', '50');
+          resetGate();
+          if(window.va) window.va('event', { name:'demo_convert' });
+          show('result');
+        })
+        .catch(function(e){ show('drop'); showErr((e && e.message) || 'No pudimos procesar la foto. Probá de nuevo en un momento.'); });
+    }
+
+    // slider arrastrable
+    var dragging = false;
+    function setX(clientX){ var r = compare.getBoundingClientRect(); var p = Math.max(0, Math.min(100, ((clientX - r.left) / r.width) * 100)); compare.style.setProperty('--x', p + '%'); handle.setAttribute('aria-valuenow', Math.round(p)); }
+    compare.addEventListener('pointerdown', function(e){ dragging = true; try{ compare.setPointerCapture(e.pointerId); }catch(_){} setX(e.clientX); });
+    compare.addEventListener('pointermove', function(e){ if(dragging) setX(e.clientX); });
+    compare.addEventListener('pointerup', function(){ dragging = false; });
+    compare.addEventListener('pointercancel', function(){ dragging = false; });
+    handle.addEventListener('keydown', function(e){
+      var cur = parseFloat(compare.style.getPropertyValue('--x')) || 50;
+      if(e.key === 'ArrowLeft'){ e.preventDefault(); var v = Math.max(0, cur - 4); compare.style.setProperty('--x', v + '%'); handle.setAttribute('aria-valuenow', Math.round(v)); }
+      if(e.key === 'ArrowRight'){ e.preventDefault(); var v2 = Math.min(100, cur + 4); compare.style.setProperty('--x', v2 + '%'); handle.setAttribute('aria-valuenow', Math.round(v2)); }
+    });
+
+    // componer cuadrado centrado sobre blanco (para la descarga, limpio)
+    function compose(size){
+      var c = document.createElement('canvas'); c.width = size; c.height = size;
+      var ctx = c.getContext('2d'); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, size, size);
+      if(cutout && box){ var pad = 0.82, scale = (size * pad) / Math.max(box.w, box.h), w = box.w * scale, h = box.h * scale, dx = (size - w) / 2, dy = (size - h) / 2; ctx.drawImage(cutout, box.x, box.y, box.w, box.h, dx, dy, w, h); }
+      return c;
+    }
+
+    // gate de email → guarda el lead en /api/contact y destraba la descarga
+    gate.addEventListener('submit', function(e){
+      e.preventDefault();
+      var emailEl = document.getElementById('demo-email');
+      var email = emailEl.value.trim();
+      var hp = document.getElementById('demo-hp').value;
+      if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ if(emailEl.reportValidity) emailEl.reportValidity(); return; }
+      var btn = document.getElementById('demo-unlock'); if(btn) btn.disabled = true;
+      fetch('/api/contact', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ email: email, msg: 'Probó la demo en la landing (mail magnet)', website: hp, lang: 'es' }) })
+        .then(function(r){ if(!r.ok) throw new Error('send'); if(window.va) window.va('event', { name:'lead', source:'magnet' }); unlock(); })
+        .catch(function(){ if(btn) btn.disabled = false; showErr('No pudimos guardar tu email. Probá de nuevo o escribinos a hola@shotpilot.app.'); });
+    });
+    function unlock(){
+      unlocked = true; card.classList.remove('locked');
+      gate.classList.add('hidden'); dl.classList.remove('hidden'); unlockedMsg.classList.remove('hidden'); err.classList.add('hidden');
+    }
+
+    document.getElementById('demo-download').addEventListener('click', function(){
+      if(!unlocked) return;
+      var c = compose(1200);
+      if(window.va) window.va('event', { name:'demo_download' });
+      c.toBlob(function(blob){ var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'shotpilot-1200x1200.jpg'; a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000); }, 'image/jpeg', 0.95);
+    });
+    document.getElementById('demo-another').addEventListener('click', function(){ file.value = ''; show('drop'); });
   })();
 
   var chips = document.querySelectorAll('.plat-select .chip');
