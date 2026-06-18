@@ -165,10 +165,10 @@
   .hero{position:relative;padding-block:clamp(4.5rem,11vw,8.5rem) var(--space-7);overflow:hidden}
   .mesh{position:absolute;inset:-12% 0 0 0;height:128%;z-index:0;background:var(--cream-2);will-change:transform}
   .blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.85;will-change:transform}
-  .blob.b1{width:46vw;height:46vw;max-width:560px;max-height:560px;background:radial-gradient(circle at 30% 30%,var(--m1),transparent 70%);top:-8%;left:-6%;animation:drift1 22s var(--ease) infinite alternate}
-  .blob.b2{width:42vw;height:42vw;max-width:520px;max-height:520px;background:radial-gradient(circle at 50% 50%,var(--m2),transparent 70%);top:-12%;right:-8%;animation:drift2 26s var(--ease) infinite alternate}
-  .blob.b3{width:40vw;height:40vw;max-width:500px;max-height:500px;background:radial-gradient(circle at 50% 50%,var(--m3),transparent 70%);bottom:-18%;left:18%;animation:drift3 28s var(--ease) infinite alternate}
-  .blob.b4{width:30vw;height:30vw;max-width:380px;max-height:380px;background:radial-gradient(circle at 50% 50%,var(--m4),transparent 68%);bottom:-10%;right:6%;animation:drift1 24s var(--ease) infinite alternate-reverse;opacity:.6}
+  .blob.b1{width:46vw;height:46vw;max-width:560px;max-height:560px;background:radial-gradient(circle at 30% 30%,var(--m1),transparent 70%);top:-8%;left:-6%}
+  .blob.b2{width:42vw;height:42vw;max-width:520px;max-height:520px;background:radial-gradient(circle at 50% 50%,var(--m2),transparent 70%);top:-12%;right:-8%}
+  .blob.b3{width:40vw;height:40vw;max-width:500px;max-height:500px;background:radial-gradient(circle at 50% 50%,var(--m3),transparent 70%);bottom:-18%;left:18%}
+  .blob.b4{width:30vw;height:30vw;max-width:380px;max-height:380px;background:radial-gradient(circle at 50% 50%,var(--m4),transparent 68%);bottom:-10%;right:6%;opacity:.6}
   /* grain-free soft top fade so text reads */
   .mesh::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(251,247,242,.1),rgba(251,247,242,.55))}
 
@@ -208,8 +208,8 @@
   .ai-sticker .arr path{fill:none;stroke:var(--accent);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:220;stroke-dashoffset:220;animation:sticker-arrow .75s var(--ease) .85s forwards}
   .ai-sticker .spk{display:inline-flex;align-items:flex-start}
   .ai-sticker .spk svg{fill:var(--accent)}
-  .ai-sticker .s1{width:clamp(14px,3vw,18px);height:auto;animation:twinkle 1.8s ease-in-out infinite}
-  .ai-sticker .s2{width:clamp(9px,2vw,12px);height:auto;align-self:flex-end;margin-left:-2px;animation:twinkle 1.8s ease-in-out .6s infinite}
+  .ai-sticker .s1{width:clamp(14px,3vw,18px);height:auto}
+  .ai-sticker .s2{width:clamp(9px,2vw,12px);height:auto;align-self:flex-end;margin-left:-2px}
   @keyframes sticker-pop{from{opacity:0;transform:rotate(-3deg) scale(.7)}to{opacity:1;transform:rotate(-3deg) scale(1)}}
   @keyframes sticker-arrow{to{stroke-dashoffset:0}}
   @keyframes twinkle{0%,100%{opacity:.45;transform:scale(.82)}50%{opacity:1;transform:scale(1.12)}}
@@ -228,12 +228,12 @@
   .ba-stage{position:relative;aspect-ratio:3/4;border-radius:16px;overflow:hidden;background:#fff;border:1px solid var(--line);cursor:ew-resize;touch-action:none;user-select:none}
   .ba-stage img{position:absolute;inset:0;width:100%;height:100%;display:block}
   .ba-after{object-fit:cover;object-position:50% 42%;z-index:1}
-  .ba-before{object-fit:cover;object-position:50% 42%;z-index:2;will-change:clip-path,opacity;animation:ba-sweep 4.2s linear infinite}
-  .ba-line{position:absolute;top:0;bottom:0;left:0;width:3px;transform:translateX(-50%);z-index:3;opacity:0;will-change:left,opacity;background:linear-gradient(180deg,rgba(226,80,58,0),var(--accent) 12%,#fff 50%,var(--accent) 88%,rgba(226,80,58,0));box-shadow:0 0 18px 3px rgba(226,80,58,.6),0 0 6px 1px rgba(255,255,255,.75);animation:ba-scan 4.2s linear infinite}
+  .ba-before{object-fit:cover;object-position:50% 42%;z-index:2;clip-path:inset(0 0 0 50%)}
+  .ba-line{position:absolute;top:0;bottom:0;left:50%;width:3px;transform:translateX(-50%);z-index:3;opacity:1;background:linear-gradient(180deg,rgba(226,80,58,0),var(--accent) 12%,#fff 50%,var(--accent) 88%,rgba(226,80,58,0));box-shadow:0 0 18px 3px rgba(226,80,58,.6),0 0 6px 1px rgba(255,255,255,.75)}
   .ba-line::after{content:"";position:absolute;top:0;bottom:0;right:1px;width:42px;background:linear-gradient(90deg,rgba(226,80,58,0),rgba(226,80,58,.18));pointer-events:none}
   .ba-stage .tag{position:absolute;top:.7rem;left:.7rem;z-index:4;font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#fff;padding:.28rem .6rem;border-radius:999px}
-  .tag-before{background:rgba(26,22,20,.6);animation:ba-tagout 4.2s linear infinite}
-  .tag-after{background:var(--accent);animation:ba-tagin 4.2s linear infinite}
+  .tag-before{background:rgba(26,22,20,.6);opacity:0}
+  .tag-after{background:var(--accent)}
   .ba-drag{position:absolute;top:0;bottom:0;left:var(--x,50%);width:2px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.1);z-index:6;opacity:0;transition:opacity .2s}
   .ba-knob{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;background:#fff;box-shadow:var(--shadow-md);display:grid;place-items:center;color:var(--ink)}
   .ba-knob svg{width:20px;height:20px}
