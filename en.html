@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>shotpilot — Upload the ugly photo. Download the one that sells.</title>
+<meta name="description" content="White-background product photos, sized exactly for Amazon, Etsy and eBay. Snap it with your phone and download it ready to list.">
+<link rel="icon" type="image/png" href="/logo-shotpilot.png">
+<link rel="apple-touch-icon" href="/logo-shotpilot.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ShotPilot">
+<meta property="og:title" content="shotpilot — Upload the ugly photo. Download the one that sells.">
+<meta property="og:description" content="White-background product photos, sized exactly for Amazon, Etsy and eBay. Snap it with your phone and download it ready to list.">
+<meta property="og:url" content="https://shotpilot.app/en">
+<meta property="og:image" content="https://shotpilot.app/logo-shotpilot.png">
+<meta property="og:image:width" content="500">
+<meta property="og:image:height" content="500">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="shotpilot — Upload the ugly photo. Download the one that sells.">
+<meta name="twitter:description" content="White-background product photos, sized exactly for Amazon, Etsy and eBay.">
+<meta name="twitter:image" content="https://shotpilot.app/logo-shotpilot.png">
+<link rel="canonical" href="https://shotpilot.app/en">
+<link rel="alternate" hreflang="es-AR" href="https://shotpilot.app/">
+<link rel="alternate" hreflang="en" href="https://shotpilot.app/en">
+<link rel="alternate" hreflang="x-default" href="https://shotpilot.app/">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Caveat:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&display=swap" rel="stylesheet">
+
+<style>
+  /* ---------- tokens ---------- */
+  :root{
+    --ink:#1A1614;
+    --ink-soft:#5C524B;
+    --ink-faint:#8A7F77;
+    --cream:#FBF7F2;
+    --cream-2:#F4ECE2;
+    --white:#FFFFFF;
+    --line:#E9DFD3;
+
+    --accent:#F4513C;
+    --accent-deep:#D8381F;
+    --accent-tint:#FDE7E2;
+
+    /* mesh hero colors (warm family — never purple/blue) */
+    --m1:#FF6F52;   /* coral */
+    --m2:#FFB257;   /* amber */
+    --m3:#FF8FA0;   /* rose  */
+    --m4:#E23E78;   /* deep rose */
+
+    --space-1:.5rem;
+    --space-2:1rem;
+    --space-3:1.5rem;
+    --space-4:2.5rem;
+    --space-5:4rem;
+    --space-6:6rem;
+    --space-7:8.5rem;
+
+    --maxw:1140px;
+    --radius:18px;
+    --radius-lg:26px;
+
+    --shadow-sm:0 2px 8px rgba(40,24,16,.06);
+    --shadow-md:0 18px 40px -18px rgba(40,24,16,.28);
+    --shadow-lg:0 40px 80px -30px rgba(40,24,16,.4);
+
+    --ease:cubic-bezier(.22,.61,.36,1);
+  }
+
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;scroll-padding-top:88px;-webkit-text-size-adjust:100%}
+  body{
+    font-family:"Inter",system-ui,-apple-system,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    line-height:1.6;
+    font-size:17px;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,.display{font-family:"Clash Display","Bricolage Grotesque","Inter",sans-serif;line-height:1.04;letter-spacing:-.025em;font-weight:700}
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%;display:block}
+  ::selection{background:var(--accent);color:#fff}
+
+  /* ---------- layout helpers ---------- */
+  .wrap{max-width:var(--maxw);margin-inline:auto;padding-inline:clamp(20px,5vw,40px)}
+  section{padding-block:var(--space-6)}
+  .eyebrow{
+    font-size:.8rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-faint);display:inline-flex;align-items:center;gap:.5rem;
+  }
+  .eyebrow::before{content:"";width:24px;height:2px;background:var(--ink-faint);border-radius:2px}
+  .section-head{max-width:640px;margin-bottom:var(--space-5)}
+  .section-head h2{font-size:clamp(2rem,4.5vw,3.1rem);margin:var(--space-2) 0 var(--space-2)}
+  .section-head p{color:var(--ink-soft);font-size:1.08rem;max-width:52ch}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:.55rem;
+    font-family:"Inter",sans-serif;font-weight:600;font-size:1rem;
+    padding:.85rem 1.5rem;border-radius:999px;border:0;cursor:pointer;
+    transition:transform .25s var(--ease),box-shadow .25s var(--ease),background .2s;
+    white-space:nowrap;
+  }
+  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 10px 24px -10px rgba(216,56,31,.7)}
+  .btn-primary:hover{background:var(--accent-deep);transform:translateY(-2px);box-shadow:0 16px 30px -10px rgba(216,56,31,.75)}
+  .btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+  .btn-ghost:hover{border-color:var(--ink);transform:translateY(-2px)}
+  .btn-lg{padding:1.05rem 2rem;font-size:1.08rem}
+  .text-link{font-weight:600;font-size:1rem;color:var(--ink-soft);border-bottom:1.5px solid var(--line);padding-bottom:2px;transition:color .2s,border-color .2s}
+  .text-link:hover{color:var(--ink);border-color:var(--ink)}
+
+  /* ---------- nav ---------- */
+  .nav{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:saturate(150%) blur(14px);
+    -webkit-backdrop-filter:saturate(150%) blur(14px);
+    background:rgba(251,247,242,.72);
+    border-bottom:1px solid transparent;
+    transition:border-color .3s,box-shadow .3s,background .3s;
+  }
+  .nav.scrolled{border-bottom-color:var(--line);box-shadow:var(--shadow-sm);background:rgba(251,247,242,.86)}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);height:72px}
+  .brand{display:flex;align-items:center;gap:.6rem;font-family:"Bricolage Grotesque";font-weight:800;font-size:1.3rem;letter-spacing:-.03em}
+  .brand .mark{width:34px;height:34px;border-radius:10px;flex:none;background:#fff no-repeat url("/logo-shotpilot.png");background-size:182%;background-position:50% 20%}
+  .nav-links{display:none;gap:var(--space-3);align-items:center}
+  .nav-links a{font-size:.96rem;font-weight:500;color:var(--ink-soft);position:relative;padding:.3rem 0;transition:color .2s}
+  .nav-links a::after{content:"";position:absolute;left:0;bottom:-2px;width:0;height:2px;background:var(--accent);border-radius:2px;transition:width .25s var(--ease)}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a:hover::after{width:100%}
+  .nav-cta{display:flex;align-items:center;gap:.6rem}
+  @media(min-width:760px){.nav-links{display:flex}}
+  @media(max-width:760px){
+    .nav-inner{gap:.5rem;height:64px}
+    .brand{font-size:1.15rem;gap:.45rem}
+    .brand .mark{width:30px;height:30px}
+    .nav-cta{gap:.5rem}
+    .nav-cta .btn-primary{padding:.55rem 1rem;font-size:.9rem}
+    .lang a{padding:.3rem .5rem}
+  }
+  @media(max-width:390px){
+    .nav-inner{gap:.4rem}
+    .brand{font-size:1.05rem}
+    .nav-cta{gap:.4rem}
+    .nav-cta .btn-primary{padding:.5rem .8rem;font-size:.84rem}
+    .lang{font-size:.72rem}
+    .lang a{padding:.28rem .42rem}
+  }
+  /* language switch */
+  .lang{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;overflow:hidden;font-size:.78rem;font-weight:700;letter-spacing:.02em}
+  .lang a{padding:.32rem .62rem;color:var(--ink-faint);transition:background .2s,color .2s}
+  .lang a[aria-current="true"]{background:var(--ink);color:#fff}
+  .lang a:not([aria-current="true"]):hover{color:var(--ink)}
+
+  /* platform selector (hero) */
+  .plat-select{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:var(--space-2)}
+  .chip{font-family:"Inter",sans-serif;font-size:.85rem;font-weight:600;color:var(--ink-soft);background:rgba(255,255,255,.7);border:1.5px solid var(--line);border-radius:999px;padding:.42rem .9rem;cursor:pointer;transition:background .2s var(--ease),color .2s,border-color .2s,transform .2s var(--ease)}
+  .chip:hover{border-color:var(--ink-faint);transform:translateY(-1px)}
+  .chip[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  /* ---------- hero ---------- */
+  .hero{position:relative;padding-block:clamp(4.5rem,11vw,8.5rem) var(--space-7);overflow:hidden}
+  .mesh{position:absolute;inset:-12% 0 0 0;height:128%;z-index:0;background:var(--cream-2);will-change:transform}
+  .blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.85;will-change:transform}
+  .blob.b1{width:46vw;height:46vw;max-width:560px;max-height:560px;background:radial-gradient(circle at 30% 30%,var(--m1),transparent 70%);top:-8%;left:-6%;animation:drift1 22s var(--ease) infinite alternate}
+  .blob.b2{width:42vw;height:42vw;max-width:520px;max-height:520px;background:radial-gradient(circle at 50% 50%,var(--m2),transparent 70%);top:-12%;right:-8%;animation:drift2 26s var(--ease) infinite alternate}
+  .blob.b3{width:40vw;height:40vw;max-width:500px;max-height:500px;background:radial-gradient(circle at 50% 50%,var(--m3),transparent 70%);bottom:-18%;left:18%;animation:drift3 28s var(--ease) infinite alternate}
+  .blob.b4{width:30vw;height:30vw;max-width:380px;max-height:380px;background:radial-gradient(circle at 50% 50%,var(--m4),transparent 68%);bottom:-10%;right:6%;animation:drift1 24s var(--ease) infinite alternate-reverse;opacity:.6}
+  .mesh::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(251,247,242,.1),rgba(251,247,242,.55))}
+
+  @keyframes drift1{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(6%,8%,0) scale(1.12)}}
+  @keyframes drift2{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(-7%,6%,0) scale(1.08)}}
+  @keyframes drift3{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(5%,-7%,0) scale(1.14)}}
+
+  .hero-inner{position:relative;z-index:1;display:grid;gap:var(--space-5);grid-template-columns:1fr;align-items:center}
+  @media(min-width:940px){.hero-inner{grid-template-columns:1.05fr .95fr}}
+
+  .glass{
+    background:rgba(255,255,255,.55);
+    backdrop-filter:blur(18px) saturate(140%);
+    -webkit-backdrop-filter:blur(18px) saturate(140%);
+    border:1px solid rgba(255,255,255,.7);
+    border-radius:var(--radius-lg);
+    padding:clamp(1.75rem,4vw,2.75rem);
+    box-shadow:var(--shadow-md);
+  }
+  .hero h1{font-size:clamp(2.7rem,6.4vw,4.5rem);font-weight:800;letter-spacing:-.04em;line-height:1.02}
+
+  /* hand-drawn underline swash under the headline keyword */
+  .swash{position:relative;display:inline-block;white-space:nowrap}
+  .swash-line{position:absolute;left:-3%;bottom:-.22em;width:106%;height:.4em;overflow:visible;pointer-events:none}
+  .swash-line path{
+    fill:none;stroke:var(--accent);stroke-width:6;stroke-linecap:round;stroke-linejoin:round;
+    stroke-dasharray:240;stroke-dashoffset:240;
+    animation:swash-draw .9s var(--ease) .35s forwards;
+  }
+  @keyframes swash-draw{to{stroke-dashoffset:0}}
+
+  /* hand-drawn "now with AI" sticker */
+  .glass{position:relative}
+  .btn-wrap{position:relative;display:inline-flex;flex-wrap:wrap;align-items:center}
+  .ai-sticker{position:absolute;left:calc(100% + 14px);top:0;bottom:0;display:flex;align-items:center;gap:.25rem;transform:rotate(-3deg);transform-origin:left center;pointer-events:none;white-space:nowrap;font-family:"Caveat",cursive;color:var(--accent);animation:sticker-pop .5s var(--ease) .55s both}
+  .ai-sticker .txt{font-size:clamp(1.15rem,2.6vw,1.45rem);font-weight:700;line-height:1;white-space:nowrap}
+  .ai-sticker .arr{width:clamp(40px,6vw,54px);height:auto;flex:none}
+  .ai-sticker .arr path{fill:none;stroke:var(--accent);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:220;stroke-dashoffset:220;animation:sticker-arrow .75s var(--ease) .85s forwards}
+  .ai-sticker .spk{display:inline-flex;align-items:flex-start}
+  .ai-sticker .spk svg{fill:var(--accent)}
+  .ai-sticker .s1{width:clamp(14px,3vw,18px);height:auto;animation:twinkle 1.8s ease-in-out infinite}
+  .ai-sticker .s2{width:clamp(9px,2vw,12px);height:auto;align-self:flex-end;margin-left:-2px;animation:twinkle 1.8s ease-in-out .6s infinite}
+  @keyframes sticker-pop{from{opacity:0;transform:rotate(-3deg) scale(.7)}to{opacity:1;transform:rotate(-3deg) scale(1)}}
+  @keyframes sticker-arrow{to{stroke-dashoffset:0}}
+  @keyframes twinkle{0%,100%{opacity:.45;transform:scale(.82)}50%{opacity:1;transform:scale(1.12)}}
+  @media(max-width:640px){.ai-sticker{position:static;top:auto;bottom:auto;left:auto;margin-top:.45rem}}
+
+  .hero .hero-sub{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:clamp(1.5rem,3.2vw,2.1rem);letter-spacing:-.02em;line-height:1.1;margin-top:var(--space-2)}
+  .hero .hero-sub .em{color:var(--accent-deep)}
+  .hero .lede{margin-top:var(--space-3);font-size:clamp(1.05rem,2vw,1.22rem);color:var(--ink-soft);max-width:46ch}
+  .hero-actions{position:relative;margin-top:var(--space-4);display:flex;flex-direction:column;align-items:flex-start;gap:1rem}
+  .hero-note{margin-top:var(--space-3);font-size:.9rem;color:var(--ink-faint);display:flex;align-items:center;gap:.5rem}
+  .hero-note svg{width:16px;height:16px;color:var(--accent)}
+
+  /* before/after card */
+  .ba{position:relative}
+  .ba-card{background:var(--white);border-radius:var(--radius-lg);padding:1rem;box-shadow:var(--shadow-lg);border:1px solid var(--line)}
+  .ba-stage{position:relative;aspect-ratio:3/4;border-radius:16px;overflow:hidden;background:#fff;border:1px solid var(--line)}
+  .ba-stage img{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .ba-after{object-fit:cover;object-position:50% 42%;z-index:1}
+  .ba-before{object-fit:cover;object-position:50% 42%;z-index:2;will-change:clip-path,opacity;animation:ba-sweep 4.2s linear infinite}
+  .ba-line{position:absolute;top:0;bottom:0;left:0;width:3px;transform:translateX(-50%);z-index:3;opacity:0;will-change:left,opacity;background:linear-gradient(180deg,rgba(226,80,58,0),var(--accent) 12%,#fff 50%,var(--accent) 88%,rgba(226,80,58,0));box-shadow:0 0 18px 3px rgba(226,80,58,.6),0 0 6px 1px rgba(255,255,255,.75);animation:ba-scan 4.2s linear infinite}
+  .ba-line::after{content:"";position:absolute;top:0;bottom:0;right:1px;width:42px;background:linear-gradient(90deg,rgba(226,80,58,0),rgba(226,80,58,.18));pointer-events:none}
+  .ba-stage .tag{position:absolute;top:.7rem;left:.7rem;z-index:4;font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#fff;padding:.28rem .6rem;border-radius:999px}
+  .tag-before{background:rgba(26,22,20,.6);animation:ba-tagout 4.2s linear infinite}
+  .tag-after{background:var(--accent);animation:ba-tagin 4.2s linear infinite}
+  @keyframes ba-sweep{0%,8%{clip-path:inset(0 0 0 0);opacity:1}48%,66%{clip-path:inset(0 0 0 100%);opacity:1}67%{clip-path:inset(0 0 0 100%);opacity:0}68%{clip-path:inset(0 0 0 0);opacity:0}82%,100%{clip-path:inset(0 0 0 0);opacity:1}}
+  @keyframes ba-scan{0%,8%{left:0;opacity:0}11%{opacity:1}48%{left:100%;opacity:1}52%,100%{left:100%;opacity:0}}
+  @keyframes ba-tagout{0%,10%{opacity:1}16%,80%{opacity:0}90%,100%{opacity:1}}
+  @keyframes ba-tagin{0%,12%{opacity:0}18%,78%{opacity:1}86%,100%{opacity:0}}
+  .ba-foot{display:flex;align-items:center;justify-content:space-between;padding:.7rem .5rem .2rem;font-size:.85rem;color:var(--ink-soft)}
+  .ba-foot strong{color:var(--ink)}
+
+  /* ---------- logos strip ---------- */
+  .strip{padding-block:var(--space-4);border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--white)}
+  .strip-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:clamp(1.5rem,5vw,3.5rem)}
+  .strip span{font-size:.82rem;color:var(--ink-faint);font-weight:500}
+  .strip .plat{font-weight:700;font-family:"Bricolage Grotesque";font-size:1.1rem;color:var(--ink-soft);opacity:.8}
+  .strip .plat-logo{height:clamp(26px,4vw,34px);width:auto;object-fit:contain;filter:grayscale(1);opacity:.6;transition:filter .3s var(--ease),opacity .3s var(--ease)}
+  .strip .plat-logo:hover{filter:grayscale(0);opacity:1}
+  .strip .plat-logo--lg{height:clamp(40px,6vw,54px)}
+
+  /* ---------- by the numbers (static band, no animation) ---------- */
+  .bynum{background:var(--ink);color:#fff}
+  .bynum-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-4) var(--space-2);text-align:center}
+  @media(min-width:780px){.bynum-grid{grid-template-columns:repeat(4,1fr)}}
+  .bynum .stat{display:flex;flex-direction:column;gap:.35rem;padding-inline:.5rem}
+  .bynum .n{font-family:"Bricolage Grotesque","Inter",sans-serif;font-weight:800;font-size:clamp(2.7rem,6vw,3.9rem);letter-spacing:-.03em;line-height:1;color:#FF9685}
+  .bynum .l{font-size:.9rem;line-height:1.4;color:rgba(255,255,255,.6);font-weight:500;max-width:22ch;margin-inline:auto}
+
+  /* ---------- steps ---------- */
+  .steps{display:grid;gap:var(--space-3);grid-template-columns:1fr}
+  @media(min-width:780px){.steps{grid-template-columns:repeat(3,1fr);gap:var(--space-4)}}
+  .step{position:relative;background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:var(--space-4);transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
+  .step:hover{transform:translateY(-6px);box-shadow:var(--shadow-md)}
+  .step .num{font-family:"Bricolage Grotesque";font-weight:800;font-size:.95rem;color:var(--ink-faint);letter-spacing:.05em}
+  .step .ico{width:54px;height:54px;border-radius:14px;background:var(--cream-2);color:var(--ink);display:grid;place-items:center;margin:var(--space-2) 0}
+  .step .ico svg{width:28px;height:28px}
+  .step h3{font-size:1.3rem;margin-bottom:.5rem}
+  .step p{color:var(--ink-soft);font-size:.98rem}
+
+  /* ---------- bridge ---------- */
+  #bridge{background:var(--cream-2)}
+  .bridge-grid{display:grid;gap:var(--space-4);grid-template-columns:1fr;align-items:center}
+  @media(min-width:860px){.bridge-grid{grid-template-columns:1fr 1fr;gap:var(--space-5)}}
+  .bridge-copy h2{font-size:clamp(1.8rem,4vw,2.7rem);margin:var(--space-2) 0}
+  .bridge-copy p{color:var(--ink-soft);max-width:46ch}
+  .bridge-copy .kicker{color:var(--ink);font-weight:600;margin-top:var(--space-3)}
+  .compare{display:grid;gap:var(--space-2)}
+  .compare-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+  .compare-card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:var(--space-3)}
+  .compare-card.bad{background:transparent;border-style:dashed}
+  .compare-card h4{font-family:"Inter";font-size:.78rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:var(--space-2)}
+  .compare-card ul{list-style:none;display:grid;gap:.6rem}
+  .compare-card li{display:flex;gap:.5rem;align-items:flex-start;font-size:.92rem;color:var(--ink-soft)}
+  .compare-card li svg{width:17px;height:17px;flex:none;margin-top:.15rem}
+  .compare-card.bad li svg{color:var(--ink-faint)}
+  .compare-card.good li{color:var(--ink)}
+  .compare-card.good li svg{color:var(--accent)}
+
+  /* ---------- pricing ---------- */
+  #pricing{background:var(--white)}
+  .tiers{display:grid;gap:var(--space-3);grid-template-columns:1fr;align-items:stretch}
+  @media(min-width:880px){.tiers{grid-template-columns:repeat(3,1fr);gap:var(--space-2)}}
+  .tier{display:flex;flex-direction:column;background:var(--cream);border:1px solid var(--line);border-radius:var(--radius);padding:var(--space-4);transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
+  .tier:hover{transform:translateY(-6px);box-shadow:var(--shadow-md)}
+  .tier.feat{background:var(--ink);color:#fff;border-color:var(--ink);position:relative;box-shadow:var(--shadow-lg)}
+  @media(min-width:880px){.tier.feat{transform:scale(1.04)}.tier.feat:hover{transform:scale(1.04) translateY(-6px)}}
+  .tier .badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .8rem;border-radius:999px;white-space:nowrap}
+  .tier .name{font-family:"Bricolage Grotesque";font-weight:700;font-size:1.25rem}
+  .tier .price{font-family:"Bricolage Grotesque";font-weight:800;font-size:2.8rem;letter-spacing:-.03em;margin:.4rem 0 .1rem;line-height:1}
+  .tier .price small{font-size:1rem;font-weight:500;color:var(--ink-faint)}
+  .tier.feat .price small{color:rgba(255,255,255,.6)}
+  .tier .sub{font-size:.92rem;color:var(--ink-soft);margin-bottom:var(--space-3)}
+  .tier.feat .sub{color:rgba(255,255,255,.7)}
+  .tier ul{list-style:none;display:grid;gap:.7rem;margin-bottom:var(--space-4);flex:1}
+  .tier li{display:flex;gap:.6rem;align-items:flex-start;font-size:.95rem}
+  .tier li svg{width:18px;height:18px;color:var(--accent);flex:none;margin-top:.2rem}
+  .tier.feat li svg{color:#FF9685}
+  .tier .btn{width:100%}
+  .tier.feat .btn-ghost{border-color:rgba(255,255,255,.3);color:#fff}
+  .tier.feat .btn-ghost:hover{border-color:#fff;background:rgba(255,255,255,.08)}
+
+  /* ---------- testimonials ---------- */
+  .quotes{display:grid;gap:var(--space-3);grid-template-columns:1fr}
+  @media(min-width:780px){.quotes{grid-template-columns:repeat(3,1fr)}}
+  .quote{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:var(--space-4);display:flex;flex-direction:column;transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
+  .quote:hover{transform:translateY(-6px);box-shadow:var(--shadow-md)}
+  .quote .stars{display:flex;gap:.15rem;color:var(--accent);margin-bottom:var(--space-2)}
+  .quote .stars svg{width:18px;height:18px}
+  .quote p{font-size:1.02rem;color:var(--ink);flex:1}
+  .quote .who{display:flex;align-items:center;gap:.8rem;margin-top:var(--space-3)}
+  .quote .av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-family:"Bricolage Grotesque";font-weight:700;color:#fff;flex:none;object-fit:cover}
+  .quote .who b{display:block;font-size:.95rem}
+  .quote .who span{font-size:.85rem;color:var(--ink-faint)}
+
+  /* ---------- contact ---------- */
+  #contact{background:var(--cream-2)}
+  .contact-grid{display:grid;gap:var(--space-5);grid-template-columns:1fr}
+  @media(min-width:880px){.contact-grid{grid-template-columns:.9fr 1.1fr;align-items:start}}
+  .contact-copy h2{font-size:clamp(2rem,4.5vw,3rem)}
+  .contact-copy p{color:var(--ink-soft);margin-top:var(--space-2);max-width:42ch}
+  .contact-list{margin-top:var(--space-4);display:grid;gap:var(--space-2)}
+  .contact-list div{display:flex;gap:.7rem;align-items:center;font-size:.98rem;color:var(--ink-soft)}
+  .contact-list svg{width:20px;height:20px;color:var(--accent);flex:none}
+  form{background:var(--white);border:1px solid var(--line);border-radius:var(--radius-lg);padding:clamp(1.5rem,4vw,2.4rem);box-shadow:var(--shadow-sm)}
+  .field{margin-bottom:var(--space-2)}
+  .field label{display:block;font-size:.88rem;font-weight:600;margin-bottom:.4rem;color:var(--ink)}
+  .field input,.field select,.field textarea{
+    width:100%;font-family:inherit;font-size:1rem;color:var(--ink);
+    padding:.8rem .95rem;border:1.5px solid var(--line);border-radius:12px;background:var(--cream);
+    transition:border-color .2s,box-shadow .2s;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-tint);background:#fff}
+  .field textarea{resize:vertical;min-height:120px}
+  form .btn{width:100%;margin-top:var(--space-1)}
+  .form-note{font-size:.82rem;color:var(--ink-faint);text-align:center;margin-top:var(--space-2)}
+
+  /* ---------- footer ---------- */
+  footer{background:var(--ink);color:#fff;padding-block:var(--space-5)}
+  .foot-inner{display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center;justify-content:space-between}
+  .foot-inner .brand{color:#fff}
+  .foot-inner .brand .mark{box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+  .foot-links{display:flex;gap:var(--space-3);flex-wrap:wrap}
+  .foot-links a{font-size:.92rem;color:rgba(255,255,255,.7);transition:color .2s}
+  .foot-links a:hover{color:#fff}
+  .foot-copy{width:100%;border-top:1px solid rgba(255,255,255,.12);margin-top:var(--space-3);padding-top:var(--space-3);font-size:.85rem;color:rgba(255,255,255,.55)}
+
+  /* ---------- reveal (visible without JS) ---------- */
+  html.js .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+  html.js .reveal.in{opacity:1;transform:none}
+  html.js .reveal.d1{transition-delay:.08s}
+  html.js .reveal.d2{transition-delay:.16s}
+  html.js .reveal.d3{transition-delay:.24s}
+  html.js .reveal.d4{transition-delay:.32s}
+
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .blob{animation:none}
+    .swash-line path{animation:none;stroke-dashoffset:0}
+    .ai-sticker,.ai-sticker .s1,.ai-sticker .s2{animation:none}
+    .ai-sticker .arr path{animation:none;stroke-dashoffset:0}
+    html.js .reveal{opacity:1;transform:none;transition:none}
+    .ba-before,.ba-line,.tag-before,.tag-after{animation:none}
+    .ba-before{clip-path:inset(0 0 0 50%)}
+    .ba-line{left:50%;opacity:1}
+    .tag-before{opacity:0}
+    .tag-after{opacity:1}
+    *{transition:none!important}
+  }
+
+  /* ---------- FAQ chat ---------- */
+  .cw-toggle{position:fixed;right:20px;bottom:20px;z-index:60;width:56px;height:56px;border-radius:50%;border:0;cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 12px 30px -8px rgba(244,81,60,.55);display:grid;place-items:center;transition:transform .2s var(--ease)}
+  .cw-toggle:hover{transform:translateY(-2px) scale(1.04)}
+  .cw-toggle svg{width:26px;height:26px}
+  .cw-toggle .cw-ic-close{display:none}
+  .cw-open .cw-toggle .cw-ic-chat{display:none}
+  .cw-open .cw-toggle .cw-ic-close{display:block}
+  .cw-panel{position:fixed;right:20px;bottom:88px;z-index:60;width:min(360px,calc(100vw - 40px));max-height:min(72vh,560px);background:var(--white);border:1px solid var(--line);border-radius:20px;box-shadow:0 24px 60px -16px rgba(26,22,20,.28);display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:translateY(12px) scale(.96);transform-origin:bottom right;pointer-events:none;transition:opacity .22s var(--ease),transform .22s var(--ease)}
+  .cw-open .cw-panel{opacity:1;transform:none;pointer-events:auto}
+  .cw-head{display:flex;align-items:center;gap:.6rem;padding:.85rem 1rem;background:var(--accent);color:#fff}
+  .cw-head .cw-logo{width:36px;height:36px;border-radius:10px;flex:none;background:#fff no-repeat url("/logo-shotpilot.png");background-size:182%;background-position:50% 20%}
+  .cw-head b{font-family:"Bricolage Grotesque",sans-serif;font-size:1rem;line-height:1.15;display:block}
+  .cw-head .cw-sub{font-size:.76rem;opacity:.9}
+  .cw-head .cw-x{margin-left:auto;background:transparent;border:0;color:#fff;cursor:pointer;opacity:.9;padding:4px;display:grid;place-items:center}
+  .cw-head .cw-x svg{width:20px;height:20px}
+  .cw-body{padding:1rem;overflow-y:auto;display:flex;flex-direction:column;gap:.5rem;background:var(--cream)}
+  .cw-msg{max-width:86%;padding:.6rem .8rem;border-radius:14px;font-size:.92rem;line-height:1.42}
+  .cw-bot{align-self:flex-start;background:var(--white);border:1px solid var(--line);color:var(--ink);border-bottom-left-radius:5px}
+  .cw-user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:5px}
+  .cw-chips{display:flex;flex-wrap:wrap;gap:.4rem;padding:.7rem .9rem .9rem;border-top:1px solid var(--line);background:var(--white)}
+  .cw-chip{font-family:"Inter",sans-serif;font-size:.82rem;font-weight:600;color:var(--accent-deep);background:var(--accent-tint);border:0;border-radius:999px;padding:.42rem .7rem;cursor:pointer;transition:background .15s var(--ease)}
+  .cw-chip:hover{background:#fbd9d2}
+  .cw-cta{color:var(--accent-deep);font-weight:700;text-decoration:underline}
+  @media(max-width:480px){.cw-panel{right:12px;left:12px;width:auto;bottom:84px}.cw-toggle{right:14px;bottom:14px}}
+</style>
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<header class="nav" id="top">
+  <div class="wrap nav-inner">
+    <a href="#top" class="brand" aria-label="shotpilot home">
+      <span class="mark" aria-hidden="true">
+              </span>
+      shotpilot
+    </a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#reviews">Reviews</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="nav-cta">
+      <span class="lang" role="group" aria-label="Language">
+        <a href="index.html" hreflang="es-AR">ES</a>
+        <a href="en.html" aria-current="true">EN</a>
+      </span>
+      <a href="#contact" class="btn btn-primary">Start free</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    <div class="mesh" aria-hidden="true" data-parallax="0.28">
+      <span class="blob b1"></span>
+      <span class="blob b2"></span>
+      <span class="blob b3"></span>
+      <span class="blob b4"></span>
+    </div>
+    <div class="wrap hero-inner">
+      <div class="glass reveal">
+        <span class="eyebrow">Product photos on autopilot</span>
+        <h1>Your <span class="swash">bad<svg class="swash-line" viewBox="0 0 200 16" preserveAspectRatio="none" aria-hidden="true"><path d="M4 10C34 4 58 13 90 8s66-9 106 2"/></svg></span> photos are costing you sales.</h1>
+        <p class="hero-sub">Upload the ugly one. <span class="em">Download the one that sells.</span></p>
+        <p class="lede">Snap it with your phone and get it back on a clean white background, sized exactly for Amazon, Etsy and eBay. You never open Photoshop.</p>
+        <div class="hero-actions">
+          <div class="btn-wrap">
+            <a href="#contact" class="btn btn-primary btn-lg">Get my 5 free photos</a>
+            <span class="ai-sticker" aria-hidden="true">
+              <svg class="arr" viewBox="0 0 64 36"><path d="M58 8 C 46 26, 26 14, 6 22 M6 22 L 20 24 M6 22 L 15 11"/></svg>
+              <span class="txt">now with AI</span>
+              <span class="spk">
+                <svg class="s1" viewBox="0 0 24 24"><path d="M12 0C13 7 17 11 24 12C17 13 13 17 12 24C11 17 7 13 0 12C7 11 11 7 12 0Z"/></svg>
+                <svg class="s2" viewBox="0 0 24 24"><path d="M12 0C13 7 17 11 24 12C17 13 13 17 12 24C11 17 7 13 0 12C7 11 11 7 12 0Z"/></svg>
+              </span>
+            </span>
+          </div>
+          <a href="#how" class="text-link">or see how it works</a>
+        </div>
+        <p class="hero-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          First 5 photos free. No card required.
+        </p>
+      </div>
+
+      <div class="ba reveal d1">
+        <div class="plat-select" role="group" aria-label="Pick your marketplace">
+          <button type="button" class="chip" data-size="1600 × 1600" aria-pressed="true">Amazon</button>
+          <button type="button" class="chip" data-size="2000 × 2000" aria-pressed="false">Etsy</button>
+          <button type="button" class="chip" data-size="1600 × 1600" aria-pressed="false">eBay</button>
+        </div>
+        <div class="ba-card">
+          <div class="ba-stage">
+            <img class="ba-after" src="vestido.webp" alt="The same dress on a clean white background, ready to list" width="600" height="800" loading="lazy" decoding="async">
+            <img class="ba-before" src="vestido-fiesta.png" alt="Dress hanging at a party, with a busy background and colored lights" width="600" height="800" loading="lazy" decoding="async">
+            <span class="ba-line" aria-hidden="true"></span>
+            <span class="tag tag-before">Before</span>
+            <span class="tag tag-after">After</span>
+          </div>
+          <div class="ba-foot">
+            <span>Busy background <strong>→ pure white <span id="ba-size">1600 × 1600</span></strong></span>
+            <span>3 sec</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== STRIP ===== -->
+  <div class="strip">
+    <div class="wrap strip-inner">
+      <span>Ready to list on</span>
+      <img class="plat-logo plat-logo--lg" src="logos/amazon.png" alt="Amazon" width="500" height="500" loading="lazy" decoding="async">
+      <img class="plat-logo plat-logo--lg" src="logos/ebay.jpg" alt="eBay" width="500" height="500" loading="lazy" decoding="async">
+      <img class="plat-logo" src="logos/etsy.png" alt="Etsy" width="500" height="500" loading="lazy" decoding="async">
+      <img class="plat-logo plat-logo--lg" src="logos/shopify.png" alt="Shopify" width="500" height="500" loading="lazy" decoding="async">
+      <img class="plat-logo" src="logos/Instagram.png" alt="Instagram" width="500" height="500" loading="lazy" decoding="async">
+    </div>
+  </div>
+
+  <!-- ===== BY THE NUMBERS (static band) ===== -->
+  <section class="bynum" aria-label="By the numbers">
+    <div class="wrap bynum-grid">
+      <div class="stat reveal d1"><span class="n" data-count>900+</span><span class="l">photos already processed</span></div>
+      <div class="stat reveal d2"><span class="n" data-count>4.9★</span><span class="l">average seller rating</span></div>
+      <div class="stat reveal d3"><span class="n" data-count>3 sec</span><span class="l">per photo, white background ready</span></div>
+      <div class="stat reveal d4"><span class="n" data-count>7 days</span><span class="l">to see if it lifts your sales</span></div>
+    </div>
+  </section>
+
+  <!-- ===== HOW IT WORKS ===== -->
+  <section id="how">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">How it works</span>
+        <h2>Three steps. Done.</h2>
+        <p>No editors, no layers, no YouTube tutorials. Upload, pick, download.</p>
+      </div>
+      <div class="steps">
+        <article class="step reveal d1">
+          <span class="num">STEP 01</span>
+          <div class="ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 9 5-5 5 5"/><path d="M12 4v12"/></svg>
+          </div>
+          <h3>Upload your photos</h3>
+          <p>Drag in your phone shots, all at once. Doesn't matter if the background is your kitchen or your garage.</p>
+        </article>
+        <article class="step reveal d2">
+          <span class="num">STEP 02</span>
+          <div class="ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+          </div>
+          <h3>Pick where you sell</h3>
+          <p>Amazon, Etsy or eBay. Each one with its exact required size and the product properly centered.</p>
+        </article>
+        <article class="step reveal d3">
+          <span class="num">STEP 03</span>
+          <div class="ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+          </div>
+          <h3>Download and list</h3>
+          <p>You get them back on a clean white background, sized to spec. One by one or all in a ZIP.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== BRIDGE: kills the "I already use a free phone app" objection ===== -->
+  <section id="bridge">
+    <div class="wrap bridge-grid">
+      <div class="bridge-copy reveal">
+        <span class="eyebrow">What about the free phone app?</span>
+        <h2>Free ends up costing you more.</h2>
+        <p>Zoom into a cut-out from a free app: halo edges, crushed shadows, and you do them one at a time. Amazon wants a pure white background (RGB 255,255,255) with the product filling ~85% of the frame — a phone cut-out won't pass, and a rejected main image means no sale.</p>
+        <p class="kicker">With shotpilot you test for free: the first 5 photos are on us. Compare them yourself.</p>
+      </div>
+      <div class="compare reveal d1">
+        <div class="compare-row">
+          <div class="compare-card bad">
+            <h4>Free phone app</h4>
+            <ul>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Halo edges and rough cut-outs</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> One photo at a time, by hand</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> You resize and crop to spec</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Watermarks or downscaled quality</li>
+            </ul>
+          </div>
+          <div class="compare-card good">
+            <h4>shotpilot</h4>
+            <ul>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Clean white background, no halo</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Upload the whole batch at once</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Exact size for each marketplace</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Full quality, ready to list</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PRICING ===== -->
+  <section id="pricing">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Pricing</span>
+        <h2>Pay per photo, not per headache.</h2>
+        <p>Start free. When you see it sell, add credits. One credit = one ready-to-list photo.</p>
+      </div>
+      <div class="tiers">
+        <div class="tier reveal d1">
+          <span class="name">Try</span>
+          <div class="price">Free</div>
+          <p class="sub">To see the before and after on your own products.</p>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> 5 free photos on signup</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Every marketplace size</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Download photo by photo</li>
+          </ul>
+          <a href="#contact" class="btn btn-ghost">Start free</a>
+        </div>
+
+        <div class="tier feat reveal d2">
+          <span class="badge">Most popular</span>
+          <span class="name">Seller</span>
+          <div class="price">US$19<small>/mo</small></div>
+          <p class="sub">For sellers who list new products every week.</p>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> 150 photos per month</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Process whole batches at once</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Download everything as ZIP</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Chat support</li>
+          </ul>
+          <a href="#contact" class="btn btn-primary">Claim my spot</a>
+        </div>
+
+        <div class="tier reveal d3">
+          <span class="name">Business</span>
+          <div class="price">US$49<small>/mo</small></div>
+          <p class="sub">For stores with big catalogs and several people uploading.</p>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> 500 photos per month</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Priority in the queue</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Multiple users (soon)</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Everything in Seller</li>
+          </ul>
+          <a href="#contact" class="btn btn-ghost">Claim my spot</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TESTIMONIALS ===== -->
+  <section id="reviews">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Reviews</span>
+        <h2>What sellers are saying.</h2>
+        <p>Real sellers — the ones uploading listings at eleven at night.</p>
+      </div>
+      <div class="quotes">
+        <figure class="quote reveal d1">
+          <div class="stars" aria-label="5 out of 5">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .9-5 4.8 1.3 7L12 18l-6.6 3.2L6.7 14l-5-4.8 7-.9L12 2Z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .9-5 4.8 1.3 7L12 18l-6.6 3.2L6.7 14l-5-4.8 7-.9L12 2Z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .9-5 4.8 1.3 7L12 18l-6.6 3.2L6.7 14l-5-4.8 7-.9L12 2Z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .9-5 4.8 1.3 7L12 18l-6.6 3.2L6.7 14l-5-4.8 7-.9L12 2Z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .9-5 4.8 1.3 7L12 18l-6.6 3.2L6.7 14l-5-4.8 7-.9L12 2Z"/></svg>
+          </div>
+          <p>“Before: 30 minutes per listing cutting out photos by hand. Now: I upload 20 at once and get back to selling. My Etsy shop finally looks consistent.”</p>
+          <figcaption class="who">
+            <img class="av" src="/avatars/en-1.jpg" alt="Sarah K." width="42" height="42" loading="lazy">
+            <span><b>Sarah K.</b><span>Handmade jewelry · Etsy</span></span>
+          </figcaption>
+        </figure>
+
+        <figure class="quote reveal d2">
+          <div class="stars" aria-label="5 out of 5">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .9-5 4.8 1.3 7L12 18l-6.6 3.2L6.7 14l-5-4.8 7-.9L12 2Z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .9-5 4.8 1.3 7L12 18l-6.6 3.2L6.7 14l-5-4.8 7-.9L12 2Z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .9-5 4.8 1.3 7L12 18l-6.6 3.2L6.7 14l-5-4.8 7-.9L12 2Z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .9-5 4.8 1.3 7L12 18l-6.6 3.2L6.7 14l-5-4.8 7-.9L12 2Z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .9-5 4.8 1.3 7L12 18l-6.6 3.2L6.7 14l-5-4.8 7-.9L12 2Z"/></svg>
+          </div>
+          <p>“I don't know Photoshop and I don't want to learn. Got it in two minutes. Amazon kept rejecting my main image for the background — that problem is just gone now.”</p>
+          <figcaption class="who">
+            <img class="av" src="/avatars/en-2.jpg" alt="Priya R." width="42" height="42" loading="lazy">
+            <span><b>Priya R.</b><span>Home &amp; kitchen · Amazon</span></span>
+          </figcaption>
+        </figure>
+
+        <figure class="quote reveal d3">
+          <div class="stars" aria-label="5 out of 5">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .9-5 4.8 1.3 7L12 18l-6.6 3.2L6.7 14l-5-4.8 7-.9L12 2Z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .9-5 4.8 1.3 7L12 18l-6.6 3.2L6.7 14l-5-4.8 7-.9L12 2Z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .9-5 4.8 1.3 7L12 18l-6.6 3.2L6.7 14l-5-4.8 7-.9L12 2Z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .9-5 4.8 1.3 7L12 18l-6.6 3.2L6.7 14l-5-4.8 7-.9L12 2Z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .9-5 4.8 1.3 7L12 18l-6.6 3.2L6.7 14l-5-4.8 7-.9L12 2Z"/></svg>
+          </div>
+          <p>“We have a 300-product catalog. Ran the whole thing through in one afternoon on the Business plan. Every listing now has the same clean white background. Huge difference.”</p>
+          <figcaption class="who">
+            <img class="av" src="/avatars/en-3.jpg" alt="Mike T." width="42" height="42" loading="lazy">
+            <span><b>Mike T.</b><span>Auto parts · eBay</span></span>
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CONTACT ===== -->
+  <section id="contact">
+    <div class="wrap contact-grid">
+      <div class="contact-copy reveal">
+        <span class="eyebrow">Claim your spot</span>
+        <h2>Drop your details and start free.</h2>
+        <p>We'll email you access and your first 5 photos. No commitment, no card.</p>
+        <div class="contact-list">
+          <div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 6 12 13 2 6"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg>
+            hello@shotpilot.app
+          </div>
+          <div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg>
+            We reply within the day
+          </div>
+          <div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            Your photos ready in minutes, not days
+          </div>
+        </div>
+      </div>
+
+      <form class="reveal d1" action="#" method="post" novalidate>
+        <div class="field">
+          <label for="name">Your name</label>
+          <input id="name" name="name" type="text" placeholder="e.g. Sarah" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="sell">What do you sell?</label>
+          <select id="sell" name="sell">
+            <option value="apparel">Apparel &amp; accessories</option>
+            <option value="home">Home &amp; kitchen</option>
+            <option value="electronics">Electronics &amp; parts</option>
+            <option value="beauty">Beauty &amp; care</option>
+            <option value="handmade">Handmade / crafts</option>
+            <option value="other">Something else</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="msg">Tell us in one line (optional)</label>
+          <textarea id="msg" name="msg" placeholder="How many photos a week, where you sell…"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg">Get my 5 free photos</button>
+        <p class="form-note">We'll be in touch within 24h. No spam.</p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="wrap">
+    <div class="foot-inner">
+      <a href="#top" class="brand">
+        <span class="mark" aria-hidden="true">
+                  </span>
+        shotpilot
+      </a>
+      <nav class="foot-links" aria-label="Footer">
+        <a href="#how">How it works</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#reviews">Reviews</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+    <div class="foot-copy">© 2026 shotpilot · Upload the ugly photo, download the one that sells.</div>
+  </div>
+</footer>
+
+<script>
+  document.documentElement.classList.add('js');
+
+  // Nav: shadow on scroll
+  var nav = document.querySelector('.nav');
+  var onScroll = function(){ nav.classList.toggle('scrolled', window.scrollY > 8); };
+  onScroll();
+  window.addEventListener('scroll', onScroll, {passive:true});
+
+  // Marketplace selector: updates the preset size on the card
+  var chips = document.querySelectorAll('.plat-select .chip');
+  var sizeEl = document.getElementById('ba-size');
+  chips.forEach(function(c){
+    c.addEventListener('click', function(){
+      chips.forEach(function(x){ x.setAttribute('aria-pressed','false'); });
+      c.setAttribute('aria-pressed','true');
+      if(sizeEl) sizeEl.textContent = c.getAttribute('data-size');
+    });
+  });
+
+  // Fade-up reveals via IntersectionObserver
+  var els = document.querySelectorAll('.reveal');
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, {threshold:.12, rootMargin:'0px 0px -8% 0px'});
+    els.forEach(function(el){ io.observe(el); });
+  } else {
+    els.forEach(function(el){ el.classList.add('in'); });
+  }
+
+  // Count-up numbers in "By the numbers" (Path Social style). Keeps prefix and
+  // suffix (+, ★, " sec", " days") and the value's decimals.
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var counters = document.querySelectorAll('[data-count]');
+  if(!reduceMotion && 'IntersectionObserver' in window){
+    var parse = function(text){
+      var m = String(text).match(/^(\D*)([\d.,]+)(.*)$/);
+      if(!m) return null;
+      var raw = m[2].replace(',', '.');
+      var dot = raw.indexOf('.');
+      return { pre: m[1], to: parseFloat(raw), dec: dot === -1 ? 0 : raw.length - dot - 1, suf: m[3] };
+    };
+    var run = function(el){
+      var parts = parse(el.textContent);
+      if(!parts){ return; }
+      var duration = 1400, start = null;
+      var step = function(ts){
+        if(start === null) start = ts;
+        var p = Math.min((ts - start) / duration, 1);
+        var eased = 1 - Math.pow(1 - p, 3);
+        var val = (eased * parts.to).toFixed(parts.dec);
+        el.textContent = parts.pre + val + parts.suf;
+        if(p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    };
+    var cio = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){ run(e.target); cio.unobserve(e.target); }
+      });
+    }, {threshold:.4});
+    counters.forEach(function(el){ cio.observe(el); });
+  }
+
+  // Parallax scrolling: the hero background layer (blobs) moves slower than the
+  // content. data-parallax="0.28" = speed factor. rAF to keep scrolling smooth;
+  // disabled when the user prefers reduced motion.
+  if(!reduceMotion){
+    var pxEls = [].slice.call(document.querySelectorAll('[data-parallax]')).map(function(el){
+      return { el: el, speed: parseFloat(el.getAttribute('data-parallax')) || 0.2 };
+    });
+    if(pxEls.length){
+      var pxTicking = false;
+      var pxUpdate = function(){
+        var y = window.scrollY;
+        pxEls.forEach(function(p){
+          p.el.style.transform = 'translate3d(0,' + (y * p.speed).toFixed(1) + 'px,0)';
+        });
+        pxTicking = false;
+      };
+      var onPx = function(){ if(!pxTicking){ pxTicking = true; requestAnimationFrame(pxUpdate); } };
+      window.addEventListener('scroll', onPx, {passive:true});
+      pxUpdate();
+    }
+  }
+
+  // ----- FAQ chat (no backend) -----
+  document.addEventListener('DOMContentLoaded', function(){
+    var faqs = [
+      {q:"How does it work?", a:"Upload the photo from your phone, choose where you sell (Amazon, Etsy or eBay) and we send it back on a clean white background, sized exactly. You never open an editor."},
+      {q:"How much is it?", a:"Start free with 5 photos. After that: Seller US$19/mo (150 photos) or Business US$49/mo (500 photos). You pay per photo, not per headache."},
+      {q:"Can I try it free?", a:"Yes. Your first 5 photos are free when you sign up — no card needed."},
+      {q:"Which platforms?", a:"Amazon, Etsy and eBay, each with its exact size and the product nicely centered."},
+      {q:"How long does it take?", a:"About 3 seconds per photo. Upload many at once and download them all in a ZIP."},
+      {q:"Do I need editing skills?", a:"No. No Photoshop, no tutorials. Upload, choose, download."},
+      {q:"How do I start?", a:"Tap “Start free” up top or drop your details in Contact and we'll reach out.", cta:{href:"#contact", label:"Go to Contact"}}
+    ];
+    var root = document.getElementById('chat');
+    if(!root) return;
+    var toggle = root.querySelector('[data-cw-toggle]');
+    var panel = root.querySelector('.cw-panel');
+    var body = document.getElementById('cw-body');
+    var chips = document.getElementById('cw-chips');
+    var esc = function(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); };
+    faqs.forEach(function(f){
+      var b = document.createElement('button');
+      b.className = 'cw-chip'; b.type = 'button'; b.textContent = f.q;
+      b.addEventListener('click', function(){ answer(f); });
+      chips.appendChild(b);
+    });
+    function add(cls, html){
+      var d = document.createElement('div');
+      d.className = 'cw-msg ' + cls; d.innerHTML = html;
+      body.appendChild(d); body.scrollTop = body.scrollHeight;
+    }
+    function answer(f){
+      add('cw-user', esc(f.q));
+      var html = esc(f.a);
+      if(f.cta){ html += ' <a class="cw-cta" href="' + f.cta.href + '">' + esc(f.cta.label) + '</a>'; }
+      setTimeout(function(){ add('cw-bot', html); }, 240);
+    }
+    function open(){ root.classList.add('cw-open'); toggle.setAttribute('aria-expanded','true'); panel.setAttribute('aria-hidden','false'); }
+    function close(){ root.classList.remove('cw-open'); toggle.setAttribute('aria-expanded','false'); panel.setAttribute('aria-hidden','true'); }
+    toggle.addEventListener('click', function(){ root.classList.contains('cw-open') ? close() : open(); });
+    root.querySelector('[data-cw-close]').addEventListener('click', close);
+  });
+</script>
+
+<!-- FAQ chat -->
+<div id="chat">
+  <div class="cw-panel" role="dialog" aria-label="Frequently asked questions" aria-hidden="true">
+    <div class="cw-head">
+      <span class="cw-logo" aria-hidden="true"></span>
+      <span>
+        <b>Questions?</b>
+        <span class="cw-sub">We answer in a tap</span>
+      </span>
+      <button class="cw-x" type="button" aria-label="Close chat" data-cw-close>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="cw-body" id="cw-body">
+      <div class="cw-msg cw-bot">Hi! 👋 I'm the shotpilot assistant. Tap a question and I'll answer right away:</div>
+    </div>
+    <div class="cw-chips" id="cw-chips"></div>
+  </div>
+  <button class="cw-toggle" type="button" aria-label="Open FAQ chat" aria-expanded="false" data-cw-toggle>
+    <svg class="cw-ic-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <svg class="cw-ic-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+  </button>
+</div>
+</body>
+</html>

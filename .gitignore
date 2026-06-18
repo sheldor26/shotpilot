@@ -1,0 +1,12 @@
+# secretos — nunca commitear
+.env
+.env.*
+
+# dependencias / build
+node_modules/
+
+# salidas de prueba
+salida-*.png
+
+# sistema
+.DS_Store
