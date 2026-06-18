@@ -251,12 +251,21 @@
   .strip .plat-logo--lg{height:clamp(40px,6vw,54px)}
 
   /* ---------- by the numbers (static band, no animation) ---------- */
-  .bynum{background:var(--ink);color:#fff}
-  .bynum-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-4) var(--space-2);text-align:center}
-  @media(min-width:780px){.bynum-grid{grid-template-columns:repeat(4,1fr)}}
-  .bynum .stat{display:flex;flex-direction:column;gap:.35rem;padding-inline:.5rem}
-  .bynum .n{font-family:"Bricolage Grotesque","Inter",sans-serif;font-weight:800;font-size:clamp(2.7rem,6vw,3.9rem);letter-spacing:-.03em;line-height:1;color:#FF9685}
-  .bynum .l{font-size:.9rem;line-height:1.4;color:rgba(255,255,255,.6);font-weight:500;max-width:22ch;margin-inline:auto}
+  .bynum{position:relative;background:var(--ink);color:#fff;padding-block:var(--space-5);overflow:hidden}
+  .bynum::before{content:"";position:absolute;inset:0;background:radial-gradient(58% 120% at 50% -10%,rgba(244,81,60,.24),transparent 68%);pointer-events:none}
+  .bynum .wrap{position:relative;z-index:1}
+  .bynum-eyebrow{display:flex;align-items:center;justify-content:center;gap:.7rem;text-align:center;font-size:.76rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:var(--space-3)}
+  .bynum-eyebrow::before,.bynum-eyebrow::after{content:"";width:26px;height:1px;background:rgba(255,150,133,.55)}
+  .bynum-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-2);text-align:center}
+  @media(min-width:780px){.bynum-grid{grid-template-columns:repeat(4,1fr);gap:var(--space-3)}}
+  .bynum .stat{display:flex;flex-direction:column;align-items:center;gap:.55rem;padding:1.7rem 1rem 1.5rem;border-radius:18px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);transition:transform .25s var(--ease),border-color .25s,background .25s}
+  .bynum .stat:hover{transform:translateY(-5px);border-color:rgba(255,150,133,.45);background:rgba(255,255,255,.06)}
+  .bynum .stat-ic{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;background:rgba(255,150,133,.14);color:#FF9685;transition:background .25s,color .25s,transform .25s var(--ease)}
+  .bynum .stat-ic svg{width:23px;height:23px}
+  .bynum .stat:hover .stat-ic{background:var(--accent);color:#fff;transform:scale(1.06)}
+  .bynum .n{font-family:"Bricolage Grotesque","Inter",sans-serif;font-weight:800;font-size:clamp(2.3rem,5.4vw,3.3rem);letter-spacing:-.03em;line-height:1;color:#FF9685}
+  .bynum .n::after{content:"";display:block;width:28px;height:3px;border-radius:3px;background:rgba(255,150,133,.45);margin:.55rem auto 0}
+  .bynum .l{font-size:.88rem;line-height:1.4;color:rgba(255,255,255,.6);font-weight:500;max-width:20ch;margin-inline:auto}
 
   /* ---------- steps ---------- */
   .steps{display:grid;gap:var(--space-3);grid-template-columns:1fr}
@@ -508,11 +517,30 @@
 
   <!-- ===== BY THE NUMBERS (static band) ===== -->
   <section class="bynum" aria-label="By the numbers">
-    <div class="wrap bynum-grid">
-      <div class="stat reveal d1"><span class="n" data-count>900+</span><span class="l">photos already processed</span></div>
-      <div class="stat reveal d2"><span class="n" data-count>4.9★</span><span class="l">average seller rating</span></div>
-      <div class="stat reveal d3"><span class="n" data-count>3 sec</span><span class="l">per photo, white background ready</span></div>
-      <div class="stat reveal d4"><span class="n" data-count>7 days</span><span class="l">to see if it lifts your sales</span></div>
+    <div class="wrap">
+      <p class="bynum-eyebrow">By the numbers</p>
+      <div class="bynum-grid">
+        <div class="stat reveal d1">
+          <span class="stat-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="m21 15-4.5-4.5L5 21"/></svg></span>
+          <span class="n" data-count>900+</span>
+          <span class="l">photos already processed</span>
+        </div>
+        <div class="stat reveal d2">
+          <span class="stat-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+          <span class="n" data-count>4.9★</span>
+          <span class="l">average seller rating</span>
+        </div>
+        <div class="stat reveal d3">
+          <span class="stat-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg></span>
+          <span class="n" data-count>3 sec</span>
+          <span class="l">per photo, white background ready</span>
+        </div>
+        <div class="stat reveal d4">
+          <span class="stat-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/></svg></span>
+          <span class="n" data-count>7 days</span>
+          <span class="l">to see if it lifts your sales</span>
+        </div>
+      </div>
     </div>
   </section>
 
