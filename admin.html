@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="/logo-shotpilot.png">
+<link rel="apple-touch-icon" href="/logo-shotpilot.png">
 <title>Leads · shotpilot</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,6 +59,8 @@
   .c-msg{color:var(--ink-soft);max-width:320px}
   .tag{display:inline-block;font-size:.72rem;font-weight:700;padding:.18rem .5rem;border-radius:999px;background:var(--accent-tint);color:var(--accent-deep);white-space:nowrap}
   .lang{display:inline-block;font-size:.7rem;font-weight:700;padding:.15rem .45rem;border-radius:6px;border:1px solid var(--line);color:var(--ink-faint);text-transform:uppercase}
+  .lang-es{background:#E8F2EC;border-color:#Bfe0cf;color:#2C7A52}
+  .lang-en{background:#E9EFFA;border-color:#C5D6F2;color:#3257A8}
   .empty{padding:3rem 1rem;text-align:center;color:var(--ink-soft)}
   .hidden{display:none!important}
   @media(max-width:560px){ .c-msg{max-width:160px} .top h1{font-size:1.35rem} }
@@ -133,7 +137,7 @@
         '<td><a href="mailto:' + esc(l.email) + '">' + esc(l.email) + '</a></td>' +
         '<td>' + (l.sells ? '<span class="tag">' + esc(l.sells) + '</span>' : '—') + '</td>' +
         '<td class="c-msg">' + (esc(l.msg) || '—') + '</td>' +
-        '<td>' + (l.lang ? '<span class="lang">' + esc(l.lang) + '</span>' : '—') + '</td>';
+        '<td>' + (l.lang ? '<span class="lang lang-' + esc(String(l.lang).toLowerCase()) + '">' + esc(l.lang) + '</span>' : '—') + '</td>';
       rowsEl.appendChild(tr);
     });
   }
