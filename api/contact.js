@@ -154,8 +154,8 @@ function emailHtml(c) {
 <p style="margin:0 0 14px 0;font-size:16px;line-height:1.6;color:#5C524B;">${c.greeting}</p>
 <p style="margin:0 0 24px 0;font-size:16px;line-height:1.6;color:#5C524B;">${c.lead}</p>
 </td></tr>
-<tr><td style="padding:0 32px 24px 32px;" align="left">
-<table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="border-radius:999px;background:#F4513C;">
+<tr><td style="padding:0 32px 24px 32px;" align="center">
+<table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr><td style="border-radius:999px;background:#F4513C;">
 <a href="${c.editorUrl}" style="display:inline-block;padding:14px 30px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:16px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:999px;">${c.cta}&nbsp;&rarr;</a>
 </td></tr></table>
 </td></tr>
