@@ -150,9 +150,9 @@
     .lang a{padding:.28rem .42rem}
   }
   /* language switch */
-  .lang{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;overflow:hidden;font-size:.78rem;font-weight:700;letter-spacing:.02em}
-  .lang a{padding:.32rem .62rem;color:var(--ink-faint);transition:background .2s,color .2s}
-  .lang a[aria-current="true"]{background:var(--ink);color:#fff}
+  .lang{display:inline-flex;align-items:center;gap:2px;background:var(--cream-2);border:1px solid var(--line);border-radius:999px;padding:3px;font-size:.78rem;font-weight:700;letter-spacing:.02em}
+  .lang a{padding:.3rem .68rem;border-radius:999px;color:var(--ink-faint);transition:color .2s,background .25s var(--ease),box-shadow .25s var(--ease)}
+  .lang a[aria-current="true"]{background:var(--accent);color:#fff;box-shadow:0 4px 10px -3px rgba(216,56,31,.5)}
   .lang a:not([aria-current="true"]):hover{color:var(--ink)}
 
   /* platform selector (hero) */
@@ -345,6 +345,11 @@
   .field textarea{resize:vertical;min-height:120px}
   form .btn{width:100%;margin-top:var(--space-1)}
   .form-note{font-size:.82rem;color:var(--ink-faint);text-align:center;margin-top:var(--space-2)}
+  .form-ok{text-align:center;padding:2.2rem 1.4rem;background:var(--white);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-md)}
+  .form-ok .ok-ic{width:58px;height:58px;border-radius:50%;background:var(--accent-tint);color:var(--accent);display:grid;place-items:center;margin:0 auto 1rem}
+  .form-ok .ok-ic svg{width:28px;height:28px}
+  .form-ok h3{font-size:1.4rem;margin-bottom:.4rem}
+  .form-ok p{color:var(--ink-soft)}
 
   /* ---------- footer ---------- */
   footer{background:var(--ink);color:#fff;padding-block:var(--space-5)}
@@ -715,7 +720,7 @@
         </div>
       </div>
 
-      <form class="reveal d1" action="#" method="post" novalidate>
+      <form id="lead-form" class="reveal d1" action="#" method="post" novalidate>
         <div class="field">
           <label for="nombre">Tu nombre</label>
           <input id="nombre" name="nombre" type="text" placeholder="Ej: Rocío" autocomplete="name" required>
@@ -741,6 +746,11 @@
         <button type="submit" class="btn btn-primary btn-lg">Quiero mis 5 fotos gratis</button>
         <p class="form-note">Te contactamos en menos de 24 hs. No mandamos spam.</p>
       </form>
+      <div class="form-ok" id="form-ok" role="status" style="display:none">
+        <span class="ok-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <h3>¡Recibimos tu mensaje!</h3>
+        <p>Te escribimos en menos de 24 hs. Revisá el spam por las dudas.</p>
+      </div>
     </div>
   </section>
 </main>
@@ -776,6 +786,20 @@
   window.addEventListener('scroll', onScroll, {passive:true});
 
   // Selector de plataforma: actualiza la medida del preset en la tarjeta
+  // Confirmación del formulario de contacto (por ahora solo muestra el cartel)
+  (function(){
+    var f = document.getElementById('lead-form');
+    var ok = document.getElementById('form-ok');
+    if(!f || !ok) return;
+    f.addEventListener('submit', function(e){
+      e.preventDefault();
+      if(!f.checkValidity()){ f.reportValidity(); return; }
+      f.style.display = 'none';
+      ok.style.display = 'block';
+      ok.scrollIntoView({behavior:'smooth', block:'center'});
+    });
+  })();
+
   var chips = document.querySelectorAll('.plat-select .chip');
   var sizeEl = document.getElementById('ba-size');
   chips.forEach(function(c){
