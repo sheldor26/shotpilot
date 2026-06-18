@@ -455,12 +455,6 @@
               </span>
       shotpilot
     </a>
-    <nav class="nav-links" aria-label="Sections">
-      <a href="#how">How it works</a>
-      <a href="#pricing">Pricing</a>
-      <a href="#reviews">Reviews</a>
-      <a href="#contact">Contact</a>
-    </nav>
     <div class="nav-cta">
       <span class="lang" role="group" aria-label="Language">
         <a href="index.html" hreflang="es-AR">ES</a>
@@ -871,6 +865,14 @@
       ok.style.display = 'block';
       ok.scrollIntoView({behavior:'smooth', block:'center'});
     }
+    function fail(btn){
+      if(btn) btn.disabled = false;
+      var note = f.querySelector('.form-note');
+      if(note){
+        note.textContent = "Couldn't send it. Email us at hola@shotpilot.app or try again.";
+        note.style.color = 'var(--accent-deep)';
+      }
+    }
     f.addEventListener('submit', function(e){
       e.preventDefault();
       if(!f.checkValidity()){ f.reportValidity(); return; }
@@ -885,7 +887,7 @@
       if(btn) btn.disabled = true;
       fetch('/api/contact', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) })
         .then(function(r){ if(!r.ok) throw new Error('send'); if(window.va) window.va('event', {name:'lead'}); done(); })
-        .catch(function(){ console.warn('shotpilot: lead no entregado (revisá RESEND_API_KEY / LEAD_TO en Vercel)'); done(); });
+        .catch(function(){ console.warn('shotpilot: lead no entregado (revisá RESEND_API_KEY / LEAD_TO en Vercel)'); fail(btn); });
     });
   })();
 
