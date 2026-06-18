@@ -14,6 +14,9 @@ export default async function handler(req) {
   let data;
   try { data = await req.json(); } catch { return json({ error: 'bad_body' }, 400); }
 
+  // Honeypot: si un bot completó el campo oculto "website", fingimos éxito y no mandamos nada.
+  if (data && String(data.website || '').trim() !== '') return json({ ok: true }, 200);
+
   const clean = (v, n) => (v == null ? '' : String(v)).slice(0, n);
   const name = clean(data.name, 200);
   const email = clean(data.email, 200);
