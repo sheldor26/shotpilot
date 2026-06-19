@@ -4,6 +4,9 @@
 
 # dependencias / build
 node_modules/
+venv/
+__pycache__/
+*.pyc
 
 # salidas de prueba
 salida-*.png
