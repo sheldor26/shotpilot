@@ -345,9 +345,12 @@
   /* ---- selector de vistas del preview ---- */
   .pv-tabs{display:flex;align-items:center;gap:.4rem;margin-bottom:.7rem}
   .pv-tabrow{display:flex;gap:.4rem;flex:1;justify-content:center;flex-wrap:wrap}
-  .pv-tab{font-family:"Manrope",sans-serif;font-size:.84rem;font-weight:700;color:var(--ink-soft);background:rgba(255,255,255,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1.5px solid var(--line);border-radius:999px;padding:.4rem .95rem;cursor:pointer;transition:all .15s var(--ease)}
-  .pv-tab:hover{border-color:var(--ink-faint)}
-  .pv-tab[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .pv-tab{display:flex;flex-direction:column;align-items:center;gap:.3rem;font-family:"Manrope",sans-serif;background:rgba(255,255,255,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1.5px solid var(--line);border-radius:12px;padding:.32rem .32rem .3rem;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .12s}
+  .pv-tab:hover{border-color:var(--ink-faint);transform:translateY(-1px)}
+  .pv-tab[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+  .pv-thumb{display:block;width:62px;height:62px;border-radius:7px;background:#fff;border:1px solid var(--line)}
+  .pv-name{font-size:.72rem;font-weight:700;color:var(--ink-soft);letter-spacing:.01em}
+  .pv-tab[aria-pressed="true"] .pv-name{color:var(--accent-deep)}
   .pv-nav{flex:0 0 auto;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);background:rgba(255,255,255,.85);cursor:pointer;font-size:17px;line-height:1;color:var(--ink-soft);display:grid;place-items:center;transition:border-color .15s,color .15s}
   .pv-nav:hover{border-color:var(--ink);color:var(--ink)}
   /* preview más grande: protagonista */
@@ -1540,20 +1543,37 @@
       updateBigprevDraggable();
       renderResult();
     }
+    const VIEW_LAYERS = { producto: { dims: false, banners: false }, medidas: { dims: true, banners: false }, banner: { dims: false, banners: true }, todo: { dims: true, banners: true } };
+    // compone la variante en un mini-canvas (thumbnail de la tab)
+    function drawVariantThumb(mini, layers){
+      const p = P();
+      compose(p.w, p.h, shadowOn, p.fill, layers);   // deja el canvas global en esta variante
+      const c = mini.getContext('2d'); c.clearRect(0, 0, mini.width, mini.height);
+      c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high';
+      const s = Math.min(mini.width / canvas.width, mini.height / canvas.height);
+      const w = Math.round(canvas.width * s), h = Math.round(canvas.height * s);
+      c.drawImage(canvas, Math.round((mini.width - w) / 2), Math.round((mini.height - h) / 2), w, h);
+    }
     function buildPreviewTabs(keepRichest){
       const views = availableViews();
       if (keepRichest || !views.includes(previewView)) previewView = views[views.length - 1];
       const LBL = { producto: t('viewProducto'), medidas: t('viewMedidas'), banner: t('viewBanner'), todo: t('viewTodo') };
       const row = $('pv-tabrow'); row.innerHTML = '';
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       views.forEach(v => {
         const b = document.createElement('button'); b.type = 'button'; b.className = 'pv-tab'; b.dataset.view = v;
         b.setAttribute('aria-pressed', v === previewView ? 'true' : 'false');
-        b.textContent = LBL[v];
+        const mini = document.createElement('canvas'); mini.className = 'pv-thumb';
+        mini.width = Math.round(62 * dpr); mini.height = Math.round(62 * dpr); mini.style.width = '62px'; mini.style.height = '62px';
+        if (cutoutBox && cutoutBox.w) drawVariantThumb(mini, VIEW_LAYERS[v]);
+        const nm = document.createElement('span'); nm.className = 'pv-name'; nm.textContent = LBL[v];
+        b.append(mini, nm);
         b.addEventListener('click', () => setPreviewView(v));
         row.appendChild(b);
       });
       $('pv-tabs').style.display = views.length > 1 ? 'flex' : 'none';
       updateBigprevDraggable();
+      renderResult();   // los thumbs dejaron el canvas en otra variante -> recomponer la vista actual
     }
     function flipPreview(dir){
       const views = availableViews(); const i = Math.max(0, views.indexOf(previewView));
