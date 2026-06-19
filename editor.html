@@ -245,6 +245,49 @@
 
   @media(max-width:560px){.row .btn{min-width:100%}}
   @media(prefers-reduced-motion:reduce){.scanbox .ln{animation:none;left:50%;opacity:.6}}
+
+  /* ============ Editor v2 · liquid glass + layout 2 columnas ============ */
+  /* fondo con halos suaves para que el vidrio se lea */
+  body{background:
+      radial-gradient(58vw 58vw at 10% -10%, rgba(244,81,60,.10), transparent 60%),
+      radial-gradient(52vw 52vw at 102% 4%, rgba(27,73,184,.07), transparent 56%),
+      radial-gradient(46vw 46vw at 50% 118%, rgba(244,81,60,.06), transparent 60%),
+      var(--cream);
+    background-attachment:fixed}
+
+  /* superficies de vidrio translúcido con desenfoque */
+  header{background:rgba(251,247,242,.66);-webkit-backdrop-filter:blur(18px) saturate(150%);backdrop-filter:blur(18px) saturate(150%);border-bottom:1px solid rgba(255,255,255,.5)}
+  .card{background:linear-gradient(157deg, rgba(255,255,255,.38), rgba(255,255,255,0) 44%), rgba(255,255,255,.58);-webkit-backdrop-filter:blur(28px) saturate(152%);backdrop-filter:blur(28px) saturate(152%);border:1px solid rgba(255,255,255,.72);box-shadow:inset 0 1px 0 rgba(255,255,255,.85), 0 24px 64px -28px rgba(40,24,16,.34)}
+  .engine,.checklist,.bn-block{background:rgba(255,255,255,.5);-webkit-backdrop-filter:blur(14px) saturate(135%);backdrop-filter:blur(14px) saturate(135%);border:1px solid rgba(255,255,255,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.6), 0 12px 32px -24px rgba(40,24,16,.4)}
+  .toolbar{background:rgba(255,255,255,.46);-webkit-backdrop-filter:blur(14px) saturate(135%);backdrop-filter:blur(14px) saturate(135%);border:1px solid rgba(255,255,255,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+  .bigprev{background:linear-gradient(157deg, rgba(255,255,255,.45), rgba(255,255,255,0) 46%), rgba(255,255,255,.5);-webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%);border:1px solid rgba(255,255,255,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.8), 0 18px 44px -26px rgba(40,24,16,.42)}
+  .quota{background:rgba(255,255,255,.62);-webkit-backdrop-filter:blur(12px) saturate(140%);backdrop-filter:blur(12px) saturate(140%);border-color:rgba(255,255,255,.6)}
+  .seg .chip,.mini{background:rgba(255,255,255,.62);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+  .dim-input input,.bn-block,.dl-tile{background:rgba(255,255,255,.66)}
+  .zoombar{background:rgba(255,255,255,.7);-webkit-backdrop-filter:blur(12px) saturate(140%);backdrop-filter:blur(12px) saturate(140%)}
+  /* el lienzo de comparación queda opaco (es la foto, no decoración) */
+  .compare{background:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.6), 0 14px 36px -26px rgba(40,24,16,.4)}
+
+  /* botón principal: un toque de profundidad de vidrio */
+  .dl-main{box-shadow:0 10px 26px -12px rgba(216,56,31,.7), inset 0 1px 0 rgba(255,255,255,.35)}
+
+  /* layout 2 columnas — solo en desktop y en modo resultado */
+  .ed-grid{display:grid;gap:1rem}
+  @media(min-width:980px){
+    body.result-mode .wrap{max-width:1160px;transition:max-width .3s var(--ease)}
+    body.result-mode .wrap > .eyebrow,
+    body.result-mode .wrap > h1,
+    body.result-mode .wrap > .lede,
+    body.result-mode .wrap > .quota{max-width:720px}
+    .ed-grid{grid-template-columns:minmax(0,1fr) 396px;gap:1.7rem;align-items:start}
+    /* izquierda: preview hero + descarga, fijo en pantalla */
+    .ed-visual{grid-column:1;grid-row:1;position:sticky;top:84px}
+    /* derecha: inspector angosto (retoque + controles), scrollea */
+    .ed-controls{grid-column:2;grid-row:1;min-width:0}
+    .ed-visual > .bigprev{margin-top:0}
+    .ed-controls > .compare{margin-top:0}
+    .ed-visual .bigprev canvas{max-height:62vh}
+  }
 </style>
 </head>
 <body>
@@ -283,6 +326,8 @@
 
         <!-- resultado -->
         <div class="result hidden" id="result">
+          <div class="ed-grid">
+          <div class="ed-controls">
           <div class="compare" id="compare">
             <div class="cmp-layer cmp-after"><img id="img-cutout" alt=""></div>
             <img class="cmp-layer cmp-before" id="img-before" alt="">
@@ -391,9 +436,6 @@
               </label>
             </div>
           </div>
-
-          <!-- checklist de cumplimiento -->
-          <div class="checklist" id="checklist"></div>
 
           <!-- placa de medidas (opcional) -->
           <div class="engine" id="dims-panel">
@@ -547,6 +589,11 @@
             </div>
           </div>
 
+          <!-- checklist de cumplimiento (validación final) -->
+          <div class="checklist" id="checklist"></div>
+          </div><!-- /ed-controls -->
+
+          <div class="ed-visual">
           <!-- vista previa grande del resultado final -->
           <div class="bigprev" id="bigprev">
             <span class="bigprev-cap" data-i18n="previewCap">Vista previa · lo que se descarga</span>
@@ -564,6 +611,8 @@
           <div class="row" style="margin-top:.55rem">
             <button type="button" class="btn btn-ghost" id="another" data-i18n="another" style="min-width:100%">Otra foto</button>
           </div>
+          </div><!-- /ed-visual -->
+          </div><!-- /ed-grid -->
         </div>
 
         <div class="err hidden" id="err"></div>
@@ -714,7 +763,7 @@
         chkResWarn: (p) => `Foto chica: el producto se agranda ${p}% y puede verse borroso`,
         chkText: 'Revisá que no tenga texto, logos ni marcas de agua',
         badgeHeader: 'MEDIDAS',
-        metric: (out, quality) => `${out}px · <b>Shotpilot</b> · ${quality}`,
+        metric: (out, quality) => `${out} px · <b>Shotpilot</b> · ${quality}`,
         metricEnh: (ms) => ` · enhance <b>${ms}ms</b>`,
       },
       en: {
@@ -850,7 +899,7 @@
         chkResWarn: (p) => `Small photo: the product is scaled up ${p}% and may look blurry`,
         chkText: 'Check that it has no text, logos or watermarks',
         badgeHeader: 'DIMENSIONS',
-        metric: (out, quality) => `${out}px · <b>Shotpilot</b> · ${quality}`,
+        metric: (out, quality) => `${out} px · <b>Shotpilot</b> · ${quality}`,
         metricEnh: (ms) => ` · enhance <b>${ms}ms</b>`,
       },
     };
@@ -913,6 +962,7 @@
       drop.classList.toggle('hidden', state !== 'drop');
       procEl.classList.toggle('hidden', state !== 'proc');
       resultEl.classList.toggle('hidden', state !== 'result');
+      document.body.classList.toggle('result-mode', state === 'result');
       if (state !== 'err') errEl.classList.add('hidden');
     }
     function showError(msg){ errEl.textContent = msg; errEl.classList.remove('hidden'); }
@@ -984,7 +1034,7 @@
         setMode('compare');
 
         const qKey = model === 'birefnet-general' ? 'qUltra' : model === 'u2net' ? 'qGood' : 'qExcellent';
-        $('metric').innerHTML = t('metric')(outSize, t(qKey));
+        $('metric').innerHTML = t('metric')((outSize || '').replace('x', ' × '), t(qKey));
         updateDimsConf();
         refreshProductColors();
         updateDlVariants();
