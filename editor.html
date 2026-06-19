@@ -167,6 +167,9 @@
   .dl-tile.dl-primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 8px 18px -10px rgba(216,56,31,.6)}
   .dl-tile.dl-primary small{color:rgba(255,255,255,.85)}
   .dl-tile.dl-primary:hover{background:var(--accent-deep)}
+  .dl-main{width:100%;margin-top:.6rem;padding:.9rem 1rem;border:none;border-radius:12px;background:var(--accent);color:#fff;font-family:"Manrope",sans-serif;font-weight:800;font-size:1rem;cursor:pointer;box-shadow:0 8px 18px -10px rgba(216,56,31,.6);transition:background .15s,transform .12s}
+  .dl-main:hover{background:var(--accent-deep);transform:translateY(-1px)}
+  .dl-note{font-size:.72rem;color:var(--ink-faint);line-height:1.35;margin:.5rem .1rem 0}
 
   /* ---- banners ---- */
   #bn-fields{margin-top:1rem;display:grid;gap:1rem}
@@ -552,14 +555,10 @@
           <p class="eng-hint" id="bigprev-hint" data-i18n="bigprevHint" style="display:none;text-align:center">Arrastrá las puntas (círculos) para ajustar cada medida.</p>
 
           <span class="eng-label" style="margin-top:.2rem;display:block"><span data-i18n="downloadLabel">Descargar · formato</span> <b id="dl-label">MercadoLibre</b></span>
-          <div class="dl-grid" id="dl-grid">
-            <button type="button" class="dl-tile" data-layers="clean"><span data-i18n="dlClean">Foto limpia</span><small data-i18n="dlCleanSub">sin texto · imagen principal de ML</small></button>
-            <button type="button" class="dl-tile" id="dl-tile-dims" data-layers="dims" style="display:none"><span data-i18n="dlDims">Con medidas</span><small data-i18n="dlDimsSub">producto + cotas</small></button>
-            <button type="button" class="dl-tile" id="dl-tile-banner" data-layers="banner" style="display:none"><span data-i18n="dlBanner">Con banner</span><small data-i18n="dlBannerSub">producto + placa/chapa</small></button>
-            <button type="button" class="dl-tile dl-primary" id="dl-tile-all" data-layers="all" style="display:none"><span data-i18n="dlAll">Todo aplicado</span><small data-i18n="dlAllSub">medidas + banner</small></button>
-          </div>
-          <div class="row" style="margin-top:.6rem">
-            <button type="button" class="btn btn-ghost" id="dl-separate" data-i18n="dlSeparate" style="display:none">Descargar separadas (todas las capas)</button>
+          <button type="button" class="dl-main" id="dl-main" data-i18n="dlMain">Descargar</button>
+          <p class="dl-note" id="dl-note" data-i18n="dlNote" style="display:none">La imagen principal de ML va sin texto. Usá "cada versión por separado" para tener también la limpia.</p>
+          <div class="row" style="margin-top:.55rem">
+            <button type="button" class="btn btn-ghost" id="dl-separate" data-i18n="dlSeparate" style="display:none">Cada versión por separado</button>
             <button type="button" class="btn btn-ghost" id="download-pack" data-i18n="dlPack">Pack (todos los formatos)</button>
           </div>
           <div class="row" style="margin-top:.55rem">
@@ -690,7 +689,9 @@
         dlBannerSub: 'producto + placa/chapa',
         dlAll: 'Todo aplicado',
         dlAllSub: 'medidas + banner',
-        dlSeparate: 'Descargar separadas (todas las capas)',
+        dlMain: 'Descargar',
+        dlNote: 'La imagen principal de ML va sin texto. Usá "cada versión por separado" para tener también la limpia.',
+        dlSeparate: 'Cada versión por separado',
         dlPack: 'Pack (todos los formatos)',
         another: 'Otra foto',
         foot: 'Las primeras 5 fotos son gratis. Sin tarjeta.',
@@ -713,7 +714,7 @@
         chkResWarn: (p) => `Foto chica: el producto se agranda ${p}% y puede verse borroso`,
         chkText: 'Revisá que no tenga texto, logos ni marcas de agua',
         badgeHeader: 'MEDIDAS',
-        metric: (out, model, rembg, enh, total) => `${out}px · modelo <b>${model}</b> · rembg <b>${rembg}ms</b>${enh} · total <b>${total}ms</b>`,
+        metric: (out, quality) => `${out}px · <b>Shotpilot</b> · ${quality}`,
         metricEnh: (ms) => ` · enhance <b>${ms}ms</b>`,
       },
       en: {
@@ -824,7 +825,9 @@
         dlBannerSub: 'product + panel/badge',
         dlAll: 'Everything applied',
         dlAllSub: 'dimensions + banner',
-        dlSeparate: 'Download separately (all layers)',
+        dlMain: 'Download',
+        dlNote: 'The ML main image must have no text. Use "each version separately" to also get the clean one.',
+        dlSeparate: 'Each version separately',
         dlPack: 'Pack (all sizes)',
         another: 'Another photo',
         foot: 'Your first 5 photos are free. No card required.',
@@ -847,7 +850,7 @@
         chkResWarn: (p) => `Small photo: the product is scaled up ${p}% and may look blurry`,
         chkText: 'Check that it has no text, logos or watermarks',
         badgeHeader: 'DIMENSIONS',
-        metric: (out, model, rembg, enh, total) => `${out}px · model <b>${model}</b> · rembg <b>${rembg}ms</b>${enh} · total <b>${total}ms</b>`,
+        metric: (out, quality) => `${out}px · <b>Shotpilot</b> · ${quality}`,
         metricEnh: (ms) => ` · enhance <b>${ms}ms</b>`,
       },
     };
@@ -968,14 +971,10 @@
       fd.append('wb', wb ? 'true' : 'false');
       fd.append('main_only', mainOnly ? 'true' : 'false');
 
-      const t0 = performance.now();
       try {
         const resp = await fetch(`${MOTOR_URL}/remove`, { method:'POST', body: fd });
         if (!resp.ok) throw new Error(t('engineError')(resp.status));
         const blob = await resp.blob();
-        const totalMs = Math.round(performance.now() - t0);
-        const rembgMs = resp.headers.get('X-Elapsed-Ms');
-        const enhMs = resp.headers.get('X-Enhance-Ms');
         const outSize = resp.headers.get('X-Out-Size');
         try { autoDims = JSON.parse(resp.headers.get('X-Dims') || 'null'); } catch { autoDims = null; }
         dimLines = null;   // re-detectar posiciones para esta foto
@@ -984,8 +983,8 @@
         imgBefore.src = originalUrl;
         setMode('compare');
 
-        const enhTxt = (enhMs && enhMs !== '0') ? t('metricEnh')(enhMs) : '';
-        $('metric').innerHTML = t('metric')(outSize, model, rembgMs, enhTxt, totalMs);
+        const qKey = model === 'birefnet-general' ? 'qUltra' : model === 'u2net' ? 'qGood' : 'qExcellent';
+        $('metric').innerHTML = t('metric')(outSize, t(qKey));
         updateDimsConf();
         refreshProductColors();
         updateDlVariants();
@@ -1895,13 +1894,18 @@
       renderResult();   // restaurar la previa a la vista completa
     }
     function updateDlVariants(){
-      $('dl-tile-dims').style.display = dimsOn ? 'flex' : 'none';
-      $('dl-tile-banner').style.display = bannerOn ? 'flex' : 'none';
-      const both = dimsOn || bannerOn;
-      $('dl-tile-all').style.display = (dimsOn && bannerOn) ? 'flex' : 'none';
-      $('dl-separate').style.display = both ? 'inline-flex' : 'none';
+      const hasLayers = dimsOn || bannerOn;
+      $('dl-separate').style.display = hasLayers ? 'inline-flex' : 'none';
+      $('dl-note').style.display = hasLayers ? 'block' : 'none';
     }
-    $('dl-grid').querySelectorAll('.dl-tile').forEach(t => t.addEventListener('click', () => downloadLayers(t.dataset.layers)));
+    // botón principal: baja exactamente lo que se ve en la preview (con las capas que estén activas)
+    $('dl-main').addEventListener('click', async () => {
+      const p = P();
+      compose(p.w, p.h, shadowOn, p.fill, { dims: dimsOn, banners: bannerOn });
+      const sfx = (dimsOn && bannerOn) ? 'completa' : dimsOn ? 'medidas' : bannerOn ? 'banner' : 'limpia';
+      downloadBlob(await toBlob(), `shotpilot-${presetKey}-${sfx}-${p.w}x${p.h}.png`);
+      renderResult();
+    });
     // descargar separadas: limpia + cada capa activa como archivos aparte
     $('dl-separate').addEventListener('click', async () => {
       const btn = $('dl-separate'); btn.disabled = true;
