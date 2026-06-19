@@ -8,7 +8,7 @@
 <link rel="icon" type="image/png" href="/logo-shotpilot.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Anton&family=Archivo+Black&family=Oswald:wght@600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Anton&family=Archivo+Black&family=Oswald:wght@600;700&family=Montserrat:wght@700;800;900&family=Poppins:wght@600;700;800&family=Inter:wght@600;700;800&family=Sora:wght@600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#1A1614;--ink-soft:#5C524B;--ink-faint:#8A7F77;
@@ -362,6 +362,12 @@
   .cs-fields input:focus{outline:none;border-color:var(--accent)}
   .cs-x{color:var(--ink-faint);font-weight:700}
   .cs-u{font-style:normal;font-size:.78rem;font-weight:600;color:var(--ink-faint)}
+
+  /* ---- carrusel de fuentes ---- */
+  .font-carousel{display:flex;align-items:center;gap:.35rem;flex:1;min-width:0}
+  .font-strip{flex:1;min-width:0;flex-wrap:nowrap;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none;-ms-overflow-style:none;padding:2px 1px}
+  .font-strip::-webkit-scrollbar{display:none}
+  .font-strip .chip{flex:0 0 auto}
   /* preview más grande: protagonista */
   .bigprev{min-height:300px}
   @media(min-width:980px){ .ed-grid{grid-template-columns:minmax(0,1fr) 372px} }
@@ -662,12 +668,20 @@
               </div>
               <div class="bn-row" style="margin-bottom:.2rem">
                 <span class="dims-mini-label" data-i18n="font">Fuente</span>
-                <div class="seg seg-sm bn-fonts" id="bn-font" role="group" data-i18n-aria="fontAria" aria-label="Fuente">
-                  <button type="button" class="chip" data-font="Montserrat" aria-pressed="true" style="font-family:Montserrat">Montserrat</button>
-                  <button type="button" class="chip" data-font="Anton" aria-pressed="false" style="font-family:Anton">Anton</button>
-                  <button type="button" class="chip" data-font="Archivo Black" aria-pressed="false" style="font-family:'Archivo Black'">Archivo</button>
-                  <button type="button" class="chip" data-font="Oswald" aria-pressed="false" style="font-family:Oswald">Oswald</button>
-                  <button type="button" class="chip" data-font="Manrope" aria-pressed="false" style="font-family:Manrope">Manrope</button>
+                <div class="font-carousel">
+                  <button type="button" class="bn-tpl-nav" id="bn-font-prev" data-i18n-aria="fontPrev" aria-label="Fuentes anteriores">‹</button>
+                  <div class="seg seg-sm bn-fonts font-strip" id="bn-font" role="group" data-i18n-aria="fontAria" aria-label="Fuente">
+                    <button type="button" class="chip" data-font="Montserrat" aria-pressed="true" style="font-family:Montserrat">Montserrat</button>
+                    <button type="button" class="chip" data-font="Poppins" aria-pressed="false" style="font-family:Poppins">Poppins</button>
+                    <button type="button" class="chip" data-font="Inter" aria-pressed="false" style="font-family:Inter">Inter</button>
+                    <button type="button" class="chip" data-font="Sora" aria-pressed="false" style="font-family:Sora">Sora</button>
+                    <button type="button" class="chip" data-font="Manrope" aria-pressed="false" style="font-family:Manrope">Manrope</button>
+                    <button type="button" class="chip" data-font="Oswald" aria-pressed="false" style="font-family:Oswald">Oswald</button>
+                    <button type="button" class="chip" data-font="Bebas Neue" aria-pressed="false" style="font-family:'Bebas Neue';letter-spacing:.04em">Bebas</button>
+                    <button type="button" class="chip" data-font="Anton" aria-pressed="false" style="font-family:Anton">Anton</button>
+                    <button type="button" class="chip" data-font="Archivo Black" aria-pressed="false" style="font-family:'Archivo Black'">Archivo</button>
+                  </div>
+                  <button type="button" class="bn-tpl-nav" id="bn-font-next" data-i18n-aria="fontNext" aria-label="Más fuentes">›</button>
                 </div>
               </div>
               <div class="bn-row" style="margin-top:.6rem">
@@ -882,6 +896,8 @@
         bannersSwitchTitle: 'Agregar banners sobre la imagen',
         font: 'Fuente',
         fontAria: 'Fuente',
+        fontPrev: 'Fuentes anteriores',
+        fontNext: 'Más fuentes',
         effect: 'Efecto',
         effectAria: 'Efecto',
         effMetal: 'Metálico 3D',
@@ -1051,6 +1067,8 @@
         bannersSwitchTitle: 'Add banners on the image',
         font: 'Font',
         fontAria: 'Font',
+        fontPrev: 'Previous fonts',
+        fontNext: 'More fonts',
         effect: 'Effect',
         effectAria: 'Effect',
         effMetal: 'Metallic 3D',
@@ -2194,9 +2212,12 @@
     $('bn-font').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
       $('bn-font').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', 'false'));
       c.setAttribute('aria-pressed', 'true'); banner.font = c.dataset.font;
+      c.scrollIntoView({ inline: 'center', block: 'nearest' });
       try { document.fonts.load(`800 40px "${banner.font}"`).then(renderResult); } catch {}
       renderResult();
     }));
+    $('bn-font-prev').addEventListener('click', () => $('bn-font').scrollBy({ left: -150, behavior: 'smooth' }));
+    $('bn-font-next').addEventListener('click', () => $('bn-font').scrollBy({ left: 150, behavior: 'smooth' }));
     $('bn-effect').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
       $('bn-effect').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', 'false'));
       c.setAttribute('aria-pressed', 'true'); banner.effect = c.dataset.effect; renderResult();
