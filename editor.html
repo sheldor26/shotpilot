@@ -1525,7 +1525,6 @@
       const v = ['producto'];
       if (dimsOn) v.push('medidas');
       if (bannerOn) v.push('banner');
-      if (dimsOn && bannerOn) v.push('todo');
       return v;
     }
     function viewLayers(){
@@ -2336,7 +2335,6 @@
       const keys = ['clean'];
       if (dimsOn) keys.push('dims');
       if (bannerOn) keys.push('banner');
-      if (dimsOn && bannerOn) keys.push('all');
       for (const k of keys){ await downloadLayers(k); await new Promise(r => setTimeout(r, 350)); }
       btn.disabled = false;
     });
