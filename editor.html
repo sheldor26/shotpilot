@@ -363,6 +363,22 @@
   .cs-x{color:var(--ink-faint);font-weight:700}
   .cs-u{font-style:normal;font-size:.78rem;font-weight:600;color:var(--ink-faint)}
 
+  /* ---- orden del inspector: Destino arriba, Motor a "Avanzados" abajo ---- */
+  .ed-controls{display:flex;flex-direction:column}
+  .ed-controls > #retouch-toggle{order:1}
+  .ed-controls > #retouch-wrap{order:2}
+  .ed-controls > .dl{order:3}
+  .ed-controls > .extras-head{order:4}
+  .ed-controls > #dims-panel{order:5}
+  .ed-controls > #banner-panel{order:6}
+  .ed-controls > #adv-toggle{order:7;margin-top:1.2rem}
+  .ed-controls > #adv-wrap{order:8}
+  .ed-controls > #checklist{order:9}
+  .adv-collapsed{display:none}
+  #adv-wrap{margin-top:.7rem}
+  #adv-wrap > .engine{margin-top:0}
+  .extras-head{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:1.5rem;margin-bottom:-.3rem;padding-left:.15rem}
+
   /* ---- comparador / retoque colapsable ---- */
   .retouch-toggle{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.62rem 1rem;border:1.5px solid var(--line);border-radius:var(--radius);background:rgba(255,255,255,.5);-webkit-backdrop-filter:blur(10px) saturate(135%);backdrop-filter:blur(10px) saturate(135%);font-family:"Manrope",sans-serif;font-size:.86rem;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:border-color .15s,color .15s}
   .retouch-toggle:hover{border-color:var(--ink-faint);color:var(--ink)}
@@ -540,6 +556,9 @@
           </div>
           </div><!-- /retouch-wrap -->
 
+          <!-- ajustes avanzados (motor: calidad + mejoras), plegado por default -->
+          <button type="button" class="retouch-toggle" id="adv-toggle" aria-expanded="false" data-i18n="advToggle">Ajustes avanzados</button>
+          <div id="adv-wrap" class="adv-collapsed">
           <!-- panel motor -->
           <div class="engine">
             <div class="eng-head">
@@ -573,6 +592,7 @@
             <p class="eng-hint" id="mainonly-hint" data-i18n="mainonlyHint">¿Tu foto tiene más de un producto para mostrar? Apagá “Solo el producto”.</p>
             <p class="metric" id="metric">—</p>
           </div>
+          </div><!-- /adv-wrap -->
 
           <!-- destino (marketplace) + descarga -->
           <div class="dl">
@@ -598,6 +618,7 @@
             </div>
           </div>
 
+          <div class="extras-head" data-i18n="extrasHead">Extras · opcional</div>
           <!-- placa de medidas (opcional) -->
           <div class="engine" id="dims-panel">
             <div class="dims-head">
@@ -952,6 +973,8 @@
         cornerBL: 'Ab. izq.',
         previewCap: 'Vista previa · lo que se descarga',
         retouchToggle: 'Comparar antes/después · retocar',
+        advToggle: 'Ajustes avanzados',
+        extrasHead: 'Extras · opcional',
         viewProducto: 'Producto',
         viewMedidas: 'Medidas',
         viewBanner: 'Banner',
@@ -1127,6 +1150,8 @@
         cornerBL: 'Bottom left',
         previewCap: 'Preview · what gets downloaded',
         retouchToggle: 'Compare before/after · retouch',
+        advToggle: 'Advanced settings',
+        extrasHead: 'Extras · optional',
         viewProducto: 'Product',
         viewMedidas: 'Dimensions',
         viewBanner: 'Banner',
@@ -1309,7 +1334,7 @@
         updateDimsConf();
         refreshProductColors();
         updateDlVariants();
-        if (firstTime) openWizard(); else show('result');
+        if (firstTime && !wizardSkipped) openWizard(); else show('result');
       } catch (e){
         if (firstTime){ show('drop'); showError(e.message); }
         else { $('metric').textContent = t('errorPrefix')(e.message); }
@@ -1936,6 +1961,11 @@
       const collapsed = $('retouch-wrap').classList.toggle('retouch-collapsed');
       $('retouch-toggle').setAttribute('aria-expanded', String(!collapsed));
     });
+    // ajustes avanzados (Motor) plegable
+    $('adv-toggle').addEventListener('click', () => {
+      const collapsed = $('adv-wrap').classList.toggle('adv-collapsed');
+      $('adv-toggle').setAttribute('aria-expanded', String(!collapsed));
+    });
     $('fly-size').addEventListener('input', e => { brush = parseInt(e.target.value, 10); $('size-val').textContent = brush; });
     $('fly-int').addEventListener('input', e => { intensity = parseInt(e.target.value, 10) / 100; $('int-val').textContent = e.target.value + '%'; });
     $('apply-inpaint').addEventListener('click', applyInpaint);
@@ -2467,6 +2497,7 @@
 
     // ================= WIZARD GUIADO =================
     let wzStep = 1, wzTemplate = 0, wzCustoms = [], wzCustomSeq = 0, wzUnit = 'cm';
+    let wizardSkipped = false;   // si el usuario elige "Editar manual", no reabrir el wizard en esta sesión
     function openWizard(){
       wzStep = 1;
       updateWzNav();
@@ -2482,7 +2513,7 @@
     }
     $('wz-next').addEventListener('click', () => { if (wzStep < 3){ wzStep++; updateWzNav(); } else generateFromWizard(); });
     $('wz-back').addEventListener('click', () => { if (wzStep > 1){ wzStep--; updateWzNav(); } });
-    $('wz-skip').addEventListener('click', () => { buildPreviewTabs(); show('result'); });
+    $('wz-skip').addEventListener('click', () => { wizardSkipped = true; buildPreviewTabs(); show('result'); });
     $('wz-unit').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
       $('wz-unit').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', 'false'));
       c.setAttribute('aria-pressed', 'true'); wzUnit = c.dataset.unit;
