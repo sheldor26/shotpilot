@@ -191,7 +191,7 @@
 
   /* vista previa grande del resultado final */
   .bigprev{margin-top:1rem;border:1px solid var(--line);border-radius:var(--radius);background:#fff;overflow:hidden;position:relative;display:grid;place-items:center;min-height:220px;padding:.6rem}
-  .bigprev canvas{max-width:100%;max-height:440px;display:block;border-radius:6px}
+  .bigprev canvas{max-width:100%;max-height:none;display:block;border-radius:6px}
   .bigprev.draggable canvas{cursor:grab;touch-action:none}
   .bigprev.draggable canvas:active{cursor:grabbing}
   .bigprev-cap{position:absolute;top:.6rem;left:.6rem;font-size:.66rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);background:rgba(255,255,255,.8);padding:.2rem .5rem;border-radius:999px}
@@ -286,7 +286,7 @@
     .ed-controls{grid-column:2;grid-row:1;min-width:0}
     .ed-visual > .bigprev{margin-top:0}
     .ed-controls > .compare{margin-top:0}
-    .ed-visual .bigprev canvas{max-height:62vh}
+    .ed-visual .bigprev canvas{max-height:none}
   }
 
   /* ---- galería de plantillas de banner ---- */
@@ -341,6 +341,18 @@
   .wz-nav .btn{flex:0 0 auto;min-width:0;padding:.7rem 1.4rem}
   #wz-skip{padding-left:0;padding-right:.4rem;border:0;color:var(--ink-faint);font-size:.9rem}
   #wz-skip:hover{color:var(--ink);background:none}
+
+  /* ---- selector de vistas del preview ---- */
+  .pv-tabs{display:flex;align-items:center;gap:.4rem;margin-bottom:.7rem}
+  .pv-tabrow{display:flex;gap:.4rem;flex:1;justify-content:center;flex-wrap:wrap}
+  .pv-tab{font-family:"Manrope",sans-serif;font-size:.84rem;font-weight:700;color:var(--ink-soft);background:rgba(255,255,255,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1.5px solid var(--line);border-radius:999px;padding:.4rem .95rem;cursor:pointer;transition:all .15s var(--ease)}
+  .pv-tab:hover{border-color:var(--ink-faint)}
+  .pv-tab[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .pv-nav{flex:0 0 auto;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);background:rgba(255,255,255,.85);cursor:pointer;font-size:17px;line-height:1;color:var(--ink-soft);display:grid;place-items:center;transition:border-color .15s,color .15s}
+  .pv-nav:hover{border-color:var(--ink);color:var(--ink)}
+  /* preview más grande: protagonista */
+  .bigprev{min-height:300px}
+  @media(min-width:980px){ .ed-grid{grid-template-columns:minmax(0,1fr) 372px} }
 </style>
 </head>
 <body>
@@ -714,6 +726,12 @@
           </div><!-- /ed-controls -->
 
           <div class="ed-visual">
+          <!-- selector de vistas (producto / medidas / banner / todo) -->
+          <div class="pv-tabs" id="pv-tabs" style="display:none">
+            <button type="button" class="pv-nav" id="pv-prev" data-i18n-aria="pvPrev" aria-label="Vista anterior">‹</button>
+            <div class="pv-tabrow" id="pv-tabrow"></div>
+            <button type="button" class="pv-nav" id="pv-next" data-i18n-aria="pvNext" aria-label="Vista siguiente">›</button>
+          </div>
           <!-- vista previa grande del resultado final -->
           <div class="bigprev" id="bigprev">
             <span class="bigprev-cap" data-i18n="previewCap">Vista previa · lo que se descarga</span>
@@ -873,6 +891,12 @@
         cornerBR: 'Ab. der.',
         cornerBL: 'Ab. izq.',
         previewCap: 'Vista previa · lo que se descarga',
+        viewProducto: 'Producto',
+        viewMedidas: 'Medidas',
+        viewBanner: 'Banner',
+        viewTodo: 'Todo',
+        pvPrev: 'Vista anterior',
+        pvNext: 'Vista siguiente',
         bigprevHint: 'Arrastrá las puntas (círculos) para ajustar cada medida.',
         downloadLabel: 'Descargar · formato',
         dlClean: 'Foto limpia',
@@ -1034,6 +1058,12 @@
         cornerBR: 'Bottom right',
         cornerBL: 'Bottom left',
         previewCap: 'Preview · what gets downloaded',
+        viewProducto: 'Product',
+        viewMedidas: 'Dimensions',
+        viewBanner: 'Banner',
+        viewTodo: 'All',
+        pvPrev: 'Previous view',
+        pvNext: 'Next view',
         bigprevHint: 'Drag the endpoints (circles) to adjust each dimension.',
         downloadLabel: 'Download · size',
         dlClean: 'Clean photo',
@@ -1486,10 +1516,54 @@
       Promise.all([document.fonts.load(`800 40px "${fam}"`), document.fonts.load(`700 40px "${fam}"`)])
         .then(() => { bnLoaded.add(fam); renderResult(); }).catch(() => {});
     }
+    // ---- selector de vistas del preview (producto / medidas / banner / todo) ----
+    let previewView = 'producto';
+    function availableViews(){
+      const v = ['producto'];
+      if (dimsOn) v.push('medidas');
+      if (bannerOn) v.push('banner');
+      if (dimsOn && bannerOn) v.push('todo');
+      return v;
+    }
+    function viewLayers(){
+      return { dims: previewView === 'medidas' || previewView === 'todo', banners: previewView === 'banner' || previewView === 'todo' };
+    }
+    function dimsVisible(){ return dimsOn && dimsStyle === 'lines' && (previewView === 'medidas' || previewView === 'todo'); }
+    function updateBigprevDraggable(){
+      const drag = dimsVisible();
+      $('bigprev').classList.toggle('draggable', drag);
+      $('bigprev-hint').style.display = drag ? 'block' : 'none';
+    }
+    function setPreviewView(v){
+      previewView = v;
+      [...$('pv-tabrow').children].forEach(b => b.setAttribute('aria-pressed', b.dataset.view === v ? 'true' : 'false'));
+      updateBigprevDraggable();
+      renderResult();
+    }
+    function buildPreviewTabs(keepRichest){
+      const views = availableViews();
+      if (keepRichest || !views.includes(previewView)) previewView = views[views.length - 1];
+      const LBL = { producto: t('viewProducto'), medidas: t('viewMedidas'), banner: t('viewBanner'), todo: t('viewTodo') };
+      const row = $('pv-tabrow'); row.innerHTML = '';
+      views.forEach(v => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'pv-tab'; b.dataset.view = v;
+        b.setAttribute('aria-pressed', v === previewView ? 'true' : 'false');
+        b.textContent = LBL[v];
+        b.addEventListener('click', () => setPreviewView(v));
+        row.appendChild(b);
+      });
+      $('pv-tabs').style.display = views.length > 1 ? 'flex' : 'none';
+      updateBigprevDraggable();
+    }
+    function flipPreview(dir){
+      const views = availableViews(); const i = Math.max(0, views.indexOf(previewView));
+      setPreviewView(views[(i + dir + views.length) % views.length]);
+    }
+
     function renderResult(){
       ensureBannerFont();
       const p = P();
-      const info = compose(p.w, p.h, shadowOn, p.fill);
+      const info = compose(p.w, p.h, shadowOn, p.fill, viewLayers());
       drawPreview();
       $('dl-label').textContent = p.name;
       updateChecklist(p, info);
@@ -1498,7 +1572,8 @@
     function drawPreview(){
       const pv = $('preview');
       const box = pv.parentElement.clientWidth - 24;
-      const s = Math.min((box > 0 ? box : 600) / canvas.width, 440 / canvas.height);
+      const maxH = Math.min(640, Math.max(340, window.innerHeight * 0.66));   // preview protagonista
+      const s = Math.min((box > 0 ? box : 600) / canvas.width, maxH / canvas.height);
       const dispW = Math.max(1, Math.round(canvas.width * s)), dispH = Math.max(1, Math.round(canvas.height * s));
       const dpr = Math.min(window.devicePixelRatio || 1, 3);   // resolución real de la pantalla (retina) -> nítido
       pv.style.width = dispW + 'px'; pv.style.height = dispH + 'px';
@@ -1508,7 +1583,7 @@
       c.clearRect(0, 0, pv.width, pv.height);
       c.drawImage(canvas, 0, 0, pv.width, pv.height);
       // handles de las puntas (solo en la previa, no en la descarga)
-      if (dimsOn && dimsStyle === 'lines' && dimLines){
+      if (dimsVisible() && dimLines){
         const hr = 6 * dpr;
         allDimEntries().forEach(en => {
           if (!en.line) return;
@@ -1777,11 +1852,10 @@
     $('dims-on').addEventListener('change', e => {
       dimsOn = e.target.checked;
       $('dims-fields').style.display = dimsOn ? 'block' : 'none';
-      $('bigprev').classList.toggle('draggable', dimsOn && dimsStyle === 'lines');
-      $('bigprev-hint').style.display = (dimsOn && dimsStyle === 'lines') ? 'block' : 'none';
       if (dimsOn) initDimLines();   // (re)posicionar las cotas para este producto
       updateDimsConf();
       updateDlVariants();
+      buildPreviewTabs(dimsOn);     // al activar, saltar a la vista que muestra las medidas
       renderResult();
     });
     document.querySelectorAll('#dims-fields .dim-v').forEach(i => i.addEventListener('input', () => { if (!dimLines) initDimLines(); renderResult(); }));
@@ -1810,7 +1884,7 @@
     }
     const clampF = v => Math.max(0.01, Math.min(0.99, v));
     preview.addEventListener('pointerdown', e => {
-      if (!dimsOn || dimsStyle !== 'lines' || !dimLines) return;
+      if (!dimsVisible() || !dimLines) return;
       const g = hit(pvFrac(e));
       if (!g) return;
       e.preventDefault();
@@ -1859,10 +1933,9 @@
       $('dims-pos-row').style.display = lines ? 'none' : 'block';        // posición por esquina solo para la placa
       $('dims-side-row').style.display = lines ? 'flex' : 'none';        // lado del número solo en líneas
       $('dims-lines-hint').style.display = lines ? 'block' : 'none';
-      $('bigprev').classList.toggle('draggable', dimsOn && lines);       // arrastre solo en modo líneas
-      $('bigprev-hint').style.display = (dimsOn && lines) ? 'block' : 'none';
       if (lines && !dimLines) initDimLines();
       updateDimsConf();
+      updateBigprevDraggable();   // arrastre solo en modo líneas y vista con medidas
       renderResult();
     }));
     $('dims-auto').addEventListener('click', () => { initDimLines(); updateDimsConf(); renderResult(); });
@@ -2161,7 +2234,7 @@
     // re-render cuando las fuentes de Google terminen de cargar
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (workCtx) renderResult(); });
 
-    $('bn-on').addEventListener('change', e => { bannerOn = e.target.checked; $('bn-fields').style.display = bannerOn ? 'block' : 'none'; updateDlVariants(); renderResult(); });
+    $('bn-on').addEventListener('change', e => { bannerOn = e.target.checked; $('bn-fields').style.display = bannerOn ? 'block' : 'none'; updateDlVariants(); buildPreviewTabs(bannerOn); renderResult(); });
     $('bn-badge-on').addEventListener('change', e => { banner.badge.on = e.target.checked; $('bn-badge-fields').style.display = banner.badge.on ? 'block' : 'none'; renderResult(); });
     ['bn-title', 'bn-sub', 'bn-big', 'bn-small'].forEach(id => $(id).addEventListener('input', renderResult));
     $('bn-panel-pos').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
@@ -2232,8 +2305,8 @@
     // botón principal: baja exactamente lo que se ve en la preview (con las capas que estén activas)
     $('dl-main').addEventListener('click', async () => {
       const p = P();
-      compose(p.w, p.h, shadowOn, p.fill, { dims: dimsOn, banners: bannerOn });
-      const sfx = (dimsOn && bannerOn) ? 'completa' : dimsOn ? 'medidas' : bannerOn ? 'banner' : 'limpia';
+      compose(p.w, p.h, shadowOn, p.fill, viewLayers());   // baja la vista que se está mirando
+      const sfx = previewView === 'todo' ? 'completa' : previewView === 'medidas' ? 'medidas' : previewView === 'banner' ? 'banner' : 'limpia';
       downloadBlob(await toBlob(), `shotpilot-${presetKey}-${sfx}-${p.w}x${p.h}.png`);
       renderResult();
     });
@@ -2262,6 +2335,8 @@
     });
 
     $('another').addEventListener('click', () => { fileInput.value = ''; show('drop'); });
+    $('pv-prev').addEventListener('click', () => flipPreview(-1));
+    $('pv-next').addEventListener('click', () => flipPreview(1));
 
     // ================= WIZARD GUIADO =================
     let wzStep = 1, wzTemplate = 0, wzCustoms = [], wzCustomSeq = 0, wzUnit = 'cm';
@@ -2280,7 +2355,7 @@
     }
     $('wz-next').addEventListener('click', () => { if (wzStep < 3){ wzStep++; updateWzNav(); } else generateFromWizard(); });
     $('wz-back').addEventListener('click', () => { if (wzStep > 1){ wzStep--; updateWzNav(); } });
-    $('wz-skip').addEventListener('click', () => show('result'));
+    $('wz-skip').addEventListener('click', () => { buildPreviewTabs(); show('result'); });
     $('wz-unit').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
       $('wz-unit').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', 'false'));
       c.setAttribute('aria-pressed', 'true'); wzUnit = c.dataset.unit;
@@ -2348,6 +2423,7 @@
           $('bn-big').value = hlVal; $('bn-small').value = hlLbl;
         }
       }
+      buildPreviewTabs(true);   // mostrar la ficha más completa armada
       show('result');
       renderResult();
     }
