@@ -153,7 +153,7 @@
   .dim-input input:focus{outline:none;border-color:var(--accent)}
   .dim-input .dim-u{position:absolute;right:.7rem;font-style:normal;font-size:.78rem;font-weight:600;color:var(--ink-faint);pointer-events:none}
 
-  .dims-unit-row{display:flex;align-items:center;gap:.7rem;margin-top:.8rem}
+  .dims-unit-row{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem .6rem;margin-top:.8rem}
   .dims-mini-label{font-size:.78rem;font-weight:600;color:var(--ink-soft)}
   .dims-actions{display:flex;align-items:center;gap:1rem;margin-top:.75rem;flex-wrap:wrap}
   .mini-link{background:none;border:0;color:var(--ink-soft);font-family:"Manrope",sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;padding:.2rem 0}
@@ -427,12 +427,16 @@
             <button type="button" class="mini dim-add" id="wz-add" data-i18n="dimAdd">+ Agregar medida</button>
             <div class="dims-unit-row">
               <span class="dims-mini-label" data-i18n="unit">Unidad</span>
+              <div class="seg seg-sm" id="wz-system" role="group">
+                <button type="button" class="chip" data-sys="metric" aria-pressed="true" data-i18n="sysMetric">Métrico</button>
+                <button type="button" class="chip" data-sys="imperial" aria-pressed="false" data-i18n="sysImperial">Imperial</button>
+              </div>
               <div class="seg seg-sm" id="wz-unit" role="group">
                 <button type="button" class="chip" data-unit="cm" aria-pressed="true">cm</button>
                 <button type="button" class="chip" data-unit="mm" aria-pressed="false">mm</button>
                 <button type="button" class="chip" data-unit="m" aria-pressed="false">m</button>
-                <button type="button" class="chip" data-unit="in" aria-pressed="false">in</button>
-                <button type="button" class="chip" data-unit="ft" aria-pressed="false">ft</button>
+                <button type="button" class="chip" data-unit="in" aria-pressed="false" style="display:none">in</button>
+                <button type="button" class="chip" data-unit="ft" aria-pressed="false" style="display:none">ft</button>
               </div>
             </div>
           </div>
@@ -610,12 +614,16 @@
               <button type="button" class="mini dim-add" id="dims-add" data-i18n="dimAdd">+ Agregar medida</button>
               <div class="dims-unit-row">
                 <span class="dims-mini-label" data-i18n="unit">Unidad</span>
+                <div class="seg seg-sm" id="dims-system" role="group" data-i18n-aria="systemAria" aria-label="Sistema de medida">
+                  <button type="button" class="chip" data-sys="metric" aria-pressed="true" data-i18n="sysMetric">Métrico</button>
+                  <button type="button" class="chip" data-sys="imperial" aria-pressed="false" data-i18n="sysImperial">Imperial</button>
+                </div>
                 <div class="seg seg-sm" id="dims-unit" role="group" data-i18n-aria="unitAria" aria-label="Unidad de medida">
                   <button type="button" class="chip" data-unit="cm" aria-pressed="true">cm</button>
                   <button type="button" class="chip" data-unit="mm" aria-pressed="false">mm</button>
                   <button type="button" class="chip" data-unit="m" aria-pressed="false">m</button>
-                  <button type="button" class="chip" data-unit="in" aria-pressed="false">in</button>
-                  <button type="button" class="chip" data-unit="ft" aria-pressed="false">ft</button>
+                  <button type="button" class="chip" data-unit="in" aria-pressed="false" style="display:none">in</button>
+                  <button type="button" class="chip" data-unit="ft" aria-pressed="false" style="display:none">ft</button>
                 </div>
               </div>
               <p class="eng-hint" id="dims-lines-hint" data-i18n="dimsLinesHint">Las cotas se colocan solas sobre los bordes. Arrastrá las puntas en la vista previa para ajustar.</p>
@@ -877,6 +885,9 @@
         wzGenerate: 'Armar ficha',
         unit: 'Unidad',
         unitAria: 'Unidad de medida',
+        systemAria: 'Sistema de medida',
+        sysMetric: 'Métrico',
+        sysImperial: 'Imperial',
         dimsLinesHint: 'Las cotas se colocan solas sobre los bordes. Arrastrá las puntas en la vista previa para ajustar.',
         dimsConf: '⚠ Ángulo suave: la profundidad es una estimación. Arrastrá su punta para ajustarla.',
         dimsAuto: '↺ Auto-acotar',
@@ -1048,6 +1059,9 @@
         wzGenerate: 'Build shot',
         unit: 'Unit',
         unitAria: 'Unit of measure',
+        systemAria: 'Measurement system',
+        sysMetric: 'Metric',
+        sysImperial: 'Imperial',
         dimsLinesHint: 'Dimension lines snap to the edges automatically. Drag the endpoints in the preview to adjust.',
         dimsConf: '⚠ Shallow angle: depth is an estimate. Drag its endpoint to adjust it.',
         dimsAuto: '↺ Auto-measure',
@@ -1378,7 +1392,11 @@
       // reservar el espacio del banner solo si se va a dibujar (si no, producto centrado full)
       const res = L.banners ? bannerReserve(tw, th) : { top: 0, bottom: 0 };
       const availTop = res.top, availH = th - res.top - res.bottom;
-      const scale = Math.min(tw * fill / b.w, availH * fill / b.h);
+      // con banner el producto ya pierde espacio por la reserva: lo agrandamos dentro
+      // del área libre para que no quede tan chico (cap 0.91 para no pegarse a los bordes)
+      const reserving = res.top + res.bottom > 0;
+      const eff = reserving ? Math.min(fill + 0.14, 0.96) : fill;
+      const scale = Math.min(tw * eff / b.w, availH * eff / b.h);
       const dw = b.w * scale, dh = b.h * scale;
       const dx = (tw - dw) / 2, dy = availTop + (availH - dh) / 2;
       if (shadow){ ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.20)'; ctx.shadowBlur = Math.min(tw, th) * 0.045; ctx.shadowOffsetY = Math.min(tw, th) * 0.03; }
@@ -1976,6 +1994,23 @@
       document.querySelectorAll('#dims-fields .dim-u').forEach(u => u.textContent = dimsUnit);  // unidad adentro del input
       renderResult();
     }));
+    // ---- Métrico / Imperial: filtra qué unidades se muestran ----
+    const UNIT_SYS = { metric: ['cm', 'mm', 'm'], imperial: ['in', 'ft'] };
+    function applyUnitSystem(unitGroupId, sys, setUnit){
+      const def = sys === 'metric' ? 'cm' : 'in';
+      $(unitGroupId).querySelectorAll('.chip').forEach(ch => {
+        const inSys = UNIT_SYS[sys].includes(ch.dataset.unit);
+        ch.style.display = inSys ? 'inline-flex' : 'none';
+        ch.setAttribute('aria-pressed', ch.dataset.unit === def ? 'true' : 'false');
+      });
+      setUnit(def);
+    }
+    $('dims-system').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+      $('dims-system').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', 'false'));
+      c.setAttribute('aria-pressed', 'true');
+      applyUnitSystem('dims-unit', c.dataset.sys, u => { dimsUnit = u; document.querySelectorAll('#dims-fields .dim-u').forEach(e => e.textContent = u); });
+      renderResult();
+    }));
     $('dims-more').addEventListener('click', () => {
       const adv = $('dims-advanced'), open = adv.style.display !== 'none';
       adv.style.display = open ? 'none' : 'block';
@@ -2093,7 +2128,7 @@
       if (!title && !sub) return { top: 0, bottom: 0 };
       const base = Math.min(tw, th);
       const m = banner.panel.style === 'band' ? 0 : base * 0.04;
-      const reserve = bannerPanelH(th, sub) + m + base * 0.025;   // panel + margen + respiro
+      const reserve = bannerPanelH(th, sub) + m + base * 0.012;   // panel + margen + respiro mínimo
       return banner.panel.pos === 'top' ? { top: reserve, bottom: 0 } : { top: 0, bottom: reserve };
     }
 
@@ -2436,6 +2471,11 @@
       c.setAttribute('aria-pressed', 'true'); wzUnit = c.dataset.unit;
       document.querySelectorAll('#wz-1 .dim-u').forEach(u => u.textContent = wzUnit);
     }));
+    $('wz-system').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+      $('wz-system').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', 'false'));
+      c.setAttribute('aria-pressed', 'true');
+      applyUnitSystem('wz-unit', c.dataset.sys, u => { wzUnit = u; document.querySelectorAll('#wz-1 .dim-u').forEach(e => e.textContent = u); });
+    }));
     function renderWzCustom(){
       const wrap = $('wz-custom-rows'); wrap.innerHTML = '';
       wzCustoms.forEach(cd => {
@@ -2478,6 +2518,9 @@
       // 1) medidas fijas + unidad
       ['alto', 'ancho', 'prof'].forEach(d => { const e = editDim(d); if (e) e.value = (document.querySelector(`.wz-dim[data-dim="${d}"]`).value || '').trim(); });
       dimsUnit = wzUnit;
+      const wzSys = UNIT_SYS.metric.includes(wzUnit) ? 'metric' : 'imperial';
+      $('dims-system').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', x.dataset.sys === wzSys ? 'true' : 'false'));
+      applyUnitSystem('dims-unit', wzSys, () => {});   // muestra las unidades del sistema elegido en el wizard
       $('dims-unit').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', x.dataset.unit === wzUnit ? 'true' : 'false'));
       document.querySelectorAll('#dims-fields .dim-u').forEach(u => u.textContent = wzUnit);
       // 2) medidas personalizadas
