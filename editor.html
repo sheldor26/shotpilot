@@ -363,6 +363,14 @@
   .cs-x{color:var(--ink-faint);font-weight:700}
   .cs-u{font-style:normal;font-size:.78rem;font-weight:600;color:var(--ink-faint)}
 
+  /* ---- comparador / retoque colapsable ---- */
+  .retouch-toggle{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.62rem 1rem;border:1.5px solid var(--line);border-radius:var(--radius);background:rgba(255,255,255,.5);-webkit-backdrop-filter:blur(10px) saturate(135%);backdrop-filter:blur(10px) saturate(135%);font-family:"Manrope",sans-serif;font-size:.86rem;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:border-color .15s,color .15s}
+  .retouch-toggle:hover{border-color:var(--ink-faint);color:var(--ink)}
+  .retouch-toggle::after{content:"▾";font-size:.78rem;transition:transform .2s var(--ease)}
+  .retouch-toggle[aria-expanded="true"]::after{transform:rotate(180deg)}
+  #retouch-wrap{margin-top:.7rem}
+  .retouch-collapsed{display:none}
+
   /* ---- carrusel de fuentes ---- */
   .font-carousel{display:flex;align-items:center;gap:.35rem;flex:1;min-width:0}
   .font-strip{flex:1;min-width:0;flex-wrap:nowrap;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none;-ms-overflow-style:none;padding:2px 1px}
@@ -474,6 +482,8 @@
         <div class="result hidden" id="result">
           <div class="ed-grid">
           <div class="ed-controls">
+          <button type="button" class="retouch-toggle" id="retouch-toggle" aria-expanded="false" data-i18n="retouchToggle">Comparar antes/después · retocar</button>
+          <div id="retouch-wrap" class="retouch-collapsed">
           <div class="compare" id="compare">
             <div class="cmp-layer cmp-after"><img id="img-cutout" alt=""></div>
             <img class="cmp-layer cmp-before" id="img-before" alt="">
@@ -528,6 +538,7 @@
               </button>
             </div>
           </div>
+          </div><!-- /retouch-wrap -->
 
           <!-- panel motor -->
           <div class="engine">
@@ -941,6 +952,7 @@
         cornerBR: 'Ab. der.',
         cornerBL: 'Ab. izq.',
         previewCap: 'Vista previa · lo que se descarga',
+        retouchToggle: 'Comparar antes/después · retocar',
         viewProducto: 'Producto',
         viewMedidas: 'Medidas',
         viewBanner: 'Banner',
@@ -1115,6 +1127,7 @@
         cornerBR: 'Bottom right',
         cornerBL: 'Bottom left',
         previewCap: 'Preview · what gets downloaded',
+        retouchToggle: 'Compare before/after · retouch',
         viewProducto: 'Product',
         viewMedidas: 'Dimensions',
         viewBanner: 'Banner',
@@ -1919,6 +1932,11 @@
     tools.querySelectorAll('.tool[data-tool]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.tool)));
     $('undo').addEventListener('click', doUndo);
     $('reset').addEventListener('click', doReset);
+    // comparador/retoque colapsable: el inspector abre en los controles; esto se despliega si querés
+    $('retouch-toggle').addEventListener('click', () => {
+      const collapsed = $('retouch-wrap').classList.toggle('retouch-collapsed');
+      $('retouch-toggle').setAttribute('aria-expanded', String(!collapsed));
+    });
     $('fly-size').addEventListener('input', e => { brush = parseInt(e.target.value, 10); $('size-val').textContent = brush; });
     $('fly-int').addEventListener('input', e => { intensity = parseInt(e.target.value, 10) / 100; $('int-val').textContent = e.target.value + '%'; });
     $('apply-inpaint').addEventListener('click', applyInpaint);
