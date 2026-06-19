@@ -249,17 +249,18 @@
   /* ============ Editor v2 · liquid glass + layout 2 columnas ============ */
   /* fondo con halos suaves para que el vidrio se lea */
   body{background:
-      radial-gradient(58vw 58vw at 10% -10%, rgba(244,81,60,.10), transparent 60%),
-      radial-gradient(52vw 52vw at 102% 4%, rgba(27,73,184,.07), transparent 56%),
-      radial-gradient(46vw 46vw at 50% 118%, rgba(244,81,60,.06), transparent 60%),
+      radial-gradient(60vw 60vw at 8% -12%, rgba(244,81,60,.14), transparent 60%),
+      radial-gradient(54vw 54vw at 104% 2%, rgba(27,73,184,.11), transparent 56%),
+      radial-gradient(48vw 48vw at 50% 120%, rgba(244,81,60,.08), transparent 60%),
+      radial-gradient(40vw 40vw at 88% 92%, rgba(201,162,75,.07), transparent 58%),
       var(--cream);
     background-attachment:fixed}
 
   /* superficies de vidrio translúcido con desenfoque */
   header{background:rgba(251,247,242,.66);-webkit-backdrop-filter:blur(18px) saturate(150%);backdrop-filter:blur(18px) saturate(150%);border-bottom:1px solid rgba(255,255,255,.5)}
   .card{background:linear-gradient(157deg, rgba(255,255,255,.38), rgba(255,255,255,0) 44%), rgba(255,255,255,.58);-webkit-backdrop-filter:blur(28px) saturate(152%);backdrop-filter:blur(28px) saturate(152%);border:1px solid rgba(255,255,255,.72);box-shadow:inset 0 1px 0 rgba(255,255,255,.85), 0 24px 64px -28px rgba(40,24,16,.34)}
-  .engine,.checklist,.bn-block{background:rgba(255,255,255,.5);-webkit-backdrop-filter:blur(14px) saturate(135%);backdrop-filter:blur(14px) saturate(135%);border:1px solid rgba(255,255,255,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.6), 0 12px 32px -24px rgba(40,24,16,.4)}
-  .toolbar{background:rgba(255,255,255,.46);-webkit-backdrop-filter:blur(14px) saturate(135%);backdrop-filter:blur(14px) saturate(135%);border:1px solid rgba(255,255,255,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+  .engine,.checklist,.bn-block{background:linear-gradient(158deg, rgba(255,255,255,.32), rgba(255,255,255,0) 50%), rgba(255,255,255,.44);-webkit-backdrop-filter:blur(16px) saturate(142%);backdrop-filter:blur(16px) saturate(142%);border:1px solid rgba(255,255,255,.68);box-shadow:inset 0 1px 0 rgba(255,255,255,.72), 0 12px 32px -24px rgba(40,24,16,.4)}
+  .toolbar{background:linear-gradient(158deg, rgba(255,255,255,.28), rgba(255,255,255,0) 52%), rgba(255,255,255,.4);-webkit-backdrop-filter:blur(16px) saturate(142%);backdrop-filter:blur(16px) saturate(142%);border:1px solid rgba(255,255,255,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
   .bigprev{background:linear-gradient(157deg, rgba(255,255,255,.45), rgba(255,255,255,0) 46%), rgba(255,255,255,.5);-webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%);border:1px solid rgba(255,255,255,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.8), 0 18px 44px -26px rgba(40,24,16,.42)}
   .quota{background:rgba(255,255,255,.62);-webkit-backdrop-filter:blur(12px) saturate(140%);backdrop-filter:blur(12px) saturate(140%);border-color:rgba(255,255,255,.6)}
   .seg .chip,.mini{background:rgba(255,255,255,.62);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
@@ -353,6 +354,14 @@
   .pv-tab[aria-pressed="true"] .pv-name{color:var(--accent-deep)}
   .pv-nav{flex:0 0 auto;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);background:rgba(255,255,255,.85);cursor:pointer;font-size:17px;line-height:1;color:var(--ink-soft);display:grid;place-items:center;transition:border-color .15s,color .15s}
   .pv-nav:hover{border-color:var(--ink);color:var(--ink)}
+
+  /* ---- tamaño personalizado ---- */
+  .custom-size{display:flex;align-items:center;gap:.7rem;margin-top:.7rem}
+  .cs-fields{display:inline-flex;align-items:center;gap:.4rem}
+  .cs-fields input{width:64px;font-family:"Manrope",sans-serif;font-size:.9rem;font-weight:600;text-align:center;padding:.4rem .3rem;border:1.5px solid var(--line);border-radius:9px;background:rgba(255,255,255,.66);color:var(--ink)}
+  .cs-fields input:focus{outline:none;border-color:var(--accent)}
+  .cs-x{color:var(--ink-faint);font-weight:700}
+  .cs-u{font-style:normal;font-size:.78rem;font-weight:600;color:var(--ink-faint)}
   /* preview más grande: protagonista */
   .bigprev{min-height:300px}
   @media(min-width:980px){ .ed-grid{grid-template-columns:minmax(0,1fr) 372px} }
@@ -416,6 +425,8 @@
                 <button type="button" class="chip" data-unit="cm" aria-pressed="true">cm</button>
                 <button type="button" class="chip" data-unit="mm" aria-pressed="false">mm</button>
                 <button type="button" class="chip" data-unit="m" aria-pressed="false">m</button>
+                <button type="button" class="chip" data-unit="in" aria-pressed="false">in</button>
+                <button type="button" class="chip" data-unit="ft" aria-pressed="false">ft</button>
               </div>
             </div>
           </div>
@@ -553,6 +564,11 @@
                 <button type="button" class="chip preset" data-key="ig" aria-pressed="false">Instagram</button>
                 <button type="button" class="chip preset" data-key="igs" aria-pressed="false">Story 9:16</button>
                 <button type="button" class="chip preset" data-key="amz" aria-pressed="false">Amazon</button>
+                <button type="button" class="chip preset" data-key="custom" aria-pressed="false" data-i18n="presetCustom">Personalizado</button>
+              </div>
+              <div class="custom-size" id="custom-size" style="display:none">
+                <span class="dims-mini-label" data-i18n="customSize">Tamaño</span>
+                <span class="cs-fields"><input id="cs-w" inputmode="numeric" maxlength="5" value="1200" aria-label="Ancho px"><span class="cs-x">×</span><input id="cs-h" inputmode="numeric" maxlength="5" value="1200" aria-label="Alto px"><i class="cs-u">px</i></span>
               </div>
               <label class="toggle" style="margin-top:.7rem">
                 <input type="checkbox" id="shadow">
@@ -592,6 +608,8 @@
                   <button type="button" class="chip" data-unit="cm" aria-pressed="true">cm</button>
                   <button type="button" class="chip" data-unit="mm" aria-pressed="false">mm</button>
                   <button type="button" class="chip" data-unit="m" aria-pressed="false">m</button>
+                  <button type="button" class="chip" data-unit="in" aria-pressed="false">in</button>
+                  <button type="button" class="chip" data-unit="ft" aria-pressed="false">ft</button>
                 </div>
               </div>
               <p class="eng-hint" id="dims-lines-hint" data-i18n="dimsLinesHint">Las cotas se colocan solas sobre los bordes. Arrastrá las puntas en la vista previa para ajustar.</p>
@@ -809,6 +827,8 @@
         productOnly: 'Solo el producto',
         mainonlyHint: '¿Tu foto tiene más de un producto para mostrar? Apagá “Solo el producto”.',
         destination: 'Destino',
+        presetCustom: 'Personalizado',
+        customSize: 'Tamaño',
         destinationAria: 'Destino',
         softShadow: 'Sombra suave',
         dimsTitle: 'Medidas del producto',
@@ -976,6 +996,8 @@
         productOnly: 'Product only',
         mainonlyHint: 'Does your photo have more than one product to show? Turn off “Product only”.',
         destination: 'Destination',
+        presetCustom: 'Custom',
+        customSize: 'Size',
         destinationAria: 'Destination',
         softShadow: 'Soft shadow',
         dimsTitle: 'Product dimensions',
@@ -1142,6 +1164,7 @@
       ig:  { name:'Instagram',    w:1080, h:1080, minSrc:1080, fill:.82 },
       igs: { name:'Story 9:16',   w:1080, h:1920, minSrc:1080, fill:.66 },
       amz: { name:'Amazon',       w:1600, h:1600, minSrc:1500, fill:.85 },
+      custom: { name:'Personalizado', w:1200, h:1200, minSrc:0, fill:.82 },
     };
     let presetKey = 'ml', shadowOn = false;
     const P = () => PRESETS[presetKey];
@@ -2298,8 +2321,21 @@
         $('presets').querySelectorAll('.preset').forEach(x => x.setAttribute('aria-pressed','false'));
         c.setAttribute('aria-pressed','true');
         presetKey = c.dataset.key;
+        $('custom-size').style.display = presetKey === 'custom' ? 'flex' : 'none';
+        buildPreviewTabs();   // re-render thumbs con el nuevo tamaño
         renderResult();
       });
+    });
+    // tamaño personalizado (px), con clamp para no romper el lienzo
+    const csClamp = v => Math.max(200, Math.min(4000, parseInt(v, 10) || 0));
+    function applyCustomSize(){
+      PRESETS.custom.w = csClamp($('cs-w').value);
+      PRESETS.custom.h = csClamp($('cs-h').value);
+      if (presetKey === 'custom'){ buildPreviewTabs(); renderResult(); }
+    }
+    ['cs-w', 'cs-h'].forEach(id => {
+      $(id).addEventListener('input', applyCustomSize);
+      $(id).addEventListener('blur', () => { $(id).value = csClamp($(id).value); });
     });
     $('shadow').addEventListener('change', e => { shadowOn = e.target.checked; renderResult(); });
 
