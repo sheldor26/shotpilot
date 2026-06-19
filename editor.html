@@ -865,11 +865,11 @@
       document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
     }
 
-    // URL del motor de imágenes (Railway). Cambiar por el dominio real cuando esté deployado.
-    // Permite override por querystring (?motor=...) para pruebas.
+    // URL del motor de imágenes (Railway). Override por ?motor=... (pruebas)
+    // o window.MOTOR_URL. Para correr el motor local: ?motor=http://127.0.0.1:8000
     const MOTOR_URL = new URLSearchParams(location.search).get('motor')
       || window.MOTOR_URL
-      || 'http://127.0.0.1:8000';
+      || 'https://shotpilot-production.up.railway.app';
     const MAX_UPLOAD_PX = 2400;   // mandamos en alta: el server reduce solo para rembg y aplica la máscara al original
 
     const drop = $('drop'), fileInput = $('file');
