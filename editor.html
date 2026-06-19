@@ -288,6 +288,59 @@
     .ed-controls > .compare{margin-top:0}
     .ed-visual .bigprev canvas{max-height:62vh}
   }
+
+  /* ---- galería de plantillas de banner ---- */
+  .bn-tpl-wrap{margin-bottom:.2rem}
+  .bn-tpl-row{display:flex;align-items:center;gap:.4rem;margin-top:.5rem}
+  .bn-tpl-strip{display:flex;gap:.5rem;overflow-x:auto;padding:.15rem .1rem .35rem;scroll-behavior:smooth;scrollbar-width:thin}
+  .bn-tpl-strip::-webkit-scrollbar{height:5px}
+  .bn-tpl-strip::-webkit-scrollbar-thumb{background:var(--line);border-radius:9px}
+  .bn-tpl{flex:0 0 auto;width:76px;border:1.5px solid var(--line);border-radius:12px;background:rgba(255,255,255,.7);padding:.4rem .4rem .35rem;cursor:pointer;display:flex;flex-direction:column;gap:.32rem;align-items:center;transition:border-color .15s,transform .12s,box-shadow .15s}
+  .bn-tpl:hover{transform:translateY(-2px);border-color:var(--ink-faint)}
+  .bn-tpl[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+  .bn-tpl-mini{position:relative;width:100%;height:48px;border-radius:7px;background:#fff;border:1px solid var(--line);overflow:hidden;flex:none}
+  .bn-tpl-mini::before{content:"";position:absolute;left:34%;top:14%;width:32%;height:54%;border-radius:3px;background:rgba(26,22,20,.16)}
+  .bn-tpl-mini::after{content:"";position:absolute;left:9%;right:9%;height:27%;border-radius:3px;background:var(--pc,#1B49B8)}
+  .bn-tpl-mini.pos-bottom::after{bottom:9%}
+  .bn-tpl-mini.pos-top::after{top:9%}
+  .bn-tpl-mini.style-band::after{left:0;right:0;border-radius:0}
+  .bn-tpl-badge{position:absolute;width:13px;height:13px;border-radius:50%;border:1.6px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+  .bn-tpl-badge.c-tr{top:5px;right:5px}.bn-tpl-badge.c-tl{top:5px;left:5px}
+  .bn-tpl-badge.c-br{bottom:5px;right:5px}.bn-tpl-badge.c-bl{bottom:5px;left:5px}
+  .bn-tpl-name{font-size:.66rem;font-weight:700;color:var(--ink-soft);white-space:nowrap;letter-spacing:.01em}
+  .bn-tpl[aria-pressed="true"] .bn-tpl-name{color:var(--accent-deep)}
+  .bn-tpl-nav{flex:0 0 auto;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--line);background:rgba(255,255,255,.85);cursor:pointer;font-size:16px;line-height:1;color:var(--ink-soft);display:grid;place-items:center;transition:border-color .15s,color .15s}
+  .bn-tpl-nav:hover{border-color:var(--ink);color:var(--ink)}
+
+  /* ---- medidas personalizadas ---- */
+  #dims-custom-rows{display:grid;gap:.45rem;margin-top:.45rem}
+  .dim-row-custom{display:flex;gap:.45rem;align-items:center}
+  .dim-name{flex:1 1 auto;min-width:0;font-family:"Manrope",sans-serif;font-size:.88rem;font-weight:600;padding:.45rem .7rem;border:1.5px solid var(--line);border-radius:9px;background:rgba(255,255,255,.66);color:var(--ink)}
+  .dim-name::placeholder{color:var(--ink-faint);font-weight:500}
+  .dim-name:focus{outline:none;border-color:var(--accent)}
+  .dim-row-custom .dim-input{flex:0 0 92px}
+  .dim-del{flex:none;width:32px;height:32px;border-radius:8px;border:1.5px solid var(--line);background:rgba(255,255,255,.6);color:var(--ink-faint);font-size:19px;line-height:1;cursor:pointer;transition:border-color .15s,color .15s}
+  .dim-del:hover{border-color:var(--accent);color:var(--accent)}
+  .dim-add{margin-top:.65rem}
+
+  /* ---- wizard guiado ---- */
+  .wizard{max-width:560px;margin-inline:auto}
+  .wz-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.1rem}
+  .wz-eyebrow{font-size:.74rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .wz-dots{display:flex;gap:.4rem}
+  .wz-dots i{width:8px;height:8px;border-radius:50%;background:var(--line);transition:background .2s,width .2s}
+  .wz-dots i.on{background:var(--accent);width:22px;border-radius:5px}
+  .wz-h{font-size:1.35rem;margin-bottom:.25rem}
+  .wz-sub{color:var(--ink-faint);font-size:.88rem;margin-bottom:1rem;line-height:1.4}
+  .wz-step .dim-rows{margin-top:.3rem}
+  .wz-step .dim-fixed{flex:0 0 110px}
+  .wz-step #wz-custom-rows{margin-top:.45rem}
+  .wz-tpl-strip{margin-top:.4rem}
+  .wz-nav{display:flex;align-items:center;gap:.6rem;margin-top:1.5rem}
+  .wz-nav-spring{flex:1}
+  .wz-nav .btn{flex:0 0 auto;min-width:0;padding:.7rem 1.4rem}
+  #wz-skip{padding-left:0;padding-right:.4rem;border:0;color:var(--ink-faint);font-size:.9rem}
+  #wz-skip:hover{color:var(--ink);background:none}
 </style>
 </head>
 <body>
@@ -322,6 +375,63 @@
         <div class="proc hidden" id="proc">
           <div class="scanbox"><img id="proc-img" alt=""><span class="ln" aria-hidden="true"></span></div>
           <p id="proc-text" data-i18n="procText">Sacando el fondo…</p>
+        </div>
+
+        <!-- wizard guiado (post-subida): medidas -> datos -> estilo -> genera fichas -->
+        <div class="wizard hidden" id="wizard">
+          <div class="wz-head">
+            <span class="wz-eyebrow" data-i18n="wzTitle">Armemos tus fichas</span>
+            <div class="wz-dots" id="wz-dots"><i class="on"></i><i></i><i></i></div>
+          </div>
+
+          <!-- paso 1: medidas -->
+          <div class="wz-step" id="wz-1">
+            <h3 class="wz-h" data-i18n="wzStep1">¿Qué medidas tiene?</h3>
+            <p class="wz-sub" data-i18n="wzStep1Sub">Dejá vacío lo que no aplique.</p>
+            <div class="dim-rows">
+              <label class="dim-row"><span class="dim-fixed" data-i18n="dimAlto">Alto</span><span class="dim-input"><input class="wz-dim" data-dim="alto" inputmode="decimal" placeholder="30" maxlength="10"><i class="dim-u wz-u">cm</i></span></label>
+              <label class="dim-row"><span class="dim-fixed" data-i18n="dimAncho">Ancho</span><span class="dim-input"><input class="wz-dim" data-dim="ancho" inputmode="decimal" placeholder="20" maxlength="10"><i class="dim-u wz-u">cm</i></span></label>
+              <label class="dim-row"><span class="dim-fixed" data-i18n="dimProf">Profundidad</span><span class="dim-input"><input class="wz-dim" data-dim="prof" inputmode="decimal" placeholder="10" maxlength="10"><i class="dim-u wz-u">cm</i></span></label>
+            </div>
+            <div id="wz-custom-rows"></div>
+            <button type="button" class="mini dim-add" id="wz-add" data-i18n="dimAdd">+ Agregar medida</button>
+            <div class="dims-unit-row">
+              <span class="dims-mini-label" data-i18n="unit">Unidad</span>
+              <div class="seg seg-sm" id="wz-unit" role="group">
+                <button type="button" class="chip" data-unit="cm" aria-pressed="true">cm</button>
+                <button type="button" class="chip" data-unit="mm" aria-pressed="false">mm</button>
+                <button type="button" class="chip" data-unit="m" aria-pressed="false">m</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- paso 2: datos del producto -->
+          <div class="wz-step hidden" id="wz-2">
+            <h3 class="wz-h" data-i18n="wzStep2">Datos del producto</h3>
+            <div class="dim-rows">
+              <label class="dim-row"><span class="dim-fixed" data-i18n="wzName">Nombre</span><span class="dim-input"><input id="wz-name" data-i18n-ph="wzNamePh" placeholder="Heladera Drean" maxlength="40"></span></label>
+              <label class="dim-row"><span class="dim-fixed" data-i18n="wzKind">Qué es</span><span class="dim-input"><input id="wz-kind" data-i18n-ph="wzKindPh" placeholder="No frost (opcional)" maxlength="40"></span></label>
+            </div>
+            <p class="wz-sub" data-i18n="wzHlSub">Dato destacado (opcional): litros, gramos, un beneficio…</p>
+            <div class="dim-rows">
+              <label class="dim-row"><span class="dim-fixed" data-i18n="wzHlVal">Valor</span><span class="dim-input"><input id="wz-hl-val" data-i18n-ph="wzHlValPh" placeholder="300" maxlength="12"></span></label>
+              <label class="dim-row"><span class="dim-fixed" data-i18n="wzHlLbl">Etiqueta</span><span class="dim-input"><input id="wz-hl-lbl" data-i18n-ph="wzHlLblPh" placeholder="LTS" maxlength="14"></span></label>
+            </div>
+          </div>
+
+          <!-- paso 3: estilo (plantillas) -->
+          <div class="wz-step hidden" id="wz-3">
+            <h3 class="wz-h" data-i18n="wzStep3">Elegí un estilo</h3>
+            <p class="wz-sub" data-i18n="wzStep3Sub">Lo aplicamos a tu ficha. Después lo cambiás si querés.</p>
+            <div class="bn-tpl-strip wz-tpl-strip" id="wz-templates"></div>
+          </div>
+
+          <div class="wz-nav">
+            <button type="button" class="btn btn-ghost" id="wz-skip" data-i18n="wzSkip">Editar manual</button>
+            <span class="wz-nav-spring"></span>
+            <button type="button" class="btn btn-ghost" id="wz-back" data-i18n="wzBack" style="display:none">Atrás</button>
+            <button type="button" class="btn btn-primary" id="wz-next" data-i18n="wzNext">Siguiente</button>
+          </div>
         </div>
 
         <!-- resultado -->
@@ -459,6 +569,8 @@
                 <label class="dim-row"><span class="dim-fixed" data-i18n="dimAncho">Ancho</span><span class="dim-input"><input class="dim-v" data-dim="ancho" inputmode="decimal" placeholder="20" maxlength="10"><i class="dim-u">cm</i></span></label>
                 <label class="dim-row"><span class="dim-fixed" data-i18n="dimProf">Profundidad</span><span class="dim-input"><input class="dim-v" data-dim="prof" inputmode="decimal" placeholder="10" maxlength="10"><i class="dim-u">cm</i></span></label>
               </div>
+              <div id="dims-custom-rows"></div>
+              <button type="button" class="mini dim-add" id="dims-add" data-i18n="dimAdd">+ Agregar medida</button>
               <div class="dims-unit-row">
                 <span class="dims-mini-label" data-i18n="unit">Unidad</span>
                 <div class="seg seg-sm" id="dims-unit" role="group" data-i18n-aria="unitAria" aria-label="Unidad de medida">
@@ -507,6 +619,14 @@
               </label>
             </div>
             <div id="bn-fields" style="display:none">
+              <div class="bn-tpl-wrap">
+                <span class="dims-mini-label" data-i18n="tplLabel">Plantillas — probá una a una</span>
+                <div class="bn-tpl-row">
+                  <button type="button" class="bn-tpl-nav" id="bn-tpl-prev" data-i18n-aria="tplPrev" aria-label="Anterior">‹</button>
+                  <div class="bn-tpl-strip" id="bn-templates"></div>
+                  <button type="button" class="bn-tpl-nav" id="bn-tpl-next" data-i18n-aria="tplNext" aria-label="Siguiente">›</button>
+                </div>
+              </div>
               <div class="bn-row" style="margin-bottom:.2rem">
                 <span class="dims-mini-label" data-i18n="font">Fuente</span>
                 <div class="seg seg-sm bn-fonts" id="bn-font" role="group" data-i18n-aria="fontAria" aria-label="Fuente">
@@ -678,6 +798,28 @@
         dimAlto: 'Alto',
         dimAncho: 'Ancho',
         dimProf: 'Profundidad',
+        dimAdd: '+ Agregar medida',
+        dimNamePh: 'Nombre (ej. Largo patilla)',
+        dimRemove: 'Quitar medida',
+        wzTitle: 'Armemos tus fichas',
+        wzStep1: '¿Qué medidas tiene?',
+        wzStep1Sub: 'Dejá vacío lo que no aplique.',
+        wzStep2: 'Datos del producto',
+        wzStep3: 'Elegí un estilo',
+        wzStep3Sub: 'Lo aplicamos a tu ficha. Después lo cambiás si querés.',
+        wzName: 'Nombre',
+        wzNamePh: 'Heladera Drean',
+        wzKind: 'Qué es',
+        wzKindPh: 'No frost (opcional)',
+        wzHlSub: 'Dato destacado (opcional): litros, gramos, un beneficio…',
+        wzHlVal: 'Valor',
+        wzHlValPh: '300',
+        wzHlLbl: 'Etiqueta',
+        wzHlLblPh: 'LTS',
+        wzSkip: 'Editar manual',
+        wzBack: 'Atrás',
+        wzNext: 'Siguiente',
+        wzGenerate: 'Armar ficha',
         unit: 'Unidad',
         unitAria: 'Unidad de medida',
         dimsLinesHint: 'Las cotas se colocan solas sobre los bordes. Arrastrá las puntas en la vista previa para ajustar.',
@@ -703,6 +845,9 @@
         effectAria: 'Efecto',
         effMetal: 'Metálico 3D',
         effFlat: 'Plano',
+        tplLabel: 'Plantillas — probá una a una',
+        tplPrev: 'Plantilla anterior',
+        tplNext: 'Plantilla siguiente',
         panel: 'Panel',
         bnTitle: 'Título',
         bnTitlePh: 'Papel Higiénico',
@@ -814,6 +959,28 @@
         dimAlto: 'Height',
         dimAncho: 'Width',
         dimProf: 'Depth',
+        dimAdd: '+ Add measurement',
+        dimNamePh: 'Name (e.g. Temple length)',
+        dimRemove: 'Remove measurement',
+        wzTitle: 'Let’s build your shots',
+        wzStep1: 'What are its dimensions?',
+        wzStep1Sub: 'Leave blank what doesn’t apply.',
+        wzStep2: 'Product details',
+        wzStep3: 'Pick a style',
+        wzStep3Sub: 'We’ll apply it to your shot. Change it later if you want.',
+        wzName: 'Name',
+        wzNamePh: 'Drean fridge',
+        wzKind: 'What it is',
+        wzKindPh: 'No frost (optional)',
+        wzHlSub: 'Highlight (optional): liters, grams, a benefit…',
+        wzHlVal: 'Value',
+        wzHlValPh: '300',
+        wzHlLbl: 'Label',
+        wzHlLblPh: 'L',
+        wzSkip: 'Edit manually',
+        wzBack: 'Back',
+        wzNext: 'Next',
+        wzGenerate: 'Build shot',
         unit: 'Unit',
         unitAria: 'Unit of measure',
         dimsLinesHint: 'Dimension lines snap to the edges automatically. Drag the endpoints in the preview to adjust.',
@@ -839,6 +1006,9 @@
         effectAria: 'Effect',
         effMetal: 'Metallic 3D',
         effFlat: 'Flat',
+        tplLabel: 'Templates — try one by one',
+        tplPrev: 'Previous template',
+        tplNext: 'Next template',
         panel: 'Panel',
         bnTitle: 'Title',
         bnTitlePh: 'Toilet paper',
@@ -962,6 +1132,7 @@
       drop.classList.toggle('hidden', state !== 'drop');
       procEl.classList.toggle('hidden', state !== 'proc');
       resultEl.classList.toggle('hidden', state !== 'result');
+      $('wizard').classList.toggle('hidden', state !== 'wizard');
       document.body.classList.toggle('result-mode', state === 'result');
       if (state !== 'err') errEl.classList.add('hidden');
     }
@@ -1038,7 +1209,7 @@
         updateDimsConf();
         refreshProductColors();
         updateDlVariants();
-        show('result');
+        if (firstTime) openWizard(); else show('result');
       } catch (e){
         if (firstTime){ show('drop'); showError(e.message); }
         else { $('metric').textContent = t('errorPrefix')(e.message); }
@@ -1154,7 +1325,15 @@
     const DIM_LABELS = { alto: t('dimAlto'), ancho: t('dimAncho'), prof: t('dimProf') };
     function getVal(dim){ const el = document.querySelector(`#dims-fields .dim-v[data-dim="${dim}"]`); return el ? el.value.trim() : ''; }
     function assignDims(){ return { alto: getVal('alto'), ancho: getVal('ancho'), prof: getVal('prof') }; }
-    function getDims(){ return ['alto', 'ancho', 'prof'].map(k => ({ l: DIM_LABELS[k], v: getVal(k) })).filter(d => d.v); }
+    let customDims = [], customSeq = 0;   // medidas con nombre propio (ej. anteojo: largo de patilla, diámetro de lente)
+    // lista unificada de TODAS las cotas con valor (fijas + personalizadas) para render, placa y arrastre
+    function allDimEntries(){
+      const out = [];
+      ['alto', 'ancho', 'prof'].forEach(k => { const v = getVal(k); if (v) out.push({ key: k, label: DIM_LABELS[k], value: v, line: dimLines && dimLines[k] }); });
+      customDims.forEach(cd => { if ((cd.value || '').trim() && (cd.label || '').trim()) out.push({ key: cd.id, label: cd.label, value: cd.value, line: cd.line, custom: true }); });
+      return out;
+    }
+    function getDims(){ return allDimEntries().map(en => ({ l: en.label, v: en.value })); }
     // aviso cuando el ángulo es dudoso (confianza media)
     function updateDimsConf(){
       const show = dimsOn && dimsStyle === 'lines' && autoDims && autoDims.angled && autoDims.conf === 'media';
@@ -1219,17 +1398,16 @@
       ctx.restore();
     }
     function drawDimsLines(ctx, tw, th, pr){
-      const vals = assignDims();
-      if (!vals.alto && !vals.ancho && !vals.prof) return;
       if (!dimLines) initDimLines();
+      const entries = allDimEntries().filter(en => en.line);
+      if (!entries.length) return;
       const base = Math.min(tw, th);
       const lw = Math.max(1.6, base * 0.0032), a = base * 0.02, f = Math.max(13, Math.round(base * 0.032));
       ctx.save();
       ctx.strokeStyle = '#241E1A'; ctx.lineWidth = lw; ctx.lineCap = 'round';
       const cx = pr.x + pr.w / 2, cy = pr.y + pr.h / 2;   // centro del producto
-      const drawOne = (key) => {
-        const val = vals[key]; if (!val) return;
-        const l = dimLines[key];
+      entries.forEach((en) => {
+        const l = en.line, val = en.value;
         const x1 = l.p1.x * tw, y1 = l.p1.y * th, x2 = l.p2.x * tw, y2 = l.p2.y * th;
         ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
         arrowHead(ctx, x1, y1, x2, y2, a); arrowHead(ctx, x2, y2, x1, y1, a);
@@ -1241,9 +1419,11 @@
         if (nx * (cx - mx) + ny * (cy - my) > 0){ nx = -nx; ny = -ny; }   // afuera
         if (dimsLabelSide === 'in'){ nx = -nx; ny = -ny; }
         const o = f * 0.95;
-        ctx.save(); ctx.translate(mx + nx * o, my + ny * o); ctx.rotate(ta); dimLabel(ctx, fmtVal(val), 0, 0, f); ctx.restore();
-      };
-      drawOne('alto'); drawOne('ancho'); drawOne('prof');
+        // las fijas (alto/ancho/prof) se entienden por su posición -> solo el valor;
+        // las personalizadas llevan el nombre para que se sepa qué miden
+        const txt = en.custom ? `${en.label} · ${fmtVal(val)}` : fmtVal(val);
+        ctx.save(); ctx.translate(mx + nx * o, my + ny * o); ctx.rotate(ta); dimLabel(ctx, txt, 0, 0, f); ctx.restore();
+      });
       ctx.restore();
     }
 
@@ -1329,10 +1509,10 @@
       c.drawImage(canvas, 0, 0, pv.width, pv.height);
       // handles de las puntas (solo en la previa, no en la descarga)
       if (dimsOn && dimsStyle === 'lines' && dimLines){
-        const vals = assignDims(), hr = 6 * dpr;
-        ['alto', 'ancho', 'prof'].forEach(k => {
-          if (!vals[k]) return;
-          [dimLines[k].p1, dimLines[k].p2].forEach(p => {
+        const hr = 6 * dpr;
+        allDimEntries().forEach(en => {
+          if (!en.line) return;
+          [en.line.p1, en.line.p2].forEach(p => {
             c.beginPath(); c.arc(p.x * pv.width, p.y * pv.height, hr, 0, Math.PI * 2);
             c.fillStyle = '#fff'; c.fill(); c.lineWidth = 2.5 * dpr; c.strokeStyle = '#F4513C'; c.stroke();
           });
@@ -1618,17 +1798,13 @@
       return Math.hypot(f.x - (p1.x + t * dx), f.y - (p1.y + t * dy));
     }
     function hit(f){
-      const vals = assignDims();
-      for (const k of ['alto', 'ancho', 'prof']){
-        if (!vals[k] || !dimLines) continue;
-        const l = dimLines[k];
-        if (dist2(f, l.p1) < 0.035) return { key: k, which: 'p1' };
-        if (dist2(f, l.p2) < 0.035) return { key: k, which: 'p2' };
+      const entries = allDimEntries().filter(en => en.line);
+      for (const en of entries){
+        if (dist2(f, en.line.p1) < 0.035) return { line: en.line, which: 'p1' };
+        if (dist2(f, en.line.p2) < 0.035) return { line: en.line, which: 'p2' };
       }
-      for (const k of ['alto', 'ancho', 'prof']){
-        if (!vals[k] || !dimLines) continue;
-        const l = dimLines[k];
-        if (segDist(f, l.p1, l.p2) < 0.025) return { key: k, which: 'line', start: f, o1: { ...l.p1 }, o2: { ...l.p2 } };
+      for (const en of entries){
+        if (segDist(f, en.line.p1, en.line.p2) < 0.025) return { line: en.line, which: 'line', start: f, o1: { ...en.line.p1 }, o2: { ...en.line.p2 } };
       }
       return null;
     }
@@ -1643,7 +1819,7 @@
     preview.addEventListener('pointermove', e => {
       if (!grab) return;
       e.preventDefault();
-      const f = pvFrac(e), l = dimLines[grab.key];
+      const f = pvFrac(e), l = grab.line;
       if (grab.which === 'line'){
         const dx = f.x - grab.start.x, dy = f.y - grab.start.y;
         l.p1 = { x: clampF(grab.o1.x + dx), y: clampF(grab.o1.y + dy) };
@@ -1690,6 +1866,42 @@
       renderResult();
     }));
     $('dims-auto').addEventListener('click', () => { initDimLines(); updateDimsConf(); renderResult(); });
+
+    // ---- medidas personalizadas (nombre propio + línea arrastrable en la previa) ----
+    function addCustomDim(label = '', value = ''){
+      const id = 'c' + (++customSeq);
+      const p = productFrac();
+      const yy = clampF(p.y + p.h * 0.42 + (customDims.length % 4) * 0.07);
+      const cd = { id, label, value, line: { p1: { x: clampF(p.x + p.w * 0.18), y: yy }, p2: { x: clampF(p.x + p.w * 0.82), y: yy } } };
+      customDims.push(cd);
+      renderCustomRows();
+      return cd;
+    }
+    function removeCustomDim(id){ customDims = customDims.filter(c => c.id !== id); renderCustomRows(); renderResult(); }
+    function renderCustomRows(){
+      const wrap = $('dims-custom-rows'); if (!wrap) return;
+      wrap.innerHTML = '';
+      customDims.forEach(cd => {
+        const row = document.createElement('div'); row.className = 'dim-row dim-row-custom';
+        const name = document.createElement('input'); name.className = 'dim-name'; name.maxLength = 22; name.placeholder = t('dimNamePh'); name.value = cd.label;
+        const inWrap = document.createElement('span'); inWrap.className = 'dim-input';
+        const val = document.createElement('input'); val.className = 'dim-cv'; val.maxLength = 10; val.inputMode = 'decimal'; val.placeholder = '0'; val.value = cd.value;
+        const u = document.createElement('i'); u.className = 'dim-u'; u.textContent = dimsUnit;
+        inWrap.append(val, u);
+        const del = document.createElement('button'); del.type = 'button'; del.className = 'dim-del'; del.setAttribute('aria-label', t('dimRemove')); del.textContent = '×';
+        name.addEventListener('input', () => { cd.label = name.value; renderResult(); });
+        val.addEventListener('input', () => { cd.value = val.value.trim(); renderResult(); });
+        del.addEventListener('click', () => removeCustomDim(cd.id));
+        row.append(name, inWrap, del);
+        wrap.appendChild(row);
+      });
+    }
+    $('dims-add').addEventListener('click', () => {
+      addCustomDim();
+      const rows = $('dims-custom-rows').querySelectorAll('.dim-name');
+      if (rows.length) rows[rows.length - 1].focus();
+      renderResult();
+    });
 
     // ---- banners promocionales ----
     const BN_COLORS = ['#1B49B8', '#C2186A', '#F2B705', '#D8381F', '#1A1614', '#1FA463'];
@@ -1874,6 +2086,75 @@
       $('bn-effect').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', 'false'));
       c.setAttribute('aria-pressed', 'true'); banner.effect = c.dataset.effect; renderResult();
     }));
+
+    // ---- plantillas de banner/chapa (estilos pre-armados, se pasan una a una) ----
+    const BANNER_TEMPLATES = [
+      { name:{es:'Oferta',       en:'Sale'},         font:'Anton',         effect:'metal', panel:{style:'band', pos:'bottom', color:'#D8381F'}, badge:{on:true,  corner:'tr', color:'#FFB200'} },
+      { name:{es:'Electro',      en:'Electro'},      font:'Montserrat',    effect:'metal', panel:{style:'card', pos:'bottom', color:'#1B49B8'}, badge:{on:true,  corner:'tr', color:'#D8381F'} },
+      { name:{es:'Premium',      en:'Premium'},      font:'Archivo Black', effect:'metal', panel:{style:'card', pos:'bottom', color:'#16130F'}, badge:{on:true,  corner:'tr', color:'#C9A24B'} },
+      { name:{es:'Del producto', en:'From product'}, font:'Montserrat',    effect:'metal', panel:{style:'card', pos:'bottom', colorMode:'product', color:'#1B49B8'}, badge:{on:true, corner:'tr', color:'#16130F'} },
+      { name:{es:'Fresco',       en:'Fresh'},        font:'Montserrat',    effect:'metal', panel:{style:'card', pos:'bottom', color:'#13A05B'}, badge:{on:true,  corner:'tr', color:'#FF7A00'} },
+      { name:{es:'Banda top',    en:'Top band'},     font:'Oswald',        effect:'metal', panel:{style:'band', pos:'top',    color:'#16130F'}, badge:{on:false, corner:'tr', color:'#D8381F'} },
+      { name:{es:'Limpio',       en:'Clean'},        font:'Manrope',       effect:'flat',  panel:{style:'card', pos:'bottom', color:'#FFFFFF'}, badge:{on:false, corner:'tr', color:'#1A1614'} },
+    ];
+    let bnTplIdx = -1;
+    function syncSeg(groupId, key, val){
+      const g = $(groupId); if (!g) return;
+      g.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', x.dataset[key] === val ? 'true' : 'false'));
+    }
+    function applyBannerTemplate(i){
+      const t = BANNER_TEMPLATES[i]; if (!t) return;
+      bnTplIdx = i;
+      banner.font = t.font;
+      banner.effect = t.effect;
+      banner.panel.style = t.panel.style;
+      banner.panel.pos = t.panel.pos;
+      banner.panel.color = t.panel.colorMode === 'product' ? (productColors(3)[0] || t.panel.color) : t.panel.color;
+      banner.badge.on = t.badge.on;
+      banner.badge.corner = t.badge.corner;
+      banner.badge.color = t.badge.color;
+      // reflejar la plantilla en todos los controles
+      syncSeg('bn-font','font',banner.font);
+      syncSeg('bn-effect','effect',banner.effect);
+      syncSeg('bn-panel-style','style',banner.panel.style);
+      syncSeg('bn-panel-pos','pos',banner.panel.pos);
+      syncSeg('bn-badge-corner','corner',banner.badge.corner);
+      $('bn-panel-pick').value = banner.panel.color;
+      $('bn-badge-pick').value = banner.badge.color;
+      $('bn-panel-color').querySelectorAll('.swatch').forEach(s => s.setAttribute('aria-pressed','false'));
+      $('bn-badge-color').querySelectorAll('.swatch').forEach(s => s.setAttribute('aria-pressed','false'));
+      $('bn-badge-on').checked = banner.badge.on;
+      $('bn-badge-fields').style.display = banner.badge.on ? 'block' : 'none';
+      [...$('bn-templates').children].forEach((el, idx) => el.setAttribute('aria-pressed', idx === i ? 'true' : 'false'));
+      ensureBannerFont();
+      try { document.fonts.load(`800 40px "${banner.font}"`).then(renderResult); } catch {}
+      renderResult();
+    }
+    function buildBannerTemplates(){
+      const strip = $('bn-templates'); if (!strip) return;
+      strip.innerHTML = '';
+      BANNER_TEMPLATES.forEach((t, i) => {
+        const pc = t.panel.colorMode === 'product'
+          ? 'conic-gradient(from 210deg,#F4513C,#1B49B8,#13A05B,#FFB200,#F4513C)'
+          : t.panel.color;
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'bn-tpl'; b.setAttribute('aria-pressed','false');
+        b.innerHTML = `<span class="bn-tpl-mini pos-${t.panel.pos} style-${t.panel.style}" style="--pc:${pc}">`
+          + (t.badge.on ? `<i class="bn-tpl-badge c-${t.badge.corner}" style="background:${t.badge.color}"></i>` : '')
+          + `</span><span class="bn-tpl-name">${t.name[LANG] || t.name.es}</span>`;
+        b.addEventListener('click', () => { applyBannerTemplate(i); b.scrollIntoView({inline:'center', block:'nearest'}); });
+        strip.appendChild(b);
+      });
+    }
+    buildBannerTemplates();
+    function flipTemplate(dir){
+      const n = BANNER_TEMPLATES.length;
+      const next = bnTplIdx < 0 ? (dir > 0 ? 0 : n - 1) : (bnTplIdx + dir + n) % n;
+      applyBannerTemplate(next);
+      $('bn-templates').children[next]?.scrollIntoView({inline:'center', block:'nearest'});
+    }
+    $('bn-tpl-prev').addEventListener('click', () => flipTemplate(-1));
+    $('bn-tpl-next').addEventListener('click', () => flipTemplate(1));
     // color personalizado (paleta completa)
     $('bn-panel-pick').addEventListener('input', e => { banner.panel.color = e.target.value; $('bn-panel-color').querySelectorAll('.swatch').forEach(s => s.setAttribute('aria-pressed', 'false')); renderResult(); });
     $('bn-badge-pick').addEventListener('input', e => { banner.badge.color = e.target.value; $('bn-badge-color').querySelectorAll('.swatch').forEach(s => s.setAttribute('aria-pressed', 'false')); renderResult(); });
@@ -1981,6 +2262,95 @@
     });
 
     $('another').addEventListener('click', () => { fileInput.value = ''; show('drop'); });
+
+    // ================= WIZARD GUIADO =================
+    let wzStep = 1, wzTemplate = 0, wzCustoms = [], wzCustomSeq = 0, wzUnit = 'cm';
+    function openWizard(){
+      wzStep = 1;
+      updateWzNav();
+      buildWzTemplates();
+      show('wizard');
+      setTimeout(() => { const f = document.querySelector('.wz-dim[data-dim="alto"]'); if (f) f.focus(); }, 60);
+    }
+    function updateWzNav(){
+      ['wz-1', 'wz-2', 'wz-3'].forEach((id, i) => $(id).classList.toggle('hidden', i !== wzStep - 1));
+      [...$('wz-dots').children].forEach((d, i) => d.classList.toggle('on', i === wzStep - 1));
+      $('wz-back').style.display = wzStep > 1 ? 'inline-flex' : 'none';
+      $('wz-next').textContent = wzStep < 3 ? t('wzNext') : t('wzGenerate');
+    }
+    $('wz-next').addEventListener('click', () => { if (wzStep < 3){ wzStep++; updateWzNav(); } else generateFromWizard(); });
+    $('wz-back').addEventListener('click', () => { if (wzStep > 1){ wzStep--; updateWzNav(); } });
+    $('wz-skip').addEventListener('click', () => show('result'));
+    $('wz-unit').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+      $('wz-unit').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', 'false'));
+      c.setAttribute('aria-pressed', 'true'); wzUnit = c.dataset.unit;
+      document.querySelectorAll('#wz-1 .dim-u').forEach(u => u.textContent = wzUnit);
+    }));
+    function renderWzCustom(){
+      const wrap = $('wz-custom-rows'); wrap.innerHTML = '';
+      wzCustoms.forEach(cd => {
+        const row = document.createElement('div'); row.className = 'dim-row dim-row-custom';
+        const name = document.createElement('input'); name.className = 'dim-name'; name.maxLength = 22; name.placeholder = t('dimNamePh'); name.value = cd.label;
+        const inWrap = document.createElement('span'); inWrap.className = 'dim-input';
+        const val = document.createElement('input'); val.className = 'dim-cv'; val.maxLength = 10; val.inputMode = 'decimal'; val.placeholder = '0'; val.value = cd.value;
+        const u = document.createElement('i'); u.className = 'dim-u'; u.textContent = wzUnit;
+        inWrap.append(val, u);
+        const del = document.createElement('button'); del.type = 'button'; del.className = 'dim-del'; del.setAttribute('aria-label', t('dimRemove')); del.textContent = '×';
+        name.addEventListener('input', () => cd.label = name.value);
+        val.addEventListener('input', () => cd.value = val.value.trim());
+        del.addEventListener('click', () => { wzCustoms = wzCustoms.filter(c => c !== cd); renderWzCustom(); });
+        row.append(name, inWrap, del);
+        wrap.appendChild(row);
+      });
+    }
+    $('wz-add').addEventListener('click', () => {
+      wzCustoms.push({ id: 'w' + (++wzCustomSeq), label: '', value: '' });
+      renderWzCustom();
+      const names = $('wz-custom-rows').querySelectorAll('.dim-name');
+      if (names.length) names[names.length - 1].focus();
+    });
+    function buildWzTemplates(){
+      const strip = $('wz-templates'); if (!strip) return;
+      strip.innerHTML = '';
+      BANNER_TEMPLATES.forEach((tp, i) => {
+        const pc = tp.panel.colorMode === 'product' ? 'conic-gradient(from 210deg,#F4513C,#1B49B8,#13A05B,#FFB200,#F4513C)' : tp.panel.color;
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'bn-tpl'; b.setAttribute('aria-pressed', i === wzTemplate ? 'true' : 'false');
+        b.innerHTML = `<span class="bn-tpl-mini pos-${tp.panel.pos} style-${tp.panel.style}" style="--pc:${pc}">`
+          + (tp.badge.on ? `<i class="bn-tpl-badge c-${tp.badge.corner}" style="background:${tp.badge.color}"></i>` : '')
+          + `</span><span class="bn-tpl-name">${tp.name[LANG] || tp.name.es}</span>`;
+        b.addEventListener('click', () => { wzTemplate = i; [...strip.children].forEach((el, idx) => el.setAttribute('aria-pressed', idx === i ? 'true' : 'false')); });
+        strip.appendChild(b);
+      });
+    }
+    // aplica TODO lo del wizard al editor y muestra el resultado armado
+    function generateFromWizard(){
+      const editDim = d => document.querySelector(`#dims-fields .dim-v[data-dim="${d}"]`);
+      // 1) medidas fijas + unidad
+      ['alto', 'ancho', 'prof'].forEach(d => { const e = editDim(d); if (e) e.value = (document.querySelector(`.wz-dim[data-dim="${d}"]`).value || '').trim(); });
+      dimsUnit = wzUnit;
+      $('dims-unit').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', x.dataset.unit === wzUnit ? 'true' : 'false'));
+      document.querySelectorAll('#dims-fields .dim-u').forEach(u => u.textContent = wzUnit);
+      // 2) medidas personalizadas
+      customDims = [];
+      wzCustoms.filter(c => (c.label || '').trim() && (c.value || '').trim()).forEach(c => addCustomDim(c.label.trim(), c.value.trim()));
+      const anyDim = ['alto', 'ancho', 'prof'].some(d => editDim(d) && editDim(d).value) || customDims.length > 0;
+      if (anyDim && !dimsOn){ $('dims-on').checked = true; $('dims-on').dispatchEvent(new Event('change', { bubbles: true })); }
+      // 3) datos del producto -> banner + chapa con la plantilla elegida
+      const name = $('wz-name').value.trim(), kind = $('wz-kind').value.trim();
+      const hlVal = $('wz-hl-val').value.trim(), hlLbl = $('wz-hl-lbl').value.trim();
+      if (name || hlVal){
+        if (!bannerOn){ $('bn-on').checked = true; $('bn-on').dispatchEvent(new Event('change', { bubbles: true })); }
+        applyBannerTemplate(wzTemplate);
+        $('bn-title').value = name;
+        $('bn-sub').value = kind;
+        if (hlVal){
+          banner.badge.on = true; $('bn-badge-on').checked = true; $('bn-badge-fields').style.display = 'block';
+          $('bn-big').value = hlVal; $('bn-small').value = hlLbl;
+        }
+      }
+      show('result');
+      renderResult();
+    }
 
     // ---------- aplicar traducciones al cargar ----------
     applyI18n();
