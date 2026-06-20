@@ -1053,7 +1053,7 @@
               <span class="panel-chevron" aria-hidden="true">⌄</span>
             </button>
             <div class="scene-body" id="scene-body" style="display:none">
-              <p class="eng-hint" data-i18n="sceneHint">Poné tu producto en una escena real (perfume en el baño, heladera en la cocina). Genera 4 variantes para usar como imágenes secundarias de la publicación.</p>
+              <p class="eng-hint" data-i18n="sceneHint">Poné tu producto en una escena real (perfume en el baño, heladera en la cocina). Genera 2 variantes para usar como imágenes secundarias de la publicación.</p>
               <div class="scene-presets" id="scene-presets"></div>
               <input id="scene-prompt" type="text" data-i18n-ph="scenePh" placeholder="O describí la escena (en inglés rinde mejor)…" autocomplete="off">
               <button type="button" class="dl-main scene-go" id="scene-go" data-i18n="sceneGo">Generar escena</button>
@@ -1261,7 +1261,7 @@
         bigprevHint: 'Arrastrá las puntas (círculos) para ajustar cada medida.',
         sceneTitle: 'Escena (IA)',
         sceneTag: 'nuevo',
-        sceneHint: 'Poné tu producto en una escena real (perfume en el baño, heladera en la cocina). Genera 4 variantes para imágenes secundarias. La primera es gratis.',
+        sceneHint: 'Poné tu producto en una escena real (perfume en el baño, heladera en la cocina). Genera 2 variantes para imágenes secundarias. La primera es gratis.',
         scenePh: 'O describí la escena (en inglés rinde mejor)…',
         sceneGo: 'Generar escena',
         sceneLocked: 'Ya usaste tu escena gratis de muestra. Los packs llegan pronto.',
@@ -1500,7 +1500,7 @@
         bigprevHint: 'Drag the endpoints (circles) to adjust each dimension.',
         sceneTitle: 'Scene (AI)',
         sceneTag: 'new',
-        sceneHint: 'Place your product in a real scene (perfume in a bathroom, fridge in a kitchen). Generates 4 variants for secondary listing images. The first one is free.',
+        sceneHint: 'Place your product in a real scene (perfume in a bathroom, fridge in a kitchen). Generates 2 variants for secondary listing images. The first one is free.',
         scenePh: 'Or describe the scene…',
         sceneGo: 'Generate scene',
         sceneLocked: 'You already used your free sample scene. Packs coming soon.',
@@ -3128,7 +3128,7 @@
         const fd = new FormData();
         fd.append('image', blob, 'product.png');
         fd.append('scene', scene);
-        fd.append('num_results', '4');
+        fd.append('num_results', '2');
         const resp = await fetch(`${MOTOR_URL}/lifestyle`, { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
         const data = await resp.json().catch(() => ({}));
         if (resp.status === 401){ sceneStatus(t('sceneNeedLogin'), true); authModal(true); return; }
@@ -3585,16 +3585,17 @@
         const op = $('auth-open'); if (op) op.addEventListener('click', () => authModal(true));
       }
     }
-    async function onAuth(session){
+    function onAuth(session){
       authUser = session ? session.user : null;
-      await loadProfile();
-      renderAuthSlot();
+      renderAuthSlot();          // render inmediato con el estado de sesión (no bloquear esperando el perfil)
       updateQuota();
-      if (authUser) authModal(false);
+      if (authUser){ authModal(false); loadProfile().then(() => { renderAuthSlot(); updateQuota(); }); }
+      else { authProfile = null; }
     }
     if (sb){
       renderAuthSlot();   // botón inmediato, sin parpadeo
-      sb.auth.getSession().then(({ data }) => onAuth(data ? data.session : null));
+      // UN SOLO camino de auth: onAuthStateChange emite INITIAL_SESSION con la sesión ya restaurada/refrescada.
+      // (Sin getSession() aparte: dos refrescos en paralelo gatillan la detección de reuso de refresh token -> logout.)
       sb.auth.onAuthStateChange((_e, session) => onAuth(session));
       $('auth-send').addEventListener('click', async () => {
         const email = ($('auth-email').value || '').trim();
