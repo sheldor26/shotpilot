@@ -1930,7 +1930,7 @@
       ctx.drawImage(workCanvas, b.x, b.y, b.w, b.h, dx, dy, dw, dh);
       ctx.filter = 'none';
       if (L.dims) drawDims(ctx, tw, th, { x: dx, y: dy, w: dw, h: dh });
-      if (L.banners) drawBanners(ctx, tw, th);
+      if (L.banners) drawBanners(ctx, tw, th, { x: dx, y: dy, w: dw, h: dh });
       if (logoOn && logoImg) drawLogo(ctx, tw, th);
       return { scaleUsed: scale, fillPct: Math.round(100 * Math.max(dw, dh) / Math.min(tw, th)) };
     }
@@ -2818,7 +2818,37 @@
       return banner.panel.pos === 'top' ? { top: reserve, bottom: 0 } : { top: 0, bottom: reserve };
     }
 
-    function drawBanners(ctx, tw, th){
+    // ¿qué fracción de un recuadro del lienzo (x,y,w,h) está cubierta por el producto?
+    function productCover(rx, ry, rw, rh, pr){
+      if (!workCtx || !cutoutBox || !pr || !pr.w) return 0;
+      const b = cutoutBox;
+      const ix = Math.max(rx, pr.x), iy = Math.max(ry, pr.y);
+      const ax = Math.min(rx + rw, pr.x + pr.w), ay = Math.min(ry + rh, pr.y + pr.h);
+      if (ax <= ix || ay <= iy) return 0;   // ni toca el bbox del producto
+      const sx = b.x + (ix - pr.x) * (b.w / pr.w), sy = b.y + (iy - pr.y) * (b.h / pr.h);
+      const sw = Math.max(1, Math.round((ax - ix) * (b.w / pr.w))), sh = Math.max(1, Math.round((ay - iy) * (b.h / pr.h)));
+      try {
+        const d = workCtx.getImageData(Math.round(sx), Math.round(sy), sw, sh).data;
+        let cov = 0; const n = d.length / 4;
+        for (let i = 3; i < d.length; i += 4) if (d[i] > 30) cov++;
+        return (cov / n) * ((ax - ix) * (ay - iy)) / (rw * rh);   // fracción de la chapa tapada por producto
+      } catch { return 1; }
+    }
+    // mejor esquina para la chapa: respeta la elegida si tapa poco; si no, la más despejada
+    function bestBadgeCorner(cw, ch, m, tw, th, pr){
+      const cand = { tl: { x: m, y: m }, tr: { x: tw - cw - m, y: m }, bl: { x: m, y: th - ch - m }, br: { x: tw - cw - m, y: th - ch - m } };
+      const title = $('bn-title').value.trim(), sub = $('bn-sub').value.trim();
+      const avoidV = (title || sub) ? (banner.panel.pos === 'bottom' ? 'b' : 't') : null;   // no chocar con el panel
+      const pref = banner.badge.corner;
+      let order = ['tr', 'tl', 'br', 'bl'].filter(k => k !== pref); order.unshift(pref);
+      if (avoidV) { const f = order.filter(k => k[0] !== avoidV); if (f.length) order = f; }
+      const prefCov = order.includes(pref) ? productCover(cand[pref].x, cand[pref].y, cw, ch, pr) : 1;
+      if (prefCov <= 0.05) return cand[pref];
+      let best = order[0], bestCov = Infinity;
+      order.forEach(k => { const c = productCover(cand[k].x, cand[k].y, cw, ch, pr); if (c < bestCov) { bestCov = c; best = k; } });
+      return cand[best];
+    }
+    function drawBanners(ctx, tw, th, pr){
       if (!bannerOn) return;
       const base = Math.min(tw, th);
       const title = $('bn-title').value.trim(), sub = $('bn-sub').value.trim();
@@ -2854,8 +2884,8 @@
         const cw = Math.max(wB, wS) + padX * 2;
         const ch = bigF + (small ? smallF * 1.35 : 0) + padY * 2;
         const m = base * 0.035;
-        const x = banner.badge.corner.includes('r') ? tw - cw - m : m;
-        const y = banner.badge.corner[0] === 't' ? m : th - ch - m;
+        const pos = bestBadgeCorner(cw, ch, m, tw, th, pr);   // esquina despejada (no tapar el producto)
+        const x = pos.x, y = pos.y;
         ctx.save();
         ctx.shadowColor = 'rgba(20,12,8,.3)'; ctx.shadowBlur = base * 0.025; ctx.shadowOffsetY = base * 0.007;
         ctx.beginPath(); ctx.roundRect(x, y, cw, ch, base * 0.022); ctx.fillStyle = bc; ctx.fill();
