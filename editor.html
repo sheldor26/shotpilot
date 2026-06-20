@@ -1195,9 +1195,10 @@
         bigprevHint: 'Arrastrá las puntas (círculos) para ajustar cada medida.',
         sceneTitle: 'Escena (IA)',
         sceneTag: 'nuevo',
-        sceneHint: 'Poné tu producto en una escena real (perfume en el baño, heladera en la cocina). Genera 4 variantes para usar como imágenes secundarias de la publicación.',
+        sceneHint: 'Poné tu producto en una escena real (perfume en el baño, heladera en la cocina). Genera 4 variantes para imágenes secundarias. La primera es gratis.',
         scenePh: 'O describí la escena (en inglés rinde mejor)…',
         sceneGo: 'Generar escena',
+        sceneLocked: 'Ya usaste tu escena gratis de muestra. Los packs llegan pronto.',
         sceneBusy: 'Generando escena… (10–30 s)',
         sceneEmptyErr: 'Elegí una escena o escribí una.',
         sceneErr: (m) => `No se pudo generar: ${m}`,
@@ -1417,9 +1418,10 @@
         bigprevHint: 'Drag the endpoints (circles) to adjust each dimension.',
         sceneTitle: 'Scene (AI)',
         sceneTag: 'new',
-        sceneHint: 'Place your product in a real scene (perfume in a bathroom, fridge in a kitchen). Generates 4 variants to use as secondary listing images.',
+        sceneHint: 'Place your product in a real scene (perfume in a bathroom, fridge in a kitchen). Generates 4 variants for secondary listing images. The first one is free.',
         scenePh: 'Or describe the scene…',
         sceneGo: 'Generate scene',
+        sceneLocked: 'You already used your free sample scene. Packs coming soon.',
         sceneBusy: 'Generating scene… (10–30 s)',
         sceneEmptyErr: 'Pick a scene or write one.',
         sceneErr: (m) => `Could not generate: ${m}`,
@@ -2977,6 +2979,11 @@
       { key: 'scDesk',    en: 'product on a modern desk next to a laptop, cozy office, morning light, clean lifestyle scene' },
     ];
     let scenePreset = null;
+    // escenas IA: 1 gratis de muestra por navegador (persistida, protege el saldo de Bria), después paga.
+    const SCENE_FREE = 1;
+    let sceneFreeUsed = 0;
+    try { sceneFreeUsed = parseInt(localStorage.getItem('sp_scene_free') || '0', 10) || 0; } catch {}
+    function sceneAllowed(){ return paid || sceneFreeUsed < SCENE_FREE; }
     function renderScenePresets(){
       const box = $('scene-presets'); if (!box) return;
       box.innerHTML = '';
@@ -3012,6 +3019,7 @@
       const preset = SCENE_PRESETS.find(p => p.key === scenePreset);
       const scene = free || (preset && preset.en) || '';
       if (!scene){ sceneStatus(t('sceneEmptyErr'), true); return; }
+      if (!sceneAllowed()){ sceneStatus(t('sceneLocked'), true); return; }   // ya usó la de muestra (Etapa 2: pedir pack)
       const go = $('scene-go'); go.disabled = true;
       const prevTxt = go.textContent; go.textContent = t('sceneBusy');
       sceneStatus('', false); $('scene-results').innerHTML = '';
@@ -3027,6 +3035,7 @@
         const urls = data.images || [];
         if (!urls.length) throw new Error('0');
         renderSceneResults(urls);
+        if (!paid){ sceneFreeUsed++; try { localStorage.setItem('sp_scene_free', String(sceneFreeUsed)); } catch {} }
       } catch (e) {
         sceneStatus(t('sceneErr')(String(e.message || e)), true);
       } finally {
