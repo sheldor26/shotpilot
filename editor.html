@@ -379,6 +379,13 @@
   #adv-wrap > .engine{margin-top:0}
   .extras-head{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:1.5rem;margin-bottom:-.3rem;padding-left:.15rem}
 
+  /* ---- selector de fondo (blanco / pasteles / transparente) ---- */
+  .bg-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.7rem}
+  .bg-swatches{gap:.4rem}
+  .bg-transparent{width:24px;height:24px;border-radius:50%;border:2px solid transparent;cursor:pointer;box-shadow:0 0 0 1px var(--line);padding:0;background:repeating-conic-gradient(#d8d2ca 0% 25%, #fff 0% 50%) 50% / 9px 9px}
+  .bg-transparent[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
+  .bigprev.is-transparent{background-image:repeating-conic-gradient(rgba(0,0,0,.05) 0% 25%, transparent 0% 50%);background-size:18px 18px}
+
   /* ---- selector de destino (dropdown con glifo de proporción) ---- */
   .dest-select{position:relative;margin-top:.5rem}
   .dest-trigger{display:flex;align-items:center;gap:.6rem;width:100%;padding:.6rem .8rem;border:1.5px solid var(--line);border-radius:12px;background:rgba(255,255,255,.66);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);cursor:pointer;font-family:"Manrope",sans-serif;text-align:left;transition:border-color .15s}
@@ -651,6 +658,12 @@
               <div class="custom-size" id="custom-size" style="display:none">
                 <span class="dims-mini-label" data-i18n="customSize">Tamaño</span>
                 <span class="cs-fields"><input id="cs-w" inputmode="numeric" maxlength="5" value="1200" aria-label="Ancho px"><span class="cs-x">×</span><input id="cs-h" inputmode="numeric" maxlength="5" value="1200" aria-label="Alto px"><i class="cs-u">px</i></span>
+              </div>
+              <div class="bg-row">
+                <span class="dims-mini-label" data-i18n="bgLabel">Fondo</span>
+                <div class="swatches bg-swatches" id="bg-swatches"></div>
+                <button type="button" class="bg-swatch bg-transparent" id="bg-none" data-i18n-title="bgNone" title="Sin fondo (PNG transparente)" aria-pressed="false" aria-label="Sin fondo"></button>
+                <input type="color" class="color-pick" id="bg-pick" value="#FFFFFF" data-i18n-title="customColor" title="Color personalizado">
               </div>
               <label class="toggle" style="margin-top:.7rem">
                 <input type="checkbox" id="shadow">
@@ -1069,6 +1082,10 @@
         errorPrefix: (m) => 'Error: ' + m,
         chkSize: (w, h) => `Medida exacta ${w} × ${h} px`,
         chkWhiteBg: 'Fondo blanco puro (#FFFFFF)',
+        chkBgColor: 'Fondo de color (la principal de ML va en blanco)',
+        chkBgNone: 'Sin fondo · PNG transparente',
+        bgLabel: 'Fondo',
+        bgNone: 'Sin fondo (PNG transparente)',
         chkCentered: (p) => `Producto centrado al ${p}% del cuadro`,
         chkCenteredWarn: (p) => `Producto al ${p}% (lo ideal es 75–90%)`,
         chkRes: 'Resolución suficiente para el zoom',
@@ -1253,6 +1270,10 @@
         errorPrefix: (m) => 'Error: ' + m,
         chkSize: (w, h) => `Exact size ${w} × ${h} px`,
         chkWhiteBg: 'Pure white background (#FFFFFF)',
+        chkBgColor: 'Colored background (ML main image must be white)',
+        chkBgNone: 'No background · transparent PNG',
+        bgLabel: 'Background',
+        bgNone: 'No background (transparent PNG)',
         chkCentered: (p) => `Product fills ${p}% of the frame, centered`,
         chkCenteredWarn: (p) => `Product fills ${p}% (75–90% is ideal)`,
         chkRes: 'Enough resolution for zoom',
@@ -1309,6 +1330,8 @@
       { id:'other',  label:'', keys:['custom'] },
     ];
     let presetKey = 'ml', shadowOn = false;
+    let bgColor = '#FFFFFF';   // fondo del lienzo · null = transparente (solo producto)
+    const BG_COLORS = ['#FFFFFF', '#FCE9EE', '#E4F4EA', '#ECE7FB', '#FFEBD8', '#E4F0FB', '#F6F1E7'];   // blanco + pasteles
     const P = () => PRESETS[presetKey];
     let model = 'isnet-general-use', enhance = false, wb = false, mainOnly = true;
 
@@ -1518,7 +1541,7 @@
       canvas.width = tw; canvas.height = th;
       const ctx = canvas.getContext('2d');
       ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, tw, th);
+      if (bgColor){ ctx.fillStyle = bgColor; ctx.fillRect(0, 0, tw, th); }   // null = sin fondo (PNG transparente)
       if (!workCtx || !cutoutBox || !cutoutBox.w) return { scaleUsed: 0, fillPct: 0 };
       const b = cutoutBox;
       // reservar el espacio del banner solo si se va a dibujar (si no, producto centrado full)
@@ -1806,9 +1829,11 @@
     }
 
     function updateChecklist(p, info){
+      const bgItem = bgColor === null ? { state:'tip', text: t('chkBgNone') }
+        : (bgColor.toLowerCase() === '#ffffff' ? { state:'ok', text: t('chkWhiteBg') } : { state:'tip', text: t('chkBgColor') });
       const items = [
         { state:'ok', text: t('chkSize')(p.w, p.h) },
-        { state:'ok', text: t('chkWhiteBg') },
+        bgItem,
       ];
       if (info.fillPct >= 72 && info.fillPct <= 92) items.push({ state:'ok', text: t('chkCentered')(info.fillPct) });
       else items.push({ state:'warn', text: t('chkCenteredWarn')(info.fillPct) });
@@ -2584,6 +2609,27 @@
     });
     $('shadow').addEventListener('change', e => { shadowOn = e.target.checked; renderResult(); });
 
+    // ---- selector de fondo ----
+    function syncBgUI(){
+      $('bg-swatches').querySelectorAll('.swatch').forEach(s => s.setAttribute('aria-pressed', (bgColor && s.dataset.hex.toLowerCase() === bgColor.toLowerCase()) ? 'true' : 'false'));
+      $('bg-none').setAttribute('aria-pressed', bgColor === null ? 'true' : 'false');
+      if (bgColor) $('bg-pick').value = bgColor;
+      $('bigprev').classList.toggle('is-transparent', bgColor === null);
+    }
+    function setBg(color){ bgColor = color; syncBgUI(); renderResult(); }
+    function renderBgSwatches(){
+      const wrap = $('bg-swatches'); wrap.innerHTML = '';
+      BG_COLORS.forEach(hex => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'swatch'; b.dataset.hex = hex; b.style.background = hex;
+        b.setAttribute('aria-pressed', hex.toLowerCase() === (bgColor || '').toLowerCase() ? 'true' : 'false'); b.setAttribute('aria-label', hex);
+        b.addEventListener('click', () => setBg(hex));
+        wrap.appendChild(b);
+      });
+    }
+    renderBgSwatches();
+    $('bg-none').addEventListener('click', () => setBg(null));
+    $('bg-pick').addEventListener('input', e => setBg(e.target.value));
+
     // descarga por capas
     const DL_VARIANTS = {
       clean:  { dims: false, banners: false, sfx: 'limpia' },
@@ -2755,7 +2801,7 @@
         bannerOn, bannerFolded, bnTplIdx,
         banner: JSON.parse(JSON.stringify(banner)),
         bnVals: { title: $('bn-title').value, sub: $('bn-sub').value, big: $('bn-big').value, small: $('bn-small').value, badgeOn: $('bn-badge-on').checked },
-        presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn, previewView,
+        presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn, previewView, bgColor,
       };
     }
     function blankState(){
@@ -2765,7 +2811,7 @@
         bannerOn:false, bannerFolded:false, bnTplIdx:-1,
         banner:{ font:'Montserrat', effect:'metal', panel:{color:'#1B49B8',pos:'bottom',style:'card'}, badge:{on:false,color:'#D8381F',corner:'tr'} },
         bnVals:{title:'',sub:'',big:'',small:'',badgeOn:false},
-        presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn:false, previewView:'producto',
+        presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn:false, previewView:'producto', bgColor:'#FFFFFF',
       };
     }
     function restoreState(s){
@@ -2799,6 +2845,7 @@
       updateDestTrigger();
       $('custom-size').style.display = presetKey === 'custom' ? 'flex' : 'none';
       shadowOn=s.shadowOn; $('shadow').checked=shadowOn;
+      bgColor = (s.bgColor === undefined ? '#FFFFFF' : s.bgColor); syncBgUI();
       previewView = s.previewView || 'producto';
       ensureBannerFont(); refreshProductColors(); updateDlVariants(); buildPreviewTabs();
     }
