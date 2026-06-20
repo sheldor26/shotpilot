@@ -3350,7 +3350,7 @@
     $('pv-next').addEventListener('click', () => flipPreview(1));
 
     // ================= WIZARD GUIADO =================
-    let wzStep = 1, wzTemplate = 0, wzCustoms = [], wzCustomSeq = 0, wzUnit = 'cm';
+    let wzStep = 1, wzTemplate = 3, wzCustoms = [], wzCustomSeq = 0, wzUnit = 'cm';   // default: "Del producto"
     let wizardSkipped = false;   // si el usuario elige "Editar manual", no reabrir el wizard en esta sesión
     function openWizard(){
       wzStep = 1;
@@ -3403,7 +3403,7 @@
     });
     function buildWzTemplates(){
       const strip = $('wz-templates'); if (!strip) return;
-      strip.innerHTML = '';
+      strip.innerHTML = ''; let selBtn = null;
       BANNER_TEMPLATES.forEach((tp, i) => {
         const pc = tp.panel.colorMode === 'product' ? 'conic-gradient(from 210deg,#F4513C,#1B49B8,#13A05B,#FFB200,#F4513C)' : tp.panel.color;
         const b = document.createElement('button'); b.type = 'button'; b.className = 'bn-tpl'; b.setAttribute('aria-pressed', i === wzTemplate ? 'true' : 'false');
@@ -3412,7 +3412,9 @@
           + `</span><span class="bn-tpl-name">${tp.name[LANG] || tp.name.es}</span>`;
         b.addEventListener('click', () => { wzTemplate = i; [...strip.children].forEach((el, idx) => el.setAttribute('aria-pressed', idx === i ? 'true' : 'false')); });
         strip.appendChild(b);
+        if (i === wzTemplate) selBtn = b;
       });
+      if (selBtn) try { selBtn.scrollIntoView({ inline: 'center', block: 'nearest' }); } catch {}
     }
     // aplica TODO lo del wizard al editor y muestra el resultado armado
     function generateFromWizard(){
