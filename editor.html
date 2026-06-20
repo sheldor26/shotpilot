@@ -379,6 +379,27 @@
   #adv-wrap > .engine{margin-top:0}
   .extras-head{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:1.5rem;margin-bottom:-.3rem;padding-left:.15rem}
 
+  /* ---- selector de destino (dropdown con glifo de proporción) ---- */
+  .dest-select{position:relative;margin-top:.5rem}
+  .dest-trigger{display:flex;align-items:center;gap:.6rem;width:100%;padding:.6rem .8rem;border:1.5px solid var(--line);border-radius:12px;background:rgba(255,255,255,.66);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);cursor:pointer;font-family:"Manrope",sans-serif;text-align:left;transition:border-color .15s}
+  .dest-trigger:hover{border-color:var(--ink-faint)}
+  .dest-trigger[aria-expanded="true"]{border-color:var(--accent)}
+  .dest-glyph{flex:none;width:22px;height:22px;display:grid;place-items:center}
+  .dest-glyph i{display:block;background:var(--accent-tint);border:1.5px solid var(--accent);border-radius:3px}
+  .dest-tname{font-weight:700;font-size:.92rem;color:var(--ink)}
+  .dest-tsize{margin-left:auto;font-size:.78rem;font-weight:600;color:var(--ink-faint);font-variant-numeric:tabular-nums}
+  .dest-caret{width:18px;height:18px;color:var(--ink-faint);flex:none;transition:transform .2s var(--ease)}
+  .dest-trigger[aria-expanded="true"] .dest-caret{transform:rotate(180deg)}
+  .dest-menu{position:absolute;left:0;right:0;top:calc(100% + .4rem);z-index:20;background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(24px) saturate(150%);backdrop-filter:blur(24px) saturate(150%);border:1px solid rgba(255,255,255,.7);border-radius:14px;box-shadow:0 24px 50px -18px rgba(40,24,16,.4), inset 0 1px 0 rgba(255,255,255,.8);padding:.4rem;max-height:340px;overflow-y:auto}
+  .dest-group-label{font-size:.66rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);padding:.5rem .6rem .25rem}
+  .dest-opt{display:flex;align-items:center;gap:.6rem;width:100%;padding:.5rem .6rem;border:0;background:transparent;border-radius:9px;cursor:pointer;font-family:"Manrope",sans-serif;text-align:left;transition:background .12s}
+  .dest-opt:hover{background:var(--cream-2)}
+  .dest-opt[aria-selected="true"]{background:var(--accent-tint)}
+  .dest-opt .dest-glyph i{background:#fff}
+  .dest-opt[aria-selected="true"] .dest-glyph i{background:var(--accent-tint)}
+  .dest-opt-name{font-weight:600;font-size:.9rem;color:var(--ink)}
+  .dest-opt-size{margin-left:auto;font-size:.76rem;font-weight:600;color:var(--ink-faint);font-variant-numeric:tabular-nums}
+
   /* ---- multi-foto: tira de miniaturas ---- */
   .photo-strip{display:flex;align-items:center;gap:.5rem;margin-bottom:.7rem;overflow-x:auto;scrollbar-width:none;padding:3px 1px}
   .photo-strip::-webkit-scrollbar{display:none}
@@ -618,13 +639,14 @@
           <div class="dl">
             <div class="dl-ctrl">
               <span class="eng-label" data-i18n="destination">Destino</span>
-              <div class="seg" id="presets" role="group" data-i18n-aria="destinationAria" aria-label="Destino">
-                <button type="button" class="chip preset" data-key="ml" aria-pressed="true">MercadoLibre</button>
-                <button type="button" class="chip preset" data-key="tn" aria-pressed="false">Tienda Nube</button>
-                <button type="button" class="chip preset" data-key="ig" aria-pressed="false">Instagram</button>
-                <button type="button" class="chip preset" data-key="igs" aria-pressed="false">Story 9:16</button>
-                <button type="button" class="chip preset" data-key="amz" aria-pressed="false">Amazon</button>
-                <button type="button" class="chip preset" data-key="custom" aria-pressed="false" data-i18n="presetCustom">Personalizado</button>
+              <div class="dest-select" id="dest-select">
+                <button type="button" class="dest-trigger" id="dest-trigger" aria-haspopup="listbox" aria-expanded="false" data-i18n-aria="destinationAria" aria-label="Destino">
+                  <span class="dest-glyph" id="dest-glyph"></span>
+                  <span class="dest-tname" id="dest-tname">MercadoLibre</span>
+                  <span class="dest-tsize" id="dest-tsize">1200×1200</span>
+                  <svg class="dest-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="dest-menu" id="dest-menu" role="listbox" hidden></div>
               </div>
               <div class="custom-size" id="custom-size" style="display:none">
                 <span class="dims-mini-label" data-i18n="customSize">Tamaño</span>
@@ -915,6 +937,8 @@
         mainonlyHint: '¿Tu foto tiene más de un producto para mostrar? Apagá “Solo el producto”.',
         destination: 'Destino',
         presetCustom: 'Personalizado',
+        grp_market: 'Marketplaces',
+        grp_social: 'Redes sociales',
         customSize: 'Tamaño',
         destinationAria: 'Destino',
         softShadow: 'Sombra suave',
@@ -1097,6 +1121,8 @@
         mainonlyHint: 'Does your photo have more than one product to show? Turn off “Product only”.',
         destination: 'Destination',
         presetCustom: 'Custom',
+        grp_market: 'Marketplaces',
+        grp_social: 'Social media',
         customSize: 'Size',
         destinationAria: 'Destination',
         softShadow: 'Soft shadow',
@@ -1268,13 +1294,20 @@
     let cutoutUrl = null, originalUrl = null, cutoutBox = null;
     // presets por destino: medida exacta + resolución de origen recomendada + relleno del cuadro
     const PRESETS = {
-      ml:  { name:'MercadoLibre', w:1200, h:1200, minSrc:1200, fill:.82 },
-      tn:  { name:'Tienda Nube',  w:1200, h:1200, minSrc:1024, fill:.82 },
-      ig:  { name:'Instagram',    w:1080, h:1080, minSrc:1080, fill:.82 },
-      igs: { name:'Story 9:16',   w:1080, h:1920, minSrc:1080, fill:.66 },
-      amz: { name:'Amazon',       w:1600, h:1600, minSrc:1500, fill:.85 },
-      custom: { name:'Personalizado', w:1200, h:1200, minSrc:0, fill:.82 },
+      ml:      { name:'MercadoLibre', w:1200, h:1200, minSrc:1200, fill:.82, group:'market' },
+      tn:      { name:'Tienda Nube',  w:1200, h:1200, minSrc:1024, fill:.82, group:'market' },
+      shopify: { name:'Shopify',      w:2048, h:2048, minSrc:1600, fill:.82, group:'market' },
+      etsy:    { name:'Etsy',         w:2000, h:2000, minSrc:1600, fill:.82, group:'market' },
+      amz:     { name:'Amazon',       w:1600, h:1600, minSrc:1500, fill:.85, group:'market' },
+      ig:      { name:'Instagram',    w:1080, h:1080, minSrc:1080, fill:.82, group:'social' },
+      igs:     { name:'Story 9:16',   w:1080, h:1920, minSrc:1080, fill:.66, group:'social' },
+      custom:  { name:'Personalizado', w:1200, h:1200, minSrc:0, fill:.82, group:'other' },
     };
+    const PRESET_GROUPS = [
+      { id:'market', label:'Marketplaces', keys:['ml','tn','shopify','etsy','amz'] },
+      { id:'social', label:'Redes sociales', keys:['ig','igs'] },
+      { id:'other',  label:'', keys:['custom'] },
+    ];
     let presetKey = 'ml', shadowOn = false;
     const P = () => PRESETS[presetKey];
     let model = 'isnet-general-use', enhance = false, wb = false, mainOnly = true;
@@ -2500,16 +2533,44 @@
     // PNG sin pérdida: máxima nitidez, cero artefactos de compresión
     const toBlob = () => new Promise(r => canvas.toBlob(r, 'image/png'));
 
-    $('presets').querySelectorAll('.preset').forEach(c => {
-      c.addEventListener('click', () => {
-        $('presets').querySelectorAll('.preset').forEach(x => x.setAttribute('aria-pressed','false'));
-        c.setAttribute('aria-pressed','true');
-        presetKey = c.dataset.key;
-        $('custom-size').style.display = presetKey === 'custom' ? 'flex' : 'none';
-        buildPreviewTabs();   // re-render thumbs con el nuevo tamaño
-        renderResult();
+    // ---- dropdown de destino ----
+    function destGlyphHTML(w, h){
+      const m = 18, s = Math.min(m / w, m / h), gw = Math.max(6, Math.round(w * s)), gh = Math.max(6, Math.round(h * s));
+      return `<i style="width:${gw}px;height:${gh}px"></i>`;
+    }
+    function updateDestTrigger(){
+      const p = PRESETS[presetKey];
+      $('dest-glyph').innerHTML = destGlyphHTML(p.w, p.h);
+      $('dest-tname').textContent = presetKey === 'custom' ? t('presetCustom') : p.name;
+      $('dest-tsize').textContent = presetKey === 'custom' ? '' : `${p.w}×${p.h}`;
+    }
+    function buildDestMenu(){
+      const menu = $('dest-menu'); menu.innerHTML = '';
+      PRESET_GROUPS.forEach(g => {
+        if (g.label){ const lb = document.createElement('div'); lb.className = 'dest-group-label'; lb.textContent = t('grp_' + g.id); menu.appendChild(lb); }
+        g.keys.forEach(k => {
+          const p = PRESETS[k];
+          const o = document.createElement('button'); o.type = 'button'; o.className = 'dest-opt'; o.dataset.key = k; o.setAttribute('role', 'option');
+          o.setAttribute('aria-selected', k === presetKey ? 'true' : 'false');
+          const name = k === 'custom' ? t('presetCustom') : p.name;
+          const size = k === 'custom' ? '' : `${p.w}×${p.h}`;
+          o.innerHTML = `<span class="dest-glyph">${destGlyphHTML(p.w, p.h)}</span><span class="dest-opt-name">${name}</span><span class="dest-opt-size">${size}</span>`;
+          o.addEventListener('click', () => { selectDest(k); closeDestMenu(); });
+          menu.appendChild(o);
+        });
       });
-    });
+    }
+    function openDestMenu(){ buildDestMenu(); $('dest-menu').hidden = false; $('dest-trigger').setAttribute('aria-expanded', 'true'); }
+    function closeDestMenu(){ $('dest-menu').hidden = true; $('dest-trigger').setAttribute('aria-expanded', 'false'); }
+    function selectDest(key){
+      presetKey = key;
+      updateDestTrigger();
+      $('custom-size').style.display = presetKey === 'custom' ? 'flex' : 'none';
+      buildPreviewTabs(); renderResult();
+    }
+    $('dest-trigger').addEventListener('click', () => { $('dest-menu').hidden ? openDestMenu() : closeDestMenu(); });
+    document.addEventListener('click', e => { if (!$('dest-select').contains(e.target)) closeDestMenu(); });
+    updateDestTrigger();
     // tamaño personalizado (px), con clamp para no romper el lienzo
     const csClamp = v => Math.max(200, Math.min(4000, parseInt(v, 10) || 0));
     function applyCustomSize(){
@@ -2735,7 +2796,7 @@
       [...$('bn-templates').children].forEach((el,idx) => el.setAttribute('aria-pressed', idx===bnTplIdx ? 'true' : 'false'));
       presetKey=s.presetKey; PRESETS.custom.w=s.customW; PRESETS.custom.h=s.customH;
       $('cs-w').value=s.customW; $('cs-h').value=s.customH;
-      syncSeg('presets','key',presetKey);
+      updateDestTrigger();
       $('custom-size').style.display = presetKey === 'custom' ? 'flex' : 'none';
       shadowOn=s.shadowOn; $('shadow').checked=shadowOn;
       previewView = s.previewView || 'producto';
