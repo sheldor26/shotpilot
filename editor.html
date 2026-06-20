@@ -915,6 +915,7 @@
                 </div>
                 <label class="opt logo-slider"><span data-i18n="logoSize">Tamaño</span> <input type="range" id="logo-size" min="6" max="42" value="18"><b id="logo-size-v">18%</b></label>
                 <label class="opt logo-slider"><span data-i18n="logoOpacity">Opacidad</span> <input type="range" id="logo-op" min="10" max="100" value="100"><b id="logo-op-v">100%</b></label>
+                <p class="eng-hint" data-i18n="logoDragHint">Arrastrá el logo en la vista previa para moverlo a cualquier lado.</p>
               </div>
             </div>
           </div>
@@ -1103,6 +1104,7 @@
         logoWmMode: 'Marca de agua',
         logoSize: 'Tamaño',
         logoOpacity: 'Opacidad',
+        logoDragHint: 'Arrastrá el logo en la vista previa para moverlo a cualquier lado.',
         enhTitle: 'Realce de la foto',
         enhSwitchTitle: 'Mejorar brillo, contraste y color',
         enhAuto: '✨ Auto estudio',
@@ -1309,6 +1311,7 @@
         logoWmMode: 'Watermark',
         logoSize: 'Size',
         logoOpacity: 'Opacity',
+        logoDragHint: 'Drag the logo on the preview to move it anywhere.',
         enhTitle: 'Photo enhance',
         enhSwitchTitle: 'Improve brightness, contrast and color',
         enhAuto: '✨ Auto studio',
@@ -1920,9 +1923,9 @@
     }
     function dimsVisible(){ return dimsOn && dimsStyle === 'lines' && (previewView === 'medidas' || previewView === 'todo'); }
     function updateBigprevDraggable(){
-      const drag = dimsVisible();
-      $('bigprev').classList.toggle('draggable', drag);
-      $('bigprev-hint').style.display = drag ? 'block' : 'none';
+      const dimsDrag = dimsVisible();
+      $('bigprev').classList.toggle('draggable', dimsDrag || (logoOn && logoImg));
+      $('bigprev-hint').style.display = dimsDrag ? 'block' : 'none';
     }
     function setPreviewView(v){
       previewView = v;
@@ -2310,9 +2313,17 @@
       return null;
     }
     const clampF = v => Math.max(0.01, Math.min(0.99, v));
+    function inLogo(f){ return logoOn && logoImg && logoRect && f.x >= logoRect.x && f.x <= logoRect.x + logoRect.w && f.y >= logoRect.y && f.y <= logoRect.y + logoRect.h; }
     preview.addEventListener('pointerdown', e => {
+      const f = pvFrac(e);
+      if (inLogo(f)){   // arrastrar el logo a cualquier lado
+        e.preventDefault();
+        grab = { logo: true, ox: f.x - (logoRect.x + logoRect.w / 2), oy: f.y - (logoRect.y + logoRect.h / 2) };
+        try { preview.setPointerCapture(e.pointerId); } catch {}
+        return;
+      }
       if (!dimsVisible() || !dimLines) return;
-      const g = hit(pvFrac(e));
+      const g = hit(f);
       if (!g) return;
       e.preventDefault();
       grab = g; try { preview.setPointerCapture(e.pointerId); } catch {}
@@ -2320,7 +2331,9 @@
     preview.addEventListener('pointermove', e => {
       if (!grab) return;
       e.preventDefault();
-      const f = pvFrac(e), l = grab.line;
+      const f = pvFrac(e);
+      if (grab.logo){ logoPos = { x: clampF(f.x - grab.ox), y: clampF(f.y - grab.oy) }; renderResult(); return; }
+      const l = grab.line;
       if (grab.which === 'line'){
         const dx = f.x - grab.start.x, dy = f.y - grab.start.y;
         l.p1 = { x: clampF(grab.o1.x + dx), y: clampF(grab.o1.y + dy) };
@@ -2429,19 +2442,18 @@
     // ---- logo / marca de agua ----
     let logoOn = false, logoFolded = false, logoImg = null;
     let logoMode = 'corner', logoCorner = 'br', logoSize = 18, logoOpacity = 1;
+    let logoPos = null;     // null = posición por esquina · {x,y} fracción = arrastrado libre (centro del logo)
+    let logoRect = null;    // rect renderizado (fracciones) para hit-test del arrastre
     function drawLogo(ctx, tw, th){
       const base = Math.min(tw, th), iw = logoImg.naturalWidth || 1, ih = logoImg.naturalHeight || 1;
-      ctx.save(); ctx.globalAlpha = logoOpacity;
-      if (logoMode === 'watermark'){
-        const w = base * (logoSize / 100) * 2.4, h = w * ih / iw;
-        ctx.drawImage(logoImg, (tw - w) / 2, (th - h) / 2, w, h);
-      } else {
-        const w = base * (logoSize / 100), h = w * ih / iw, m = base * 0.04;
-        const x = logoCorner.includes('r') ? tw - w - m : m;
-        const y = logoCorner[0] === 't' ? m : th - h - m;
-        ctx.drawImage(logoImg, x, y, w, h);
-      }
-      ctx.restore();
+      const wm = logoMode === 'watermark';
+      const w = base * (logoSize / 100) * (wm ? 2.4 : 1), h = w * ih / iw, m = base * 0.04;
+      let x, y;
+      if (logoPos){ x = logoPos.x * tw - w / 2; y = logoPos.y * th - h / 2; }
+      else if (wm){ x = (tw - w) / 2; y = (th - h) / 2; }
+      else { x = logoCorner.includes('r') ? tw - w - m : m; y = logoCorner[0] === 't' ? m : th - h - m; }
+      ctx.save(); ctx.globalAlpha = logoOpacity; ctx.drawImage(logoImg, x, y, w, h); ctx.restore();
+      logoRect = { x: x / tw, y: y / th, w: w / tw, h: h / th };
     }
 
     let bannerOn = false;
@@ -2754,7 +2766,8 @@
     }));
     $('logo-corner').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
       $('logo-corner').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', 'false'));
-      c.setAttribute('aria-pressed', 'true'); logoCorner = c.dataset.corner; renderResult();
+      c.setAttribute('aria-pressed', 'true'); logoCorner = c.dataset.corner; logoPos = null;   // volver a la esquina (cancela el arrastre libre)
+      renderResult();
     }));
     $('logo-size').addEventListener('input', e => { logoSize = parseInt(e.target.value, 10); $('logo-size-v').textContent = logoSize + '%'; renderResult(); });
     $('logo-op').addEventListener('input', e => { logoOpacity = parseInt(e.target.value, 10) / 100; $('logo-op-v').textContent = e.target.value + '%'; renderResult(); });
@@ -3069,7 +3082,7 @@
         banner: JSON.parse(JSON.stringify(banner)),
         bnVals: { title: $('bn-title').value, sub: $('bn-sub').value, big: $('bn-big').value, small: $('bn-small').value, badgeOn: $('bn-badge-on').checked },
         presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn, previewView, bgColor, bgGrad,
-        logoOn, logoFolded, logoMode, logoCorner, logoSize, logoOpacity,
+        logoOn, logoFolded, logoMode, logoCorner, logoSize, logoOpacity, logoPos: logoPos ? { ...logoPos } : null,
         enhanceFx, enhFolded, enhB, enhC, enhS,
       };
     }
@@ -3081,7 +3094,7 @@
         banner:{ font:'Montserrat', effect:'metal', panel:{color:'#1B49B8',pos:'bottom',style:'card'}, badge:{on:false,color:'#D8381F',corner:'tr'} },
         bnVals:{title:'',sub:'',big:'',small:'',badgeOn:false},
         presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn:false, previewView:'producto', bgColor:'#FFFFFF', bgGrad:-1,
-        logoOn:false, logoFolded:false, logoMode:'corner', logoCorner:'br', logoSize:18, logoOpacity:1,
+        logoOn:false, logoFolded:false, logoMode:'corner', logoCorner:'br', logoSize:18, logoOpacity:1, logoPos:null,
         enhanceFx:false, enhFolded:false, enhB:100, enhC:100, enhS:100,
       };
     }
@@ -3117,7 +3130,7 @@
       $('custom-size').style.display = presetKey === 'custom' ? 'flex' : 'none';
       shadowOn=s.shadowOn; $('shadow').checked=shadowOn;
       bgColor = (s.bgColor === undefined ? '#FFFFFF' : s.bgColor); bgGrad = (s.bgGrad == null ? -1 : s.bgGrad); if (bgGrad === -2) computeProductGrad(); syncBgUI();
-      logoOn = !!s.logoOn; logoFolded = !!s.logoFolded; logoMode = s.logoMode || 'corner'; logoCorner = s.logoCorner || 'br'; logoSize = s.logoSize || 18; logoOpacity = (s.logoOpacity == null ? 1 : s.logoOpacity);
+      logoOn = !!s.logoOn; logoFolded = !!s.logoFolded; logoMode = s.logoMode || 'corner'; logoCorner = s.logoCorner || 'br'; logoSize = s.logoSize || 18; logoOpacity = (s.logoOpacity == null ? 1 : s.logoOpacity); logoPos = s.logoPos ? { ...s.logoPos } : null;
       $('logo-on').checked = logoOn; $('logo-fold').style.display = logoOn ? 'grid' : 'none'; syncLogoFold();
       syncSeg('logo-mode','mode',logoMode); syncSeg('logo-corner','corner',logoCorner);
       $('logo-corner-row').style.display = logoMode === 'corner' ? 'flex' : 'none';
