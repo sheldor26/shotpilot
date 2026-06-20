@@ -114,8 +114,8 @@
   /* ---- comparador / lienzo de retoque ---- */
   .compare{position:relative;aspect-ratio:1;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#fff;user-select:none;touch-action:none;cursor:ew-resize}
   .cmp-layer{position:absolute;inset:0;width:100%;height:100%}
-  .cmp-after{background:#fff;display:grid;place-items:center}
-  .cmp-after img{width:100%;height:100%;object-fit:contain}
+  .cmp-after{background:#fff}
+  .cmp-after img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
   .cmp-before{object-fit:contain;background:#fff;clip-path:inset(0 calc(100% - var(--x,50%)) 0 0)}
   .paint{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:3;opacity:0;pointer-events:none;transition:opacity .15s;touch-action:none}
   .cmp-tag{position:absolute;top:.6rem;z-index:4;font-size:.66rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#fff;padding:.24rem .55rem;border-radius:999px}
