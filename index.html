@@ -484,8 +484,8 @@
   .demo .cmp-knob{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;background:#fff;box-shadow:var(--shadow-md);display:grid;place-items:center;color:var(--ink)}
   .demo .cmp-knob svg{width:20px;height:20px}
   /* marca de agua sobre el resultado hasta destrabar con email */
-  .demo .cmp-after::after{content:"shotpilot · vista previa";position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:1rem;letter-spacing:.04em;color:rgba(26,22,20,.18);transform:rotate(-18deg);background:repeating-linear-gradient(-18deg,transparent,transparent 38px,rgba(26,22,20,.045) 38px,rgba(26,22,20,.045) 76px);pointer-events:none;z-index:3}
-  .demo-card.locked .cmp-after::after{display:flex}
+  .demo .cmp-after::after{content:"";position:absolute;inset:0;display:none;pointer-events:none;z-index:3;background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='800'><defs><pattern id='wm' patternUnits='userSpaceOnUse' width='210' height='92' patternTransform='rotate(-30)'><text x='0' y='42' font-family='Manrope,system-ui,sans-serif' font-size='27' font-weight='800' fill='rgba(36,30,26,0.15)'>SHOTPILOT</text></pattern></defs><rect width='600' height='800' fill='url(%23wm)'/></svg>");background-size:cover;background-repeat:no-repeat}
+  .demo-card.locked .cmp-after::after{display:block}
   /* gate de email */
   .demo-gate{margin-top:1.2rem}
   .demo-gate-row{display:flex;gap:.6rem;flex-wrap:wrap}
