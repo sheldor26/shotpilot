@@ -228,12 +228,12 @@
   .ba-stage{position:relative;aspect-ratio:3/4;border-radius:16px;overflow:hidden;background:#fff;border:1px solid var(--line);cursor:ew-resize;touch-action:none;user-select:none}
   .ba-stage img{position:absolute;inset:0;width:100%;height:100%;display:block}
   .ba-after{object-fit:cover;object-position:50% 42%;z-index:1}
-  .ba-before{object-fit:cover;object-position:50% 42%;z-index:2;clip-path:inset(0 0 0 50%)}
+  .ba-before{object-fit:cover;object-position:50% 42%;z-index:2;clip-path:inset(0 50% 0 0)}
   .ba-line{position:absolute;top:0;bottom:0;left:50%;width:3px;transform:translateX(-50%);z-index:3;opacity:1;background:linear-gradient(180deg,rgba(226,80,58,0),var(--accent) 12%,#fff 50%,var(--accent) 88%,rgba(226,80,58,0));box-shadow:0 0 18px 3px rgba(226,80,58,.6),0 0 6px 1px rgba(255,255,255,.75)}
   .ba-line::after{content:"";position:absolute;top:0;bottom:0;right:1px;width:42px;background:linear-gradient(90deg,rgba(226,80,58,0),rgba(226,80,58,.18));pointer-events:none}
   .ba-stage .tag{position:absolute;top:.7rem;left:.7rem;z-index:4;font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#fff;padding:.28rem .6rem;border-radius:999px}
-  .tag-before{background:rgba(26,22,20,.6);opacity:0}
-  .tag-after{background:var(--accent)}
+  .ba-stage .tag-before{background:rgba(26,22,20,.6);left:.7rem;right:auto;opacity:1}
+  .ba-stage .tag-after{background:var(--accent);left:auto;right:.7rem}
   .ba-drag{position:absolute;top:0;bottom:0;left:var(--x,50%);width:2px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.1);z-index:6;opacity:0;transition:opacity .2s}
   .ba-knob{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;background:#fff;box-shadow:var(--shadow-md);display:grid;place-items:center;color:var(--ink)}
   .ba-knob svg{width:20px;height:20px}
@@ -404,9 +404,9 @@
     .ai-sticker .arr path{animation:none;stroke-dashoffset:0}
     html.js .reveal{opacity:1;transform:none;transition:none}
     .ba-before,.ba-line,.tag-before,.tag-after{animation:none}
-    .ba-before{clip-path:inset(0 0 0 50%)}
+    .ba-before{clip-path:inset(0 50% 0 0)}
     .ba-line{left:50%;opacity:1}
-    .tag-before{opacity:0}
+    .tag-before{opacity:1}
     .tag-after{opacity:1}
     *{transition:none!important}
   }
