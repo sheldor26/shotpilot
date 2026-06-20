@@ -3553,7 +3553,7 @@
 
     // ---------- cuentas + créditos (Supabase) ----------
     const SB_URL = 'https://ntybvdfyxesxpoukyqpf.supabase.co';
-    const SB_KEY = 'sb_publishable_slLrGZt-yt-mIfgBcaUfDA_KSKUeRbN';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50eWJ2ZGZ5eGVzeHBvdWt5cXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3OTk5NzcsImV4cCI6MjA5NzM3NTk3N30.txWMTF34NaN_NDVtcbgx_69kDSX4Bm9mBfJYf7PIvAw';
     // URL canónica (sin .html) para que el login NO pase por el redirect 308 que puede tirar la sesión
     const AUTH_REDIRECT = location.origin + location.pathname.replace(/\.html$/, '');
     let sb = null, authUser = null, authProfile = null;
@@ -3602,8 +3602,11 @@
     }
     if (sb){
       renderAuthSlot(); authDbg('init');   // botón inmediato, sin parpadeo
-      sb.auth.getSession().then(({ data }) => onAuth(data.session));
-      sb.auth.onAuthStateChange((_e, session) => onAuth(session));
+      sb.auth.getSession().then(({ data, error }) => {
+        const d = $('authdbg'); if (d) d.textContent += ` || getSession:${data && data.session ? 'OK' : 'null'}${error ? ' ERR:' + error.message : ''}`;
+        onAuth(data ? data.session : null);
+      });
+      sb.auth.onAuthStateChange((ev, session) => { const d = $('authdbg'); if (d) d.textContent += ` [evt:${ev} ${session ? 'sess' : 'nada'}]`; onAuth(session); });
       $('auth-send').addEventListener('click', async () => {
         const email = ($('auth-email').value || '').trim();
         const st = $('auth-status');
