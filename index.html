@@ -1093,6 +1093,7 @@
   (function(){
     var card = document.getElementById('demo-card');
     if(!card) return;
+    var MOTOR_URL = 'https://shotpilot-production.up.railway.app';   // mismo motor (rembg) que el editor — gratis, full-res
     var drop = document.getElementById('demo-drop'), file = document.getElementById('demo-file');
     var proc = document.getElementById('demo-proc'), procImg = document.getElementById('demo-proc-img');
     var result = document.getElementById('demo-result'), err = document.getElementById('demo-err');
@@ -1162,9 +1163,9 @@
       if(originalUrl) URL.revokeObjectURL(originalUrl);
       originalUrl = URL.createObjectURL(f); procImg.src = originalUrl; show('proc');
       resizeForUpload(f)
-        .then(function(blob){ return fetch('/api/convert', { method:'POST', headers:{ 'Content-Type':'image/jpeg' }, body: blob }); })
+        .then(function(blob){ var fd = new FormData(); fd.append('image', blob, 'foto.jpg'); fd.append('white_bg', 'false'); fd.append('main_only', 'true'); fd.append('model', 'isnet-general-use'); return fetch(MOTOR_URL + '/remove', { method:'POST', body: fd }); })
         .then(function(resp){
-          if(!resp.ok){ return resp.json().catch(function(){ return {}; }).then(function(j){ throw new Error(j.error === 'missing_api_key' ? 'Falta configurar la API key en el servidor.' : 'No pudimos procesar la foto. Probá de nuevo en un momento.'); }); }
+          if(!resp.ok){ throw new Error('No pudimos procesar la foto. Probá de nuevo en un momento.'); }
           return resp.blob();
         })
         .then(function(blob){ return loadCutout(blob); })
