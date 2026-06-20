@@ -839,6 +839,11 @@
                 <span class="sw" aria-hidden="true"></span>
                 <span data-i18n="softShadow">Sombra suave</span>
               </label>
+              <label class="toggle" style="margin-top:.6rem">
+                <input type="checkbox" id="reflect">
+                <span class="sw" aria-hidden="true"></span>
+                <span data-i18n="reflection">Reflejo de estudio</span>
+              </label>
             </div>
           </div>
 
@@ -1312,6 +1317,7 @@
         customSize: 'Tamaño',
         destinationAria: 'Destino',
         softShadow: 'Sombra suave',
+        reflection: 'Reflejo de estudio',
         prodSize: 'Tamaño del producto',
         prodSizeAuto: 'Volver al tamaño automático',
         autoLbl: 'Auto',
@@ -1581,6 +1587,7 @@
         customSize: 'Size',
         destinationAria: 'Destination',
         softShadow: 'Soft shadow',
+        reflection: 'Studio reflection',
         prodSize: 'Product size',
         prodSizeAuto: 'Back to automatic size',
         autoLbl: 'Auto',
@@ -1820,7 +1827,7 @@
       { id:'social', label:'Redes sociales', keys:['ig','igs'] },
       { id:'other',  label:'', keys:['custom'] },
     ];
-    let presetKey = 'ml', shadowOn = false;
+    let presetKey = 'ml', shadowOn = false, reflectOn = false;
     let bgColor = '#FFFFFF';   // fondo del lienzo · null = transparente (solo producto)
     let bgGrad = -1;           // -1 = sin gradiente · >=0 = índice de GRADIENTS (tiene prioridad sobre bgColor)
     const BG_COLORS = ['#FFFFFF', '#FCE9EE', '#E4F4EA', '#ECE7FB', '#FFEBD8', '#E4F0FB', '#F6F1E7'];   // blanco + pasteles
@@ -1833,18 +1840,23 @@
       { type:'radial', from:'#EFF6FF', to:'#D2E5FB' },   // cielo
       { type:'linear', from:'#FFF4EA', to:'#F8DCC3' },   // durazno
       { type:'linear', from:'#FCEBE6', to:'#F3D6EA' },   // atardecer
-      { type:'linear', from:'#30313A', to:'#15151A' },   // grafito (oscuro premium)
+      { type:'linear', from:'#30313A', to:'#15151A', dark:true },   // grafito (oscuro premium)
     ];
     function drawGradient(ctx, tw, th, g){
       let grad;
       if (g.type === 'radial'){
-        const r = Math.max(tw, th) * 0.80;
-        grad = ctx.createRadialGradient(tw / 2, th * 0.40, r * 0.04, tw / 2, th * 0.55, r);
+        const r = Math.max(tw, th) * 0.85;
+        grad = ctx.createRadialGradient(tw / 2, th * 0.38, r * 0.04, tw / 2, th * 0.6, r);
       } else {
         grad = ctx.createLinearGradient(0, 0, 0, th);
       }
       grad.addColorStop(0, g.from); grad.addColorStop(1, g.to);
       ctx.fillStyle = grad; ctx.fillRect(0, 0, tw, th);
+      // viñeta sutil: oscurece apenas las esquinas para dar profundidad de estudio
+      const vr = Math.max(tw, th) * 0.78;
+      const vg = ctx.createRadialGradient(tw / 2, th * 0.5, vr * 0.52, tw / 2, th * 0.5, vr);
+      vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, g.dark ? 'rgba(0,0,0,.30)' : 'rgba(36,22,14,.11)');
+      ctx.fillStyle = vg; ctx.fillRect(0, 0, tw, th);
     }
     function gradCSS(g){ return g.type === 'radial' ? `radial-gradient(circle at 50% 40%, ${g.from}, ${g.to})` : `linear-gradient(180deg, ${g.from}, ${g.to})`; }
     // backdrop derivado del color dominante del producto (con chroma.js) — "auto del producto"
@@ -1965,15 +1977,15 @@
 
         if (mode === 'reprocess'){
           if (photos[activePhoto]) photos[activePhoto].cutoutBlob = blob;
-          updateDlVariants(); buildPreviewTabs(); show('result');
+          updateDlVariants(); buildPreviewTabs(); show('result'); startReveal();
         } else if (mode === 'add'){
           restoreState(blankState());          // foto nueva arranca limpia (mismo tamaño)
           registerPhoto(blob, false);
-          updateDlVariants(); buildPreviewTabs(); show('result');
+          updateDlVariants(); buildPreviewTabs(); show('result'); startReveal();
         } else {                                // 'first'
           registerPhoto(blob, true);
           updateDlVariants();
-          if (!wizardSkipped) openWizard(); else { buildPreviewTabs(); show('result'); }
+          if (!wizardSkipped) openWizard(); else { buildPreviewTabs(); show('result'); startReveal(); }
         }
       } catch (e){
         if (mode === 'first'){ show('drop'); showError(e.message); }
@@ -2057,6 +2069,15 @@
     }
 
     // ---------- componer cuadrado centrado sobre blanco ----------
+    // sombra elíptica difusa (achatada). stops = [[offset, color], ...]
+    const reflCanvas = document.createElement('canvas');
+    function softShadow(ctx, cx, cy, rx, ry, stops){
+      ctx.save(); ctx.translate(cx, cy); ctx.scale(1, Math.max(0.02, ry / rx)); ctx.translate(-cx, -cy);
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, rx);
+      stops.forEach(s => g.addColorStop(s[0], s[1]));
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, rx, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
     // compone el producto centrado sobre blanco en cualquier medida W×H. Devuelve métricas.
     // layers: qué capas dibujar. Por defecto, las que estén activas (para la previa).
     function compose(tw, th, shadow, fill, layers){
@@ -2084,15 +2105,34 @@
       const scale = Math.min(autoScale * productScale, maxScale);
       const dw = b.w * scale, dh = b.h * scale;
       const dx = availLeft + (availW - dw) / 2, dy = availTop + (availH - dh) / 2;
+      const cx2 = dx + dw / 2, baseY = dy + dh - dh * 0.006;
+      // halo de luz detrás del producto (solo con fondo de estudio) -> el producto "flota"
+      if (bgGrad === -2 || bgGrad >= 0){
+        const hy = dy + dh * 0.46, hr = Math.max(dw, dh) * 0.64;
+        const hg = ctx.createRadialGradient(cx2, hy, hr * 0.05, cx2, hy, hr);
+        hg.addColorStop(0, 'rgba(255,255,255,.40)'); hg.addColorStop(0.55, 'rgba(255,255,255,.12)'); hg.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = hg; ctx.fillRect(0, 0, tw, th);
+      }
+      // reflejo de estudio (espejo del producto debajo, con caída de opacidad)
+      if (reflectOn){
+        const maxRH = (availTop + availH) - (dy + dh) - 2;
+        const rh = Math.min(dh * 0.42, Math.max(0, maxRH));
+        if (rh > 10){
+          reflCanvas.width = Math.max(1, Math.round(dw)); reflCanvas.height = Math.max(1, Math.round(rh));
+          const rx = reflCanvas.getContext('2d'); rx.clearRect(0, 0, reflCanvas.width, reflCanvas.height);
+          rx.save(); rx.scale(1, -1); rx.translate(0, -dh); rx.drawImage(workCanvas, b.x, b.y, b.w, b.h, 0, 0, dw, dh); rx.restore();
+          rx.globalCompositeOperation = 'destination-out';
+          const fg = rx.createLinearGradient(0, 0, 0, reflCanvas.height);
+          fg.addColorStop(0, 'rgba(0,0,0,.5)'); fg.addColorStop(1, 'rgba(0,0,0,1)');
+          rx.fillStyle = fg; rx.fillRect(0, 0, reflCanvas.width, reflCanvas.height);
+          rx.globalCompositeOperation = 'source-over';
+          ctx.save(); ctx.globalAlpha = 0.5; ctx.drawImage(reflCanvas, dx, dy + dh); ctx.restore();
+        }
+      }
       if (shadow){
-        // sombra de contacto difusa bajo el producto (look de estudio premium)
-        const cx2 = dx + dw / 2, baseY = dy + dh - dh * 0.012, ew = dw * 0.66, eh = Math.max(6, dh * 0.05);
-        ctx.save();
-        ctx.translate(cx2, baseY); ctx.scale(1, eh / (ew / 2)); ctx.translate(-cx2, -baseY);
-        const sg = ctx.createRadialGradient(cx2, baseY, 0, cx2, baseY, ew / 2);
-        sg.addColorStop(0, 'rgba(0,0,0,.30)'); sg.addColorStop(0.7, 'rgba(0,0,0,.12)'); sg.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(cx2, baseY, ew / 2, 0, Math.PI * 2); ctx.fill();
-        ctx.restore();
+        // sombra de estudio: capa ambiente (ancha y suave) + capa de contacto (angosta y oscura)
+        softShadow(ctx, cx2, baseY, dw * 0.60, dh * 0.075, [[0, 'rgba(0,0,0,.20)'], [0.6, 'rgba(0,0,0,.08)'], [1, 'rgba(0,0,0,0)']]);
+        softShadow(ctx, cx2, baseY, dw * 0.40, dh * 0.028, [[0, 'rgba(0,0,0,.36)'], [0.55, 'rgba(0,0,0,.17)'], [1, 'rgba(0,0,0,0)']]);
       }
       ctx.filter = enhFilter();   // realce premium (brillo/contraste/color) solo sobre el producto
       ctx.drawImage(workCanvas, b.x, b.y, b.w, b.h, dx, dy, dw, dh);
@@ -2433,6 +2473,14 @@
     document.addEventListener('dragstart', e => { if (e.target.closest && e.target.closest('#preview, #scene-results')) e.preventDefault(); });
 
     // dibuja el lienzo compuesto (offscreen) en la vista previa visible, a escala
+    // animación de "reveal": el producto limpio aparece con fade + scale suave (una vez)
+    let revealT = 1, revealRAF = 0, revealStart = 0;
+    function startReveal(){
+      if (!workCtx || !cutoutBox || !cutoutBox.w) return;
+      revealT = 0; cancelAnimationFrame(revealRAF); revealStart = performance.now();
+      const step = (now) => { revealT = Math.min(1, (now - revealStart) / 540); drawPreview(); if (revealT < 1) revealRAF = requestAnimationFrame(step); };
+      revealRAF = requestAnimationFrame(step);
+    }
     function drawPreview(){
       const pv = $('preview');
       const box = pv.parentElement.clientWidth - 24;
@@ -2445,6 +2493,16 @@
       const c = pv.getContext('2d');
       c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high';
       c.clearRect(0, 0, pv.width, pv.height);
+      const rv = revealT < 1 ? (1 - Math.pow(1 - revealT, 3)) : 1;   // easeOutCubic
+      if (rv < 1){   // durante el reveal: fade + scale suave, sin marca de agua ni handles
+        c.save();
+        c.globalAlpha = rv;
+        const scl = 0.93 + 0.07 * rv;
+        c.translate(pv.width / 2, pv.height / 2); c.scale(scl, scl); c.translate(-pv.width / 2, -pv.height / 2);
+        c.drawImage(canvas, 0, 0, pv.width, pv.height);
+        c.restore();
+        return;
+      }
       c.drawImage(canvas, 0, 0, pv.width, pv.height);
       if (wmOn()) drawWatermark(c, pv.width, pv.height);   // captura de pantalla = imagen marcada (solo pasado el free)
       // handles de las puntas (solo en la previa, no en la descarga)
@@ -3032,9 +3090,11 @@
         ctx.textBaseline = 'middle';
         ctx.font = bnFont(800, tf); ctx.fillText(title, tx, y + bh * 0.38);
         const subTxt = sub.toUpperCase();
+        ctx.letterSpacing = (bh * 0.014) + 'px';   // tracking en la bajada (mayúsculas)
         const sf = fitFont(ctx, subTxt, maxW, Math.round(tf * 0.5), '700');   // la bajada también se achica para no salirse
         ctx.save(); ctx.globalAlpha = 0.85; ctx.font = bnFont(700, sf);
         ctx.fillText(subTxt, tx, y + bh * 0.72); ctx.restore();
+        ctx.letterSpacing = '0px';
       } else {
         const tf = fitFont(ctx, title, maxW, Math.round(bh * 0.5), '800');
         ctx.textBaseline = 'middle'; ctx.font = bnFont(800, tf);
@@ -3229,9 +3289,9 @@
       const base = Math.min(tw, th), n = items.length;
       const budget = colW * 0.82;
       let fs = Math.round(base * 0.052 * Math.min(1.3, feats.scale));
-      ctx.font = ftFont(800, fs);
+      ctx.font = ftFont(800, fs); ctx.letterSpacing = (fs * 0.045) + 'px';   // tracking premium en mayúsculas
       while (fs > 12 && items.some(it => ctx.measureText(it.text.toUpperCase()).width > budget)){ fs -= 1; ctx.font = ftFont(800, fs); }
-      const padX = fs * 0.95, ph = fs * 1.95, gap = ph * 0.42;
+      const padX = fs * 1.05, ph = fs * 1.95, gap = ph * 0.42;
       const tc = bnTxt(feats.color);
       let cy = (th - (ph * n + gap * (n - 1))) / 2;
       items.forEach(it => {
@@ -3245,6 +3305,7 @@
         ctx.fillText(label, x + w / 2, cy + ph * 0.54);
         cy += ph + gap;
       });
+      ctx.letterSpacing = '0px';
     }
     const FEAT_BUBBLE_PALETTE = ['#F4513C', '#E0457A', '#7A3FF2', '#12A0A0', '#FF8A00', '#1B49B8'];
     function drawFeatBubbles(ctx, tw, th, items){
@@ -3253,6 +3314,7 @@
       const fs0 = Math.round(base * 0.044 * Math.min(1.3, feats.scale));
       const ph = fs0 * 3.0, gap = ph * 0.32, w = colW * 0.96, icoR = ph * 0.32;
       const wrapW = Math.max(base * 0.1, w - icoR * 2 - ph * 0.62);
+      ctx.letterSpacing = (fs0 * 0.03) + 'px';   // tracking premium en mayúsculas
       // fuente de texto uniforme para TODAS
       const fsT = featFitFont(ctx, items, wrapW, 800, fs0, it => it.text.toUpperCase());
       let cy = (th - (ph * n + gap * (n - 1))) / 2;
@@ -3276,6 +3338,7 @@
         lines.forEach((l, i) => ctx.fillText(l, txX, sy + i * lh));
         cy += ph + gap;
       });
+      ctx.letterSpacing = '0px';
     }
     function drawFeatLeader(ctx, tw, th, pr, items){
       const rv = featsReserve(tw, th); const colW = rv.left || rv.right; if (!colW) return;
@@ -3283,6 +3346,7 @@
       const m = colW * 0.08, textX = left ? m : tw - m, innerX = left ? colW : tw - colW, wrapW = colW - m * 2;
       const top = th * 0.13, bot = th * 0.87;
       const lineW = Math.max(2, base * 0.004), dot = base * 0.0072;
+      ctx.letterSpacing = (base * 0.04 * 0.03) + 'px';   // tracking premium en mayúsculas
       // fuente uniforme
       const fs = featFitFont(ctx, items, wrapW, 800, base * 0.04 * Math.min(1.4, feats.scale), it => it.text.toUpperCase());
       items.forEach((it, i) => {
@@ -3298,6 +3362,7 @@
         const lh = fs * 1.16, sy = ly - (lines.length - 1) * lh / 2;
         lines.forEach((l, k) => ctx.fillText(l, textX, sy + k * lh));
       });
+      ctx.letterSpacing = '0px';
     }
     // panel sólido lateral (estilo Philco oscuro): columna de color + filas ícono/texto con divisores
     function drawFeatPanel(ctx, tw, th, items){
@@ -3921,6 +3986,7 @@
       $(id).addEventListener('blur', () => { $(id).value = csClamp($(id).value); });
     });
     $('shadow').addEventListener('change', e => { shadowOn = e.target.checked; renderResult(); });
+    $('reflect').addEventListener('change', e => { reflectOn = e.target.checked; renderResult(); });
 
     // ---- selector de fondo ----
     function syncBgUI(){
@@ -4100,6 +4166,7 @@
       buildPreviewTabs(true);   // mostrar la ficha más completa armada
       show('result');
       renderResult();
+      startReveal();
     }
 
     // ================= MULTI-FOTO (varias vistas del mismo producto) =================
@@ -4127,7 +4194,7 @@
         banner: JSON.parse(JSON.stringify(banner)),
         bnVals: { title: $('bn-title').value, sub: $('bn-sub').value, big: $('bn-big').value, small: $('bn-small').value, badgeOn: $('bn-badge-on').checked },
         featsOn, featsFolded, featsTplIdx, feats: JSON.parse(JSON.stringify(feats)),
-        presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn, previewView, bgColor, bgGrad,
+        presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn, reflectOn, previewView, bgColor, bgGrad,
         logoOn, logoFolded, logoMode, logoCorner, logoSize, logoOpacity, logoPos: logoPos ? { ...logoPos } : null,
         enhanceFx, enhFolded, enhB, enhC, enhS,
       };
@@ -4141,7 +4208,7 @@
         bnVals:{title:'',sub:'',big:'',small:'',badgeOn:false},
         featsOn:false, featsFolded:false, featsTplIdx:0,
         feats:{ layout:'cards', font:'Manrope', color:'#16130F', side:'r', scale:1, items:[{icon:'check',text:''},{icon:'bolt',text:''},{icon:'shield',text:''}] },
-        presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn:false, previewView:'producto', bgColor:'#FFFFFF', bgGrad:-1,
+        presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn:false, reflectOn:false, previewView:'producto', bgColor:'#FFFFFF', bgGrad:-1,
         logoOn:false, logoFolded:false, logoMode:'corner', logoCorner:'br', logoSize:18, logoOpacity:1, logoPos:null,
         enhanceFx:false, enhFolded:false, enhB:100, enhC:100, enhS:100,
       };
@@ -4188,6 +4255,7 @@
       updateDestTrigger();
       $('custom-size').style.display = presetKey === 'custom' ? 'flex' : 'none';
       shadowOn=s.shadowOn; $('shadow').checked=shadowOn;
+      reflectOn=!!s.reflectOn; $('reflect').checked=reflectOn;
       bgColor = (s.bgColor === undefined ? '#FFFFFF' : s.bgColor); bgGrad = (s.bgGrad == null ? -1 : s.bgGrad); if (bgGrad === -2) computeProductGrad(); syncBgUI();
       logoOn = !!s.logoOn; logoFolded = !!s.logoFolded; logoMode = s.logoMode || 'corner'; logoCorner = s.logoCorner || 'br'; logoSize = s.logoSize || 18; logoOpacity = (s.logoOpacity == null ? 1 : s.logoOpacity); logoPos = s.logoPos ? { ...s.logoPos } : null;
       $('logo-on').checked = logoOn; $('logo-fold').style.display = logoOn ? 'grid' : 'none'; syncLogoFold();
@@ -4239,7 +4307,7 @@
     async function switchPhoto(i){
       if (i === activePhoto || i < 0 || i >= photos.length) return;
       if (activePhoto >= 0 && photos[activePhoto]) photos[activePhoto].state = snapshotState();
-      activePhoto = i; await loadPhotoInto(i); renderPhotoStrip();
+      activePhoto = i; await loadPhotoInto(i); renderPhotoStrip(); startReveal();
     }
     async function removePhoto(i){
       if (photos.length <= 1) return;
