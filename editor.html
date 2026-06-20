@@ -2043,7 +2043,15 @@
         // las fijas (alto/ancho/prof) se entienden por su posición -> solo el valor;
         // las personalizadas llevan el nombre para que se sepa qué miden
         const txt = en.custom ? `${en.label} · ${fmtVal(val)}` : fmtVal(val);
-        const lx = mx + nx * o, ly = my + ny * o;   // posición del número en el lienzo
+        let lx = mx + nx * o, ly = my + ny * o;   // posición del número en el lienzo
+        // clamp: que el número no se corte contra el borde (cuenta el ancho del texto y la rotación)
+        ctx.font = '800 ' + f + 'px Manrope, system-ui, sans-serif';
+        const twTxt = ctx.measureText(txt).width;
+        const ca = Math.abs(Math.cos(ta)), sa = Math.abs(Math.sin(ta));
+        const hExt = ca * twTxt / 2 + sa * f * 0.62 + f * 0.25;   // medio extent horizontal del label + respiro
+        const vExt = sa * twTxt / 2 + ca * f * 0.62 + f * 0.25;
+        lx = Math.max(hExt, Math.min(tw - hExt, lx));
+        ly = Math.max(vExt, Math.min(th - vExt, ly));
         let halo = '#ffffff', dark = false;          // muestrear el fondo real ahí (sólido/gradiente/transparente)
         try { const px = ctx.getImageData(Math.max(0, Math.min(tw - 1, Math.round(lx))), Math.max(0, Math.min(th - 1, Math.round(ly))), 1, 1).data;
           if (px[3] > 20){ halo = `rgb(${px[0]},${px[1]},${px[2]})`; dark = (0.299 * px[0] + 0.587 * px[1] + 0.114 * px[2]) < 130; } } catch {}
