@@ -455,6 +455,30 @@
   .logo-slider > span:first-child{font-size:.78rem;font-weight:600;color:var(--ink-soft);min-width:64px}
   .size-auto{border:1px solid var(--line);background:var(--white);color:var(--ink-soft);font-size:.72rem;font-weight:700;border-radius:7px;padding:.18rem .42rem;cursor:pointer;text-transform:none;letter-spacing:0}
   .size-auto:hover{border-color:var(--accent);color:var(--accent)}
+  /* placa de características (callouts) */
+  .feats-rows{display:flex;flex-direction:column;gap:.4rem;margin:.5rem 0}
+  .feats-row{display:flex;align-items:center;gap:.4rem}
+  .feats-ico-btn{flex:0 0 auto;width:34px;height:34px;border:1px solid var(--line);background:var(--white);border-radius:9px;display:grid;place-items:center;cursor:pointer;color:var(--ink-soft);padding:0}
+  .feats-ico-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .feats-ico-btn svg{width:18px;height:18px}
+  .feats-row .feats-txt{flex:1;min-width:0;border:1px solid var(--line);background:var(--white);border-radius:9px;padding:.45rem .6rem;font:inherit;font-size:.85rem;color:var(--ink)}
+  .feats-row .feats-txt:focus{outline:none;border-color:var(--accent)}
+  .feats-del{flex:0 0 auto;width:30px;height:30px;border:none;background:transparent;color:var(--ink-faint);font-size:1.2rem;line-height:1;cursor:pointer;border-radius:8px}
+  .feats-del:hover{color:var(--accent);background:var(--cream-2)}
+  .feats-add{margin-top:.2rem;width:100%;border:1px dashed var(--line);background:transparent;color:var(--ink-soft);font-weight:700;font-size:.82rem;border-radius:10px;padding:.5rem;cursor:pointer}
+  .feats-add:hover{border-color:var(--accent);color:var(--accent)}
+  .feats-iconmenu{position:fixed;z-index:120;background:var(--white);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px rgba(40,24,16,.18);padding:.5rem;display:grid;grid-template-columns:repeat(6,1fr);gap:.25rem;max-width:260px}
+  /* mini-previews de las plantillas de características */
+  .bn-tpl-mini.ft-cards{background:linear-gradient(90deg,#fff 0 55%,var(--pc) 55% 100%)}
+  .bn-tpl-mini.ft-chips{background:#fff;position:relative;overflow:hidden}
+  .bn-tpl-mini.ft-chips::after{content:"";position:absolute;right:3px;top:4px;width:42%;height:5px;border-radius:3px;background:var(--pc);box-shadow:0 8px 0 var(--pc),0 16px 0 var(--pc)}
+  .bn-tpl-mini.ft-bubbles{background:#fff;position:relative;overflow:hidden}
+  .bn-tpl-mini.ft-bubbles::after{content:"";position:absolute;right:4px;top:5px;width:36%;height:6px;border-radius:4px;background:var(--pc);box-shadow:0 10px 0 #F4513C,0 20px 0 #FFB200}
+  .bn-tpl-mini.ft-leader{background:#fff;position:relative;overflow:hidden}
+  .bn-tpl-mini.ft-leader::after{content:"";position:absolute;left:8%;top:18%;width:46%;height:0;border-top:2px solid var(--pc)}
+  .feats-iconmenu button{width:34px;height:34px;border:1px solid transparent;background:transparent;border-radius:8px;display:grid;place-items:center;cursor:pointer;color:var(--ink-soft)}
+  .feats-iconmenu button:hover{border-color:var(--accent);color:var(--accent);background:var(--cream)}
+  .feats-iconmenu button svg{width:19px;height:19px}
   .adv-collapsed{display:none}
   #adv-wrap{margin-top:.7rem}
   #adv-wrap > .engine{margin-top:0}
@@ -491,6 +515,9 @@
   .dest-opt-size{margin-left:auto;font-size:.76rem;font-weight:600;color:var(--ink-faint);font-variant-numeric:tabular-nums}
 
   /* ---- multi-foto: tira de miniaturas ---- */
+  .photo-strip-label{display:flex;align-items:baseline;gap:.45rem;margin-bottom:.35rem;padding:0 1px}
+  .photo-strip-label span{font-size:.74rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+  .photo-strip-label small{font-size:.72rem;color:var(--ink-faint)}
   .photo-strip{display:flex;align-items:center;gap:.5rem;margin-bottom:.7rem;overflow-x:auto;scrollbar-width:none;padding:3px 1px}
   .photo-strip::-webkit-scrollbar{display:none}
   .photo-thumb{flex:0 0 auto;width:56px;height:56px;border-radius:11px;border:2px solid var(--line);overflow:visible;cursor:pointer;background:#fff;position:relative;transition:border-color .15s,box-shadow .15s}
@@ -982,6 +1009,79 @@
             </div>
           </div>
 
+          <!-- características / callouts (opcional) -->
+          <div class="engine" id="feats-panel">
+            <div class="dims-head">
+              <span class="dims-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <span data-i18n="featsTitle">Características</span>
+              </span>
+              <span class="dims-head-actions">
+                <button type="button" class="panel-fold" id="feats-fold" data-i18n-aria="foldPanel" aria-label="Plegar / desplegar" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+                <label class="dims-switch" data-i18n-title="featsSwitchTitle" title="Agregar características sobre la imagen">
+                  <input type="checkbox" id="feats-on">
+                  <span class="sw" aria-hidden="true"></span>
+                </label>
+              </span>
+            </div>
+            <div id="feats-fields" style="display:none">
+              <div class="bn-tpl-wrap">
+                <span class="dims-mini-label" data-i18n="tplLabel">Plantillas — probá una a una</span>
+                <div class="bn-tpl-row">
+                  <button type="button" class="bn-tpl-nav" id="feats-tpl-prev" data-i18n-aria="tplPrev" aria-label="Anterior">‹</button>
+                  <div class="bn-tpl-strip" id="feats-templates"></div>
+                  <button type="button" class="bn-tpl-nav" id="feats-tpl-next" data-i18n-aria="tplNext" aria-label="Siguiente">›</button>
+                </div>
+              </div>
+              <div class="bn-block">
+                <span class="dims-mini-label" data-i18n="featsItems">Beneficios — uno por línea</span>
+                <div id="feats-rows" class="feats-rows"></div>
+                <button type="button" class="feats-add" id="feats-add" data-i18n="featsAdd">+ Agregar beneficio</button>
+              </div>
+              <div class="bn-row" style="margin-bottom:.2rem">
+                <span class="dims-mini-label" data-i18n="font">Fuente</span>
+                <div class="font-carousel">
+                  <button type="button" class="bn-tpl-nav" id="feats-font-prev" data-i18n-aria="fontPrev" aria-label="Fuentes anteriores">‹</button>
+                  <div class="seg seg-sm bn-fonts font-strip" id="feats-font" role="group" data-i18n-aria="fontAria" aria-label="Fuente">
+                    <button type="button" class="chip" data-font="Manrope" aria-pressed="true" style="font-family:Manrope">Manrope</button>
+                    <button type="button" class="chip" data-font="Montserrat" aria-pressed="false" style="font-family:Montserrat">Montserrat</button>
+                    <button type="button" class="chip" data-font="Poppins" aria-pressed="false" style="font-family:Poppins">Poppins</button>
+                    <button type="button" class="chip" data-font="Inter" aria-pressed="false" style="font-family:Inter">Inter</button>
+                    <button type="button" class="chip" data-font="Sora" aria-pressed="false" style="font-family:Sora">Sora</button>
+                    <button type="button" class="chip" data-font="Oswald" aria-pressed="false" style="font-family:Oswald">Oswald</button>
+                    <button type="button" class="chip" data-font="Bebas Neue" aria-pressed="false" style="font-family:'Bebas Neue';letter-spacing:.04em">Bebas</button>
+                    <button type="button" class="chip" data-font="Anton" aria-pressed="false" style="font-family:Anton">Anton</button>
+                    <button type="button" class="chip" data-font="Archivo Black" aria-pressed="false" style="font-family:'Archivo Black'">Archivo</button>
+                  </div>
+                  <button type="button" class="bn-tpl-nav" id="feats-font-next" data-i18n-aria="fontNext" aria-label="Más fuentes">›</button>
+                </div>
+              </div>
+              <div class="bn-row">
+                <span class="dims-mini-label" data-i18n="color">Color</span>
+                <div class="swatches" id="feats-color"></div>
+                <input type="color" class="color-pick" id="feats-pick" value="#16130F" data-i18n-title="customColor" title="Color personalizado">
+              </div>
+              <div class="bn-row bn-prod-row" id="feats-prod-row" style="display:none">
+                <span class="dims-mini-label" data-i18n="fromProduct">Del producto</span>
+                <div class="swatches" id="feats-prod"></div>
+              </div>
+              <div class="bn-row">
+                <span class="dims-mini-label" data-i18n="position">Posición</span>
+                <div class="seg seg-sm" id="feats-side" role="group">
+                  <button type="button" class="chip" data-side="r" aria-pressed="true" data-i18n="sideRight">Derecha</button>
+                  <button type="button" class="chip" data-side="l" aria-pressed="false" data-i18n="sideLeft">Izquierda</button>
+                </div>
+              </div>
+              <label class="opt logo-slider" style="margin-top:.4rem">
+                <span data-i18n="featsSize">Tamaño</span>
+                <input type="range" id="feats-size" min="60" max="140" value="100">
+                <b id="feats-size-v">100%</b>
+                <button type="button" id="feats-size-auto" class="size-auto" data-i18n-title="prodSizeAuto" title="Volver al tamaño automático" data-i18n="autoLbl">Auto</button>
+              </label>
+              <p class="dims-mini-label" id="feats-leader-hint" data-i18n="featsLeaderHint" style="display:none;margin-top:.4rem">Arrastrá cada punto sobre la imagen para apuntar a una parte del producto.</p>
+            </div>
+          </div>
+
           <!-- logo / marca de agua (opcional) -->
           <div class="engine" id="logo-panel">
             <div class="dims-head">
@@ -1058,6 +1158,7 @@
 
           <div class="ed-visual">
           <!-- fotos del producto (varias vistas/ángulos), cada una con sus propios ajustes -->
+          <div class="photo-strip-label" id="photo-strip-label" style="display:none"><span data-i18n="photosLabel">Fotos del producto</span><small data-i18n="photosHint">sumá ángulos (frente, perfil…)</small></div>
           <div class="photo-strip" id="photo-strip" style="display:none"></div>
           <input type="file" id="add-file" accept="image/png,image/jpeg,image/webp" hidden>
           <!-- selector de vistas (producto / medidas / banner / todo) -->
@@ -1153,6 +1254,8 @@
         noCredits: 'Te quedaste sin créditos. Los packs llegan pronto.',
         sceneNeedLogin: 'Iniciá sesión para generar escenas.',
         addPhoto: 'Foto',
+        photosLabel: 'Tus fotos',
+        photosHint: 'sumá más productos o ángulos · cada una es independiente',
         photoRemove: 'Quitar foto',
         dlAllPhotos: 'Bajar todas las fotos',
         dropTitle: 'Arrastrá tu foto o tocá para elegir',
@@ -1196,6 +1299,16 @@
         prodSize: 'Tamaño del producto',
         prodSizeAuto: 'Volver al tamaño automático',
         autoLbl: 'Auto',
+        featsTitle: 'Características',
+        featsSwitchTitle: 'Agregar características sobre la imagen',
+        featsItems: 'Beneficios — uno por línea',
+        featsAdd: '+ Agregar beneficio',
+        featsItemPh: 'Ej: Hasta 50% de ahorro',
+        featsIconTitle: 'Cambiar ícono',
+        featsSize: 'Tamaño',
+        featsLeaderHint: 'Arrastrá cada punto sobre la imagen para apuntar a una parte del producto.',
+        sideRight: 'Derecha',
+        sideLeft: 'Izquierda',
         dimsTitle: 'Medidas del producto',
         dimsSwitchTitle: 'Mostrar medidas sobre la imagen',
         dimsStyleAria: 'Estilo de medidas',
@@ -1307,6 +1420,7 @@
         viewProducto: 'Producto',
         viewMedidas: 'Medidas',
         viewBanner: 'Banner',
+        viewFeats: 'Características',
         viewTodo: 'Todo',
         pvPrev: 'Vista anterior',
         pvNext: 'Vista siguiente',
@@ -1406,6 +1520,8 @@
         noCredits: "You're out of credits. Packs coming soon.",
         sceneNeedLogin: 'Sign in to generate scenes.',
         addPhoto: 'Photo',
+        photosLabel: 'Your photos',
+        photosHint: 'add more products or angles · each one is independent',
         photoRemove: 'Remove photo',
         dlAllPhotos: 'Download all photos',
         dropTitle: 'Drag your photo or tap to choose',
@@ -1449,6 +1565,16 @@
         prodSize: 'Product size',
         prodSizeAuto: 'Back to automatic size',
         autoLbl: 'Auto',
+        featsTitle: 'Features',
+        featsSwitchTitle: 'Add features over the image',
+        featsItems: 'Benefits — one per line',
+        featsAdd: '+ Add benefit',
+        featsItemPh: 'e.g. Up to 50% savings',
+        featsIconTitle: 'Change icon',
+        featsSize: 'Size',
+        featsLeaderHint: 'Drag each dot onto the image to point at a part of the product.',
+        sideRight: 'Right',
+        sideLeft: 'Left',
         dimsTitle: 'Product dimensions',
         dimsSwitchTitle: 'Show dimensions on the image',
         dimsStyleAria: 'Dimension style',
@@ -1560,6 +1686,7 @@
         viewProducto: 'Product',
         viewMedidas: 'Dimensions',
         viewBanner: 'Banner',
+        viewFeats: 'Features',
         viewTodo: 'All',
         pvPrev: 'Previous view',
         pvNext: 'Next view',
@@ -1911,7 +2038,7 @@
     // compone el producto centrado sobre blanco en cualquier medida W×H. Devuelve métricas.
     // layers: qué capas dibujar. Por defecto, las que estén activas (para la previa).
     function compose(tw, th, shadow, fill, layers){
-      const L = layers || { dims: dimsOn, banners: bannerOn };
+      const L = layers || { dims: dimsOn, banners: bannerOn, feats: featsOn };
       canvas.width = tw; canvas.height = th;
       const ctx = canvas.getContext('2d');
       ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
@@ -1920,19 +2047,21 @@
       else if (bgColor){ ctx.fillStyle = bgColor; ctx.fillRect(0, 0, tw, th); }   // null = sin fondo (PNG transparente)
       if (!workCtx || !cutoutBox || !cutoutBox.w) return { scaleUsed: 0, fillPct: 0 };
       const b = cutoutBox;
-      // reservar el espacio del banner solo si se va a dibujar (si no, producto centrado full)
-      const res = L.banners ? bannerReserve(tw, th) : { top: 0, bottom: 0 };
-      const availTop = res.top, availH = th - res.top - res.bottom;
-      // con banner el producto ya pierde espacio por la reserva: lo agrandamos dentro
-      // del área libre para que no quede tan chico (cap 0.91 para no pegarse a los bordes)
-      const reserving = res.top + res.bottom > 0;
+      // reservar espacio de las placas (banner: arriba/abajo · características: a un costado)
+      const res = { top: 0, right: 0, bottom: 0, left: 0 };
+      if (L.banners){ const r = bannerReserve(tw, th); res.top += r.top || 0; res.bottom += r.bottom || 0; }
+      if (L.feats){ const r = featsReserve(tw, th); res.top += r.top || 0; res.right += r.right || 0; res.bottom += r.bottom || 0; res.left += r.left || 0; }
+      const availTop = res.top, availLeft = res.left;
+      const availW = tw - res.left - res.right, availH = th - res.top - res.bottom;
+      // con placa el producto pierde espacio por la reserva: lo agrandamos dentro del área libre
+      const reserving = res.top + res.bottom + res.left + res.right > 0;
       const eff = reserving ? Math.min(fill + 0.14, 0.96) : fill;
-      const autoScale = Math.min(tw * eff / b.w, availH * eff / b.h);
-      // tamaño manual (productScale): tope = llenar el área libre sin invadir el banner
-      const maxScale = Math.min(tw / b.w, availH / b.h);
+      const autoScale = Math.min(availW * eff / b.w, availH * eff / b.h);
+      // tamaño manual (productScale): tope = llenar el área libre sin invadir las placas
+      const maxScale = Math.min(availW / b.w, availH / b.h);
       const scale = Math.min(autoScale * productScale, maxScale);
       const dw = b.w * scale, dh = b.h * scale;
-      const dx = (tw - dw) / 2, dy = availTop + (availH - dh) / 2;
+      const dx = availLeft + (availW - dw) / 2, dy = availTop + (availH - dh) / 2;
       if (shadow){
         // sombra de contacto difusa bajo el producto (look de estudio premium)
         const cx2 = dx + dw / 2, baseY = dy + dh - dh * 0.012, ew = dw * 0.66, eh = Math.max(6, dh * 0.05);
@@ -1948,6 +2077,7 @@
       ctx.filter = 'none';
       if (L.dims) drawDims(ctx, tw, th, { x: dx, y: dy, w: dw, h: dh });
       if (L.banners) drawBanners(ctx, tw, th, { x: dx, y: dy, w: dw, h: dh });
+      if (L.feats) drawFeats(ctx, tw, th, { x: dx, y: dy, w: dw, h: dh });
       if (logoOn && logoImg) drawLogo(ctx, tw, th);
       return { scaleUsed: scale, fillPct: Math.round(100 * Math.max(dw, dh) / Math.min(tw, th)) };
     }
@@ -2142,10 +2272,15 @@
       const v = ['producto'];
       if (dimsOn) v.push('medidas');
       if (bannerOn) v.push('banner');
+      if (featsOn) v.push('caracteristicas');
       return v;
     }
     function viewLayers(){
-      return { dims: previewView === 'medidas' || previewView === 'todo', banners: previewView === 'banner' || previewView === 'todo' };
+      return {
+        dims: previewView === 'medidas' || previewView === 'todo',
+        banners: previewView === 'banner' || previewView === 'todo',
+        feats: previewView === 'caracteristicas' || previewView === 'todo',
+      };
     }
     function dimsVisible(){ return dimsOn && dimsStyle === 'lines' && (previewView === 'medidas' || previewView === 'todo'); }
     function updateBigprevDraggable(){
@@ -2159,7 +2294,7 @@
       updateBigprevDraggable();
       renderResult();
     }
-    const VIEW_LAYERS = { producto: { dims: false, banners: false }, medidas: { dims: true, banners: false }, banner: { dims: false, banners: true }, todo: { dims: true, banners: true } };
+    const VIEW_LAYERS = { producto: { dims: false, banners: false, feats: false }, medidas: { dims: true, banners: false, feats: false }, banner: { dims: false, banners: true, feats: false }, caracteristicas: { dims: false, banners: false, feats: true }, todo: { dims: true, banners: true, feats: true } };
     // compone la variante en un mini-canvas (thumbnail de la tab)
     function drawVariantThumb(mini, layers){
       const p = P();
@@ -2173,7 +2308,7 @@
     function buildPreviewTabs(keepRichest){
       const views = availableViews();
       if (keepRichest || !views.includes(previewView)) previewView = views[views.length - 1];
-      const LBL = { producto: t('viewProducto'), medidas: t('viewMedidas'), banner: t('viewBanner'), todo: t('viewTodo') };
+      const LBL = { producto: t('viewProducto'), medidas: t('viewMedidas'), banner: t('viewBanner'), caracteristicas: t('viewFeats'), todo: t('viewTodo') };
       const row = $('pv-tabrow'); row.innerHTML = '';
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       views.forEach(v => {
@@ -2938,6 +3073,149 @@
       }
     }
 
+    // ===== placa de características (callouts) — dibujo en canvas =====
+    function ftFont(weight, px){ return `${weight} ${px}px "${feats.font}", "Manrope", sans-serif`; }
+    function featItems(){ return feats.items.filter(it => (it.text || '').trim()); }
+    function drawFeatIcon(ctx, name, cx, cy, size, color, lw){
+      const d = FEAT_ICONS[name] || FEAT_ICONS.check;
+      ctx.save();
+      ctx.translate(cx - size / 2, cy - size / 2); ctx.scale(size / 24, size / 24);
+      ctx.strokeStyle = color; ctx.lineWidth = (lw || 2) * 24 / size; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      try { ctx.stroke(new Path2D(d)); } catch {}
+      ctx.restore();
+    }
+    function featWrap(ctx, text, maxW, maxLines){
+      const words = (text || '').split(/\s+/).filter(Boolean); if (!words.length) return [''];
+      const lines = []; let cur = '';
+      for (const w of words){
+        const test = cur ? cur + ' ' + w : w;
+        if (ctx.measureText(test).width > maxW && cur){ lines.push(cur); cur = w; } else cur = test;
+      }
+      if (cur) lines.push(cur);
+      if (lines.length > maxLines){ lines.length = maxLines; lines[maxLines - 1] += '…'; }
+      return lines;
+    }
+    function rr(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+    // espacio reservado para que la placa no tape el producto (a un costado)
+    function featsReserve(tw, th){
+      if (!featsOn || !featItems().length) return { left: 0, right: 0, top: 0, bottom: 0 };
+      const fracByLayout = { cards: 0.42, chips: 0.34, bubbles: 0.40, leader: 0.30 };
+      let frac = (fracByLayout[feats.layout] || 0.40) * feats.scale;
+      frac = Math.max(0.22, Math.min(0.54, frac));
+      const w = Math.round(tw * frac);
+      return feats.side === 'l' ? { left: w, right: 0, top: 0, bottom: 0 } : { left: 0, right: w, top: 0, bottom: 0 };
+    }
+    function drawFeats(ctx, tw, th, pr){
+      if (!featsOn) return;
+      const items = featItems(); if (!items.length) return;
+      const layout = feats.layout;
+      if (layout === 'cards') drawFeatCards(ctx, tw, th, items);
+      else if (layout === 'chips') drawFeatChips(ctx, tw, th, items);
+      else if (layout === 'bubbles') drawFeatBubbles(ctx, tw, th, items);
+      else if (layout === 'leader') drawFeatLeader(ctx, tw, th, pr, items);
+    }
+    function drawFeatCards(ctx, tw, th, items){
+      const rv = featsReserve(tw, th); const colW = rv.left || rv.right; if (!colW) return;
+      const n = items.length, m = colW * 0.07;
+      const cx0 = (feats.side === 'l' ? 0 : tw - colW) + m, cw = colW - m * 2;
+      const gap = Math.max(th * 0.02, 8);
+      const ch = Math.min((th * 0.9 - gap * (n - 1)) / n, cw * 0.44);
+      const tile = ch * 0.6, txX = cx0 + ch * 0.2 + tile + ch * 0.16, txW = cx0 + cw - txX - ch * 0.14;
+      // tamaño de fuente uniforme: el más chico que entra en 2 líneas para TODAS las tarjetas
+      let fs = Math.round(ch * 0.27); ctx.font = ftFont(700, fs);
+      while (fs > 10 && items.some(it => featWrap(ctx, it.text, txW, 99).length > 2)){ fs -= 1; ctx.font = ftFont(700, fs); }
+      let cy = (th - (ch * n + gap * (n - 1))) / 2;
+      items.forEach(it => {
+        ctx.save(); ctx.shadowColor = 'rgba(40,24,16,.16)'; ctx.shadowBlur = ch * 0.16; ctx.shadowOffsetY = ch * 0.05;
+        rr(ctx, cx0, cy, cw, ch, ch * 0.2); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.restore();
+        const tx = cx0 + ch * 0.2, ty = cy + (ch - tile) / 2;
+        rr(ctx, tx, ty, tile, tile, tile * 0.26); ctx.fillStyle = feats.color; ctx.fill();
+        drawFeatIcon(ctx, it.icon, tx + tile / 2, ty + tile / 2, tile * 0.56, '#ffffff', 2.1);
+        ctx.fillStyle = '#1A1614'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.font = ftFont(700, fs);
+        let lines = featWrap(ctx, it.text, txW, 2);
+        const lh = fs * 1.2, sy = cy + ch / 2 - (lines.length - 1) * lh / 2;
+        lines.forEach((l, i) => ctx.fillText(l, txX, sy + i * lh));
+        cy += ch + gap;
+      });
+    }
+    function drawFeatChips(ctx, tw, th, items){
+      const rv = featsReserve(tw, th); const colW = rv.left || rv.right; if (!colW) return;
+      const base = Math.min(tw, th), n = items.length;
+      const budget = colW * 0.82;
+      let fs = Math.round(base * 0.052 * Math.min(1.3, feats.scale));
+      ctx.font = ftFont(800, fs);
+      while (fs > 12 && items.some(it => ctx.measureText(it.text.toUpperCase()).width > budget)){ fs -= 1; ctx.font = ftFont(800, fs); }
+      const padX = fs * 0.95, ph = fs * 1.95, gap = ph * 0.42;
+      const tc = bnTxt(feats.color);
+      let cy = (th - (ph * n + gap * (n - 1))) / 2;
+      items.forEach(it => {
+        const label = it.text.toUpperCase();
+        ctx.font = ftFont(800, fs);
+        const w = Math.min(ctx.measureText(label).width + padX * 2, colW * 0.96);
+        const x = feats.side === 'l' ? base * 0.04 : tw - w - base * 0.04;
+        ctx.save(); ctx.shadowColor = 'rgba(20,12,8,.24)'; ctx.shadowBlur = ph * 0.16; ctx.shadowOffsetY = ph * 0.06;
+        paintRect(ctx, x, cy, w, ph, ph * 0.26, feats.color, 'metal'); ctx.restore();
+        ctx.fillStyle = tc; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(label, x + w / 2, cy + ph * 0.54);
+        cy += ph + gap;
+      });
+    }
+    const FEAT_BUBBLE_PALETTE = ['#F4513C', '#E0457A', '#7A3FF2', '#12A0A0', '#FF8A00', '#1B49B8'];
+    function drawFeatBubbles(ctx, tw, th, items){
+      const rv = featsReserve(tw, th); const colW = rv.left || rv.right; if (!colW) return;
+      const base = Math.min(tw, th), n = items.length, left = feats.side === 'l';
+      const fs0 = Math.round(base * 0.044 * Math.min(1.3, feats.scale));
+      const ph = fs0 * 3.0, gap = ph * 0.32, w = colW * 0.96, icoR = ph * 0.32;
+      const wrapW = Math.max(base * 0.1, w - icoR * 2 - ph * 0.62);
+      // fuente de texto uniforme: la más chica que entra en 2 líneas para TODAS
+      let fsT = fs0; ctx.font = ftFont(800, fsT);
+      while (fsT > 10 && items.some(it => featWrap(ctx, it.text.toUpperCase(), wrapW, 99).length > 2)){ fsT -= 1; ctx.font = ftFont(800, fsT); }
+      let cy = (th - (ph * n + gap * (n - 1))) / 2;
+      items.forEach((it, idx) => {
+        const col = idx === 0 ? feats.color : FEAT_BUBBLE_PALETTE[idx % FEAT_BUBBLE_PALETTE.length];
+        const tc = bnTxt(col);
+        const x = left ? base * 0.04 : tw - w - base * 0.04;
+        ctx.save(); ctx.shadowColor = 'rgba(20,12,8,.22)'; ctx.shadowBlur = ph * 0.14; ctx.shadowOffsetY = ph * 0.05;
+        rr(ctx, x, cy, w, ph, ph * 0.22); ctx.fillStyle = col; ctx.fill(); ctx.restore();
+        // colita apuntando al producto (lado interno)
+        const tipX = left ? x + w : x, dir = left ? 1 : -1;
+        ctx.beginPath(); ctx.moveTo(tipX, cy + ph * 0.45); ctx.lineTo(tipX + dir * ph * 0.16, cy + ph * 0.58); ctx.lineTo(tipX, cy + ph * 0.71); ctx.closePath(); ctx.fillStyle = col; ctx.fill();
+        // ícono en el lado interno
+        const icoX = left ? x + w - icoR - ph * 0.14 : x + icoR + ph * 0.14, icoY = cy + ph / 2;
+        ctx.save(); ctx.globalAlpha = 0.18; ctx.beginPath(); ctx.arc(icoX, icoY, icoR, 0, Math.PI * 2); ctx.fillStyle = tc; ctx.fill(); ctx.restore();
+        drawFeatIcon(ctx, it.icon, icoX, icoY, icoR * 1.1, tc, 2);
+        const txX = left ? x + ph * 0.24 : x + icoR * 2 + ph * 0.36;
+        ctx.fillStyle = tc; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.font = ftFont(800, fsT);
+        const lines = featWrap(ctx, it.text.toUpperCase(), wrapW, 2);
+        const lh = fsT * 1.16, sy = cy + ph / 2 - (lines.length - 1) * lh / 2;
+        lines.forEach((l, i) => ctx.fillText(l, txX, sy + i * lh));
+        cy += ph + gap;
+      });
+    }
+    function drawFeatLeader(ctx, tw, th, pr, items){
+      const rv = featsReserve(tw, th); const colW = rv.left || rv.right; if (!colW) return;
+      const base = Math.min(tw, th), n = items.length, left = feats.side === 'l';
+      const m = colW * 0.08, textX = left ? m : tw - m, innerX = left ? colW : tw - colW, wrapW = colW - m * 2;
+      const top = th * 0.13, bot = th * 0.87;
+      const lineW = Math.max(2, base * 0.004), dot = base * 0.0072;
+      // fuente uniforme
+      let fs = Math.round(base * 0.04 * Math.min(1.4, feats.scale)); ctx.font = ftFont(800, fs);
+      while (fs > 11 && items.some(it => featWrap(ctx, it.text.toUpperCase(), wrapW, 99).length > 2)){ fs -= 1; ctx.font = ftFont(800, fs); }
+      items.forEach((it, i) => {
+        const ly = n === 1 ? th * 0.5 : top + (bot - top) * (i / (n - 1));
+        const ax = left ? pr.x : pr.x + pr.w;
+        ctx.strokeStyle = feats.color; ctx.lineWidth = lineW; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(innerX, ly); ctx.lineTo(ax, ly); ctx.stroke();
+        ctx.fillStyle = feats.color;
+        ctx.beginPath(); ctx.arc(ax, ly, dot, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(innerX, ly, dot * 0.7, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#1A1614'; ctx.textBaseline = 'middle'; ctx.textAlign = left ? 'left' : 'right'; ctx.font = ftFont(800, fs);
+        const lines = featWrap(ctx, it.text.toUpperCase(), wrapW, 2);
+        const lh = fs * 1.16, sy = ly - (lines.length - 1) * lh / 2;
+        lines.forEach((l, k) => ctx.fillText(l, textX, sy + k * lh));
+      });
+    }
+
     function buildSwatches(containerId, current, onPick){
       const c = $(containerId);
       BN_COLORS.forEach(hex => {
@@ -3102,6 +3380,186 @@
     });
     $('bn-fold').addEventListener('click', () => { bannerFolded = !bannerFolded; syncBannerFold(); });
     $('bn-badge-on').addEventListener('change', e => { banner.badge.on = e.target.checked; $('bn-badge-fields').style.display = banner.badge.on ? 'block' : 'none'; renderResult(); });
+
+    // ================= PLACA DE CARACTERÍSTICAS (callouts) =================
+    // íconos estilo Lucide (trazo, viewBox 24x24). Un string de path por ícono.
+    const FEAT_ICONS = {
+      check:'M20 6 9 17l-5-5',
+      star:'M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.6 1-5.8L3.5 9.7l5.9-.9z',
+      bolt:'M13 2 4 14h7l-1 8 9-12h-7z',
+      shield:'M12 3l8 3v5c0 5-3.4 8.2-8 10-4.6-1.8-8-5-8-10V6z',
+      droplet:'M12 3.2c3.2 3.6 5.5 6.3 5.5 9.3A5.5 5.5 0 0 1 6.5 12.5c0-3 2.3-5.7 5.5-9.3z',
+      ruler:'M3.5 15.5 15.5 3.5l5 5L8.5 20.5z M7 12l2 2 M11 8l2 2 M15 12l2 2',
+      box:'M21 8.5 12 3.5 3 8.5v7l9 5 9-5z M3 8.5l9 5 9-5 M12 13.5v7',
+      truck:'M3 6.5h10v9H3z M13 9.5h4l4 3.5v2.5h-8z M7 18.6a1.8 1.8 0 1 0 .01 0 M17.5 18.6a1.8 1.8 0 1 0 .01 0',
+      clock:'M12 3.2a8.8 8.8 0 1 0 .01 0 M12 7.5v5l3.2 2',
+      leaf:'M4 20c0-8.5 6.5-15 16-15 0 9.5-6 16-16 15z M4.5 19.5c4-4.5 8-7 12-8',
+      flame:'M12 3.2c3 4 5 6 5 9a5 5 0 0 1-10 0c0-2 1-3.6 2.6-4.6.2 1.2.7 2 1.6 2.6.8-2.4.2-5-1.8-7z',
+      snow:'M12 2v20 M2.5 12h19 M5 5l14 14 M19 5 5 19',
+      heart:'M12 20.5C7 16.5 3 13 3 8.8 3 6 5.2 4 7.6 4c1.7 0 3.2 1 4.4 2.6C13.2 5 14.7 4 16.4 4 18.8 4 21 6 21 8.8c0 4.2-4 7.7-9 11.7z',
+      award:'M12 3.5a4.8 4.8 0 1 0 .01 0 M9 12.5l-1.5 8 4.5-2.7 4.5 2.7-1.5-8',
+      sparkles:'M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8z M18.5 14l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z',
+      temp:'M14 14.2V5.5a2 2 0 0 0-4 0v8.7a4 4 0 1 0 4 0z',
+      wifi:'M5 12.5a10 10 0 0 1 14 0 M8 15.5a5.5 5.5 0 0 1 8 0 M12 18.8h.01',
+      power:'M12 3v8.5 M6.8 7.3a7 7 0 1 0 10.4 0',
+      battery:'M3 8.5h14v7H3z M19 11h2v2.5h-2z M6 11v2 M9 11v2',
+      gauge:'M12 13l4-3 M4.6 16a8 8 0 1 1 14.8 0z',
+      weight:'M7.5 8.5h9l1.5 11.5h-12z M9.5 8.5a2.5 2.5 0 1 1 5 0',
+      volume:'M4 9.5h3.5L12 6v12L7.5 14.5H4z M15.5 9.5a4 4 0 0 1 0 5',
+      maximize:'M4 9V4h5 M20 9V4h-5 M4 15v5h5 M20 15v5h-5',
+      cpu:'M7 7h10v10H7z M9.5 9.5h5v5h-5z M9 3v3 M15 3v3 M9 18v3 M15 18v3 M3 9h3 M3 15h3 M18 9h3 M18 15h3',
+    };
+    const FEAT_ICON_KEYS = Object.keys(FEAT_ICONS);
+    function iconSvg(name){
+      const d = FEAT_ICONS[name] || FEAT_ICONS.check;
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+    }
+    // plantillas: cards (panel lateral) · chips (píldoras) · bubbles (burbujas color) · leader (líneas guía)
+    const FEAT_TEMPLATES = [
+      { name:{es:'Tarjetas', en:'Cards'},    layout:'cards',   font:'Manrope',    color:'#16130F' },
+      { name:{es:'Chips',    en:'Chips'},    layout:'chips',   font:'Montserrat', color:'#1B49B8' },
+      { name:{es:'Burbujas', en:'Bubbles'},  layout:'bubbles', font:'Montserrat', color:'#13A05B' },
+      { name:{es:'Líneas',   en:'Callouts'}, layout:'leader',  font:'Manrope',    color:'#16130F' },
+    ];
+    let featsOn = false, featsFolded = false, featsTplIdx = 0;
+    const feats = {
+      layout: 'cards', font: 'Manrope', color: '#16130F', side: 'r', scale: 1,
+      items: [ { icon:'check', text:'' }, { icon:'bolt', text:'' }, { icon:'shield', text:'' } ],
+    };
+    const featLoaded = new Set();
+    function ensureFeatFont(){
+      if (!featsOn || !document.fonts) return;
+      const fam = feats.font;
+      if (featLoaded.has(fam) || document.fonts.check(`800 40px "${fam}"`)){ featLoaded.add(fam); return; }
+      Promise.all([document.fonts.load(`800 40px "${fam}"`), document.fonts.load(`700 40px "${fam}"`)])
+        .then(() => { featLoaded.add(fam); renderResult(); }).catch(() => {});
+    }
+    // filas de beneficios
+    function renderFeatRows(){
+      const wrap = $('feats-rows'); if (!wrap) return;
+      wrap.innerHTML = '';
+      feats.items.forEach((it, i) => {
+        const row = document.createElement('div'); row.className = 'feats-row'; row.dataset.i = i;
+        row.innerHTML = `<button type="button" class="feats-ico-btn" data-act="icon" title="${t('featsIconTitle')}">${iconSvg(it.icon)}</button>`
+          + `<input class="feats-txt" maxlength="48" placeholder="${t('featsItemPh')}">`
+          + `<button type="button" class="feats-del" data-act="del" aria-label="${t('dimRemove')}">×</button>`;
+        row.querySelector('.feats-txt').value = it.text;
+        wrap.appendChild(row);
+      });
+    }
+    $('feats-rows').addEventListener('input', e => {
+      const row = e.target.closest('.feats-row'); if (!row) return;
+      const i = +row.dataset.i;
+      if (e.target.classList.contains('feats-txt')){ feats.items[i].text = e.target.value; renderResult(); }
+    });
+    $('feats-rows').addEventListener('click', e => {
+      const btn = e.target.closest('[data-act]'); if (!btn) return;
+      const row = btn.closest('.feats-row'); const i = +row.dataset.i;
+      if (btn.dataset.act === 'del'){
+        if (feats.items.length <= 1) return;
+        feats.items.splice(i, 1); renderFeatRows(); renderResult();
+      } else if (btn.dataset.act === 'icon'){
+        openIconMenu(btn, i);
+      }
+    });
+    $('feats-add').addEventListener('click', () => {
+      if (feats.items.length >= 6) return;
+      const used = feats.items.map(x => x.icon);
+      const nextIcon = FEAT_ICON_KEYS.find(k => !used.includes(k)) || 'check';
+      feats.items.push({ icon: nextIcon, text: '' });
+      renderFeatRows(); renderResult();
+      const inputs = $('feats-rows').querySelectorAll('.feats-txt');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    });
+    // menú de íconos (popover compartido)
+    let iconMenuEl = null, iconMenuRow = -1;
+    function buildIconMenu(){
+      iconMenuEl = document.createElement('div'); iconMenuEl.className = 'feats-iconmenu'; iconMenuEl.style.display = 'none';
+      FEAT_ICON_KEYS.forEach(k => {
+        const b = document.createElement('button'); b.type = 'button'; b.innerHTML = iconSvg(k); b.dataset.icon = k;
+        b.addEventListener('click', () => {
+          if (iconMenuRow >= 0 && feats.items[iconMenuRow]){ feats.items[iconMenuRow].icon = k; renderFeatRows(); renderResult(); }
+          closeIconMenu();
+        });
+        iconMenuEl.appendChild(b);
+      });
+      document.body.appendChild(iconMenuEl);
+    }
+    function openIconMenu(btn, i){
+      if (!iconMenuEl) buildIconMenu();
+      iconMenuRow = i;
+      iconMenuEl.style.display = 'grid'; iconMenuEl.style.visibility = 'hidden';
+      const r = btn.getBoundingClientRect(), mw = iconMenuEl.offsetWidth, mh = iconMenuEl.offsetHeight;
+      let left = r.left, top = r.bottom + 6;
+      if (left + mw > window.innerWidth - 8) left = window.innerWidth - mw - 8;
+      if (top + mh > window.innerHeight - 8) top = r.top - mh - 6;
+      iconMenuEl.style.left = Math.max(8, left) + 'px'; iconMenuEl.style.top = Math.max(8, top) + 'px';
+      iconMenuEl.style.visibility = 'visible';
+    }
+    function closeIconMenu(){ if (iconMenuEl){ iconMenuEl.style.display = 'none'; iconMenuRow = -1; } }
+    document.addEventListener('click', e => { if (iconMenuEl && iconMenuEl.style.display !== 'none' && !iconMenuEl.contains(e.target) && !e.target.closest('[data-act="icon"]')) closeIconMenu(); });
+    // selector de plantillas
+    function applyFeatTemplate(i){
+      const tp = FEAT_TEMPLATES[i]; if (!tp) return;
+      featsTplIdx = i;
+      feats.layout = tp.layout; feats.font = tp.font; feats.color = tp.color;
+      syncSeg('feats-font', 'font', feats.font);
+      $('feats-pick').value = feats.color;
+      $('feats-color').querySelectorAll('.swatch').forEach(s => s.setAttribute('aria-pressed', 'false'));
+      [...$('feats-templates').children].forEach((el, idx) => el.setAttribute('aria-pressed', idx === i ? 'true' : 'false'));
+      $('feats-leader-hint').style.display = feats.layout === 'leader' ? 'block' : 'none';
+      ensureFeatFont();
+      try { document.fonts.load(`800 40px "${feats.font}"`).then(renderResult); } catch {}
+      renderResult();
+    }
+    function buildFeatTemplates(){
+      const strip = $('feats-templates'); if (!strip) return;
+      strip.innerHTML = '';
+      FEAT_TEMPLATES.forEach((tp, i) => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'bn-tpl'; b.setAttribute('aria-pressed', i === featsTplIdx ? 'true' : 'false');
+        b.innerHTML = `<span class="bn-tpl-mini ft-${tp.layout}" style="--pc:${tp.color}"></span><span class="bn-tpl-name">${tp.name[LANG] || tp.name.es}</span>`;
+        b.addEventListener('click', () => { applyFeatTemplate(i); b.scrollIntoView({ inline: 'center', block: 'nearest' }); });
+        strip.appendChild(b);
+      });
+    }
+    buildFeatTemplates();
+    function flipFeatTemplate(dir){
+      const n = FEAT_TEMPLATES.length;
+      applyFeatTemplate((featsTplIdx + dir + n) % n);
+      $('feats-templates').children[featsTplIdx]?.scrollIntoView({ inline: 'center', block: 'nearest' });
+    }
+    $('feats-tpl-prev').addEventListener('click', () => flipFeatTemplate(-1));
+    $('feats-tpl-next').addEventListener('click', () => flipFeatTemplate(1));
+    // fuente
+    $('feats-font').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+      feats.font = c.dataset.font; syncSeg('feats-font', 'font', feats.font); ensureFeatFont();
+      try { document.fonts.load(`800 40px "${feats.font}"`).then(renderResult); } catch {}
+      renderResult();
+    }));
+    $('feats-font-prev').addEventListener('click', () => { $('feats-font').scrollBy({ left: -160, behavior: 'smooth' }); });
+    $('feats-font-next').addEventListener('click', () => { $('feats-font').scrollBy({ left: 160, behavior: 'smooth' }); });
+    // color
+    buildSwatches('feats-color', feats.color, hex => { feats.color = hex; $('feats-pick').value = hex; renderResult(); });
+    $('feats-pick').addEventListener('input', e => { feats.color = e.target.value; $('feats-color').querySelectorAll('.swatch').forEach(s => s.setAttribute('aria-pressed', 'false')); renderResult(); });
+    // posición (lado)
+    $('feats-side').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => { feats.side = c.dataset.side; syncSeg('feats-side', 'side', feats.side); renderResult(); }));
+    // tamaño
+    $('feats-size').addEventListener('input', e => { feats.scale = parseInt(e.target.value, 10) / 100; $('feats-size-v').textContent = e.target.value + '%'; renderResult(); });
+    $('feats-size-auto').addEventListener('click', () => { feats.scale = 1; $('feats-size').value = 100; $('feats-size-v').textContent = '100%'; renderResult(); });
+    // toggle + fold
+    function syncFeatsFold(){
+      $('feats-fields').style.display = (featsOn && !featsFolded) ? 'block' : 'none';
+      $('feats-fold').classList.toggle('folded', featsFolded);
+    }
+    $('feats-on').addEventListener('change', e => {
+      featsOn = e.target.checked;
+      if (featsOn) featsFolded = false;
+      $('feats-fold').style.display = featsOn ? 'grid' : 'none';
+      syncFeatsFold(); ensureFeatFont();
+      updateDlVariants(); buildPreviewTabs(featsOn); renderResult();
+    });
+    $('feats-fold').addEventListener('click', () => { featsFolded = !featsFolded; syncFeatsFold(); });
+    renderFeatRows();
 
     // ---- logo / marca de agua ----
     function syncLogoFold(){
@@ -3367,19 +3825,21 @@
 
     // descarga por capas
     const DL_VARIANTS = {
-      clean:  { dims: false, banners: false, sfx: 'limpia' },
-      dims:   { dims: true,  banners: false, sfx: 'medidas' },
-      banner: { dims: false, banners: true,  sfx: 'banner' },
-      all:    { dims: true,  banners: true,  sfx: 'completa' },
+      clean:  { dims: false, banners: false, feats: false, sfx: 'limpia' },
+      dims:   { dims: true,  banners: false, feats: false, sfx: 'medidas' },
+      banner: { dims: false, banners: true,  feats: false, sfx: 'banner' },
+      feats:  { dims: false, banners: false, feats: true,  sfx: 'caracteristicas' },
+      all:    { dims: true,  banners: true,  feats: true,  sfx: 'completa' },
     };
     async function downloadLayers(key){
       const p = P(), v = DL_VARIANTS[key];
-      compose(p.w, p.h, shadowOn, p.fill, { dims: v.dims, banners: v.banners });
+      compose(p.w, p.h, shadowOn, p.fill, { dims: v.dims, banners: v.banners, feats: v.feats });
       downloadBlob(await exportBlob(), `shotpilot-${presetKey}-${v.sfx}-${p.w}x${p.h}.png`);
       renderResult();   // restaurar la previa a la vista completa
     }
+    function viewSfx(){ return previewView === 'todo' ? 'completa' : previewView === 'medidas' ? 'medidas' : previewView === 'banner' ? 'banner' : previewView === 'caracteristicas' ? 'caracteristicas' : 'limpia'; }
     function updateDlVariants(){
-      const hasLayers = dimsOn || bannerOn;
+      const hasLayers = dimsOn || bannerOn || featsOn;
       $('dl-separate').style.display = hasLayers ? 'inline-flex' : 'none';
       $('dl-note').style.display = hasLayers ? 'block' : 'none';
     }
@@ -3388,8 +3848,7 @@
       await ensureUnlocked();   // desbloquea la foto (gasta 1 crédito) o pide login / avisa sin créditos
       const p = P();
       compose(p.w, p.h, shadowOn, p.fill, viewLayers());   // baja la vista que se está mirando
-      const sfx = previewView === 'todo' ? 'completa' : previewView === 'medidas' ? 'medidas' : previewView === 'banner' ? 'banner' : 'limpia';
-      downloadBlob(await exportBlob(), `shotpilot-${presetKey}-${sfx}-${p.w}x${p.h}.png`);
+      downloadBlob(await exportBlob(), `shotpilot-${presetKey}-${viewSfx()}-${p.w}x${p.h}.png`);
       renderResult();
     });
     // descargar separadas: limpia + cada capa activa como archivos aparte
@@ -3399,6 +3858,7 @@
       const keys = ['clean'];
       if (dimsOn) keys.push('dims');
       if (bannerOn) keys.push('banner');
+      if (featsOn) keys.push('feats');
       for (const k of keys){ await downloadLayers(k); await new Promise(r => setTimeout(r, 350)); }
       btn.disabled = false;
     });
@@ -3532,6 +3992,7 @@
         bannerOn, bannerFolded, bnTplIdx,
         banner: JSON.parse(JSON.stringify(banner)),
         bnVals: { title: $('bn-title').value, sub: $('bn-sub').value, big: $('bn-big').value, small: $('bn-small').value, badgeOn: $('bn-badge-on').checked },
+        featsOn, featsFolded, featsTplIdx, feats: JSON.parse(JSON.stringify(feats)),
         presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn, previewView, bgColor, bgGrad,
         logoOn, logoFolded, logoMode, logoCorner, logoSize, logoOpacity, logoPos: logoPos ? { ...logoPos } : null,
         enhanceFx, enhFolded, enhB, enhC, enhS,
@@ -3544,6 +4005,8 @@
         bannerOn:false, bannerFolded:false, bnTplIdx:-1,
         banner:{ font:'Montserrat', effect:'metal', panel:{color:'#1B49B8',pos:'bottom',style:'card'}, badge:{on:false,color:'#D8381F',corner:'tr'} },
         bnVals:{title:'',sub:'',big:'',small:'',badgeOn:false},
+        featsOn:false, featsFolded:false, featsTplIdx:0,
+        feats:{ layout:'cards', font:'Manrope', color:'#16130F', side:'r', scale:1, items:[{icon:'check',text:''},{icon:'bolt',text:''},{icon:'shield',text:''}] },
         presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn:false, previewView:'producto', bgColor:'#FFFFFF', bgGrad:-1,
         logoOn:false, logoFolded:false, logoMode:'corner', logoCorner:'br', logoSize:18, logoOpacity:1, logoPos:null,
         enhanceFx:false, enhFolded:false, enhB:100, enhC:100, enhS:100,
@@ -3575,6 +4038,17 @@
       syncSeg('bn-badge-corner','corner',banner.badge.corner);
       $('bn-panel-pick').value=banner.panel.color; $('bn-badge-pick').value=banner.badge.color;
       [...$('bn-templates').children].forEach((el,idx) => el.setAttribute('aria-pressed', idx===bnTplIdx ? 'true' : 'false'));
+      // características
+      featsOn = !!s.featsOn; featsFolded = !!s.featsFolded; featsTplIdx = s.featsTplIdx || 0;
+      if (s.feats){ feats.layout=s.feats.layout; feats.font=s.feats.font; feats.color=s.feats.color; feats.side=s.feats.side; feats.scale=(s.feats.scale==null?1:s.feats.scale); feats.items=JSON.parse(JSON.stringify(s.feats.items||[])); }
+      if (!feats.items.length) feats.items=[{icon:'check',text:''}];
+      $('feats-on').checked=featsOn; $('feats-fold').style.display=featsOn ? 'grid' : 'none'; syncFeatsFold();
+      syncSeg('feats-font','font',feats.font); syncSeg('feats-side','side',feats.side);
+      $('feats-pick').value=feats.color;
+      $('feats-size').value=Math.round(feats.scale*100); $('feats-size-v').textContent=Math.round(feats.scale*100)+'%';
+      $('feats-leader-hint').style.display = feats.layout==='leader' ? 'block' : 'none';
+      [...$('feats-templates').children].forEach((el,idx) => el.setAttribute('aria-pressed', idx===featsTplIdx ? 'true' : 'false'));
+      renderFeatRows();
       presetKey=s.presetKey; PRESETS.custom.w=s.customW; PRESETS.custom.h=s.customH;
       $('cs-w').value=s.customW; $('cs-h').value=s.customH;
       updateDestTrigger();
@@ -3592,7 +4066,7 @@
       enhanceFx = !!s.enhanceFx; enhFolded = !!s.enhFolded; enhB = s.enhB || 100; enhC = s.enhC || 100; enhS = s.enhS || 100;
       $('enh-on').checked = enhanceFx; $('enh-fold').style.display = enhanceFx ? 'grid' : 'none'; syncEnhFold(); syncEnhUI();
       previewView = s.previewView || 'producto';
-      ensureBannerFont(); refreshProductColors(); updateDlVariants(); buildPreviewTabs();
+      ensureBannerFont(); ensureFeatFont(); refreshProductColors(); updateDlVariants(); buildPreviewTabs();
     }
     function registerPhoto(cutoutBlob, isFirst){
       const photo = { id: 'p' + (++photoSeq), originalUrl, cutoutBlob, thumbUrl: URL.createObjectURL(cutoutBlob), state: null };
@@ -3601,9 +4075,9 @@
       renderPhotoStrip();
     }
     function renderPhotoStrip(){
-      const strip = $('photo-strip');
-      if (!photos.length){ strip.style.display = 'none'; $('dl-all-photos').style.display = 'none'; return; }
-      strip.style.display = 'flex'; strip.innerHTML = '';
+      const strip = $('photo-strip'), label = $('photo-strip-label');
+      if (!photos.length){ strip.style.display = 'none'; if (label) label.style.display = 'none'; $('dl-all-photos').style.display = 'none'; return; }
+      strip.style.display = 'flex'; if (label) label.style.display = 'flex'; strip.innerHTML = '';
       photos.forEach((p, i) => {
         const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'photo-thumb';
         btn.setAttribute('aria-pressed', i === activePhoto ? 'true' : 'false');
@@ -3654,8 +4128,7 @@
         await ensureUnlocked();     // cada foto gasta su propio crédito
         const pr = P(), L = viewLayers();
         compose(pr.w, pr.h, shadowOn, pr.fill, L);
-        const sfx = previewView === 'medidas' ? 'medidas' : previewView === 'banner' ? 'banner' : 'limpia';
-        downloadBlob(await exportBlob(), `shotpilot-foto${i + 1}-${sfx}-${pr.w}x${pr.h}.png`);
+        downloadBlob(await exportBlob(), `shotpilot-foto${i + 1}-${viewSfx()}-${pr.w}x${pr.h}.png`);
         await new Promise(r => setTimeout(r, 350));
       }
       activePhoto = cur; await loadPhotoInto(cur);
