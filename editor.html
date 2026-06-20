@@ -4500,9 +4500,42 @@
       return true;
     }
 
+    // ---------- producto de ejemplo (?demo=1) — nunca pantalla en blanco ----------
+    // genera un recorte transparente sintético (frasco) y lo mete por el mismo pipeline
+    // que una foto procesada, para probar el flujo sin subir nada.
+    function makeDemoBlob(){
+      const c = document.createElement('canvas'); c.width = 680; c.height = 920;
+      const x = c.getContext('2d');
+      const bx = 150, bw = 380, by = 250, bh = 560;
+      const g = x.createLinearGradient(bx, 0, bx + bw, 0);
+      g.addColorStop(0, '#7a4d12'); g.addColorStop(.2, '#d9a23e'); g.addColorStop(.5, '#f6d98a'); g.addColorStop(.8, '#caa24b'); g.addColorStop(1, '#6e4410');
+      x.fillStyle = g; x.beginPath(); x.roundRect(bx, by, bw, bh, 34); x.fill();
+      x.fillStyle = 'rgba(255,255,255,.35)'; x.beginPath(); x.roundRect(bx + 30, by + 30, 58, bh - 120, 22); x.fill();
+      x.fillStyle = 'rgba(20,16,12,.86)'; x.beginPath(); x.roundRect(bx + 64, by + 200, bw - 128, 160, 14); x.fill();
+      x.fillStyle = '#e9d9b0'; x.textAlign = 'center';
+      x.font = '700 40px Georgia'; x.fillText('AUREO', bx + bw / 2, by + 282);
+      x.font = '600 20px Georgia'; x.fillText('PARFUM', bx + bw / 2, by + 320);
+      const cg = x.createLinearGradient(bx + 90, 0, bx + bw - 90, 0);
+      cg.addColorStop(0, '#2a2a2e'); cg.addColorStop(.5, '#6b6b72'); cg.addColorStop(1, '#1e1e22');
+      x.fillStyle = cg; x.beginPath(); x.roundRect(bx + 100, 90, bw - 200, 180, 14); x.fill();
+      return new Promise(r => c.toBlob(r, 'image/png'));
+    }
+    async function loadDemoProduct(){
+      try {
+        const blob = await makeDemoBlob();
+        originalUrl = URL.createObjectURL(blob);
+        origImageEl = await loadImg(originalUrl);
+        await loadCutout(blob);
+        imgBefore.src = originalUrl; setMode('compare'); refreshProductColors();
+        registerPhoto(blob, true);
+        updateDlVariants(); buildPreviewTabs(); show('result'); startReveal();
+      } catch (e) { console.error('demo', e); show('drop'); }
+    }
+
     // ---------- aplicar traducciones al cargar ----------
     applyI18n();
-    restoreDraft();   // value-first: si había trabajo en progreso, lo traemos (nunca pantalla en blanco)
+    if (new URLSearchParams(location.search).get('demo')) loadDemoProduct();
+    else restoreDraft();   // value-first: si había trabajo en progreso, lo traemos (nunca pantalla en blanco)
   </script>
 </body>
 </html>
