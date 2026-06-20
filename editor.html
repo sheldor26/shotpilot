@@ -2056,6 +2056,9 @@
         if (localStorage.getItem('sp_paid') === '1') paid = true;
       } catch {}
     })();
+    // ¿lleva marca de agua? Las primeras FREE_CREDITS fotos van limpias (free tier).
+    // Recién al pasarse del free (Etapa 2: y sin pagar) aparece la marca. El dueño (paid) siempre limpio.
+    function wmOn(){ return !paid && creditsUsed > FREE_CREDITS; }
     // marca de agua diagonal repetida: visible sobre fondo claro u oscuro (borde negro + relleno blanco)
     function drawWatermark(ctx, w, h){
       ctx.save();
@@ -2074,9 +2077,9 @@
       }
       ctx.restore();
     }
-    // blob a descargar: limpio si está pago, con marca de agua si no
+    // blob a descargar: limpio dentro del free / pago, con marca de agua si se pasó
     async function exportBlob(){
-      if (paid) return new Promise(r => canvas.toBlob(r, 'image/png'));
+      if (!wmOn()) return new Promise(r => canvas.toBlob(r, 'image/png'));
       const wc = document.createElement('canvas'); wc.width = canvas.width; wc.height = canvas.height;
       const wx = wc.getContext('2d'); wx.drawImage(canvas, 0, 0); drawWatermark(wx, wc.width, wc.height);
       return new Promise(r => wc.toBlob(r, 'image/png'));
@@ -2099,7 +2102,7 @@
       c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high';
       c.clearRect(0, 0, pv.width, pv.height);
       c.drawImage(canvas, 0, 0, pv.width, pv.height);
-      if (!paid) drawWatermark(c, pv.width, pv.height);   // captura de pantalla = imagen marcada
+      if (wmOn()) drawWatermark(c, pv.width, pv.height);   // captura de pantalla = imagen marcada (solo pasado el free)
       // handles de las puntas (solo en la previa, no en la descarga)
       if (dimsVisible() && dimLines){
         const hr = 6 * dpr;
