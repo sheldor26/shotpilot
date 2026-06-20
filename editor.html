@@ -541,8 +541,6 @@
     </div>
   </div>
 
-  <!-- DIAGNÓSTICO TEMPORAL (sacar después): muestra dominio + si la sesión se guardó -->
-  <div id="authdbg" style="position:fixed;bottom:8px;left:8px;z-index:9999;background:#241E1A;color:#fff;font:11px/1.4 monospace;padding:6px 9px;border-radius:7px;max-width:92vw;word-break:break-all;opacity:.92"></div>
 
   <main>
     <div class="wrap">
@@ -3587,26 +3585,17 @@
         const op = $('auth-open'); if (op) op.addEventListener('click', () => authModal(true));
       }
     }
-    function authDbg(tag){
-      const d = $('authdbg'); if (!d) return;
-      let ls = '?'; try { ls = localStorage.getItem('sb-ntybvdfyxesxpoukyqpf-auth-token') ? 'SÍ' : 'no'; } catch { ls = 'ERR'; }
-      d.textContent = `[${tag}] ${location.host}${location.pathname}${location.hash ? ' +#hash' : ''} · storage:${ls} · user:${authUser ? authUser.email : 'no'}`;
-    }
     async function onAuth(session){
       authUser = session ? session.user : null;
       await loadProfile();
       renderAuthSlot();
       updateQuota();
-      authDbg('auth');
       if (authUser) authModal(false);
     }
     if (sb){
-      renderAuthSlot(); authDbg('init');   // botón inmediato, sin parpadeo
-      sb.auth.getSession().then(({ data, error }) => {
-        const d = $('authdbg'); if (d) d.textContent += ` || getSession:${data && data.session ? 'OK' : 'null'}${error ? ' ERR:' + error.message : ''}`;
-        onAuth(data ? data.session : null);
-      });
-      sb.auth.onAuthStateChange((ev, session) => { const d = $('authdbg'); if (d) d.textContent += ` [evt:${ev} ${session ? 'sess' : 'nada'}]`; onAuth(session); });
+      renderAuthSlot();   // botón inmediato, sin parpadeo
+      sb.auth.getSession().then(({ data }) => onAuth(data ? data.session : null));
+      sb.auth.onAuthStateChange((_e, session) => onAuth(session));
       $('auth-send').addEventListener('click', async () => {
         const email = ($('auth-email').value || '').trim();
         const st = $('auth-status');
