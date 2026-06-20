@@ -2044,6 +2044,47 @@
       $('dl-label').textContent = p.name;
       updateChecklist(p, info);
     }
+    // ---- gate de pago (Etapa 1): preview + descargas con marca de agua hasta desbloquear ----
+    // El desbloqueo real lo hará el pago (Etapa 2) llamando a unlock(). Por ahora hay
+    // un bypass del dueño por URL (?owner=...) para poder bajar limpio en la transición.
+    let paid = false;
+    function unlock(){ paid = true; try { localStorage.setItem('sp_paid', '1'); } catch {} if (typeof renderResult === 'function') renderResult(); }
+    (function initPaid(){
+      try {
+        const q = new URLSearchParams(location.search);
+        if (q.get('owner') === 'juan-sp-unlock') localStorage.setItem('sp_paid', '1');
+        if (localStorage.getItem('sp_paid') === '1') paid = true;
+      } catch {}
+    })();
+    // marca de agua diagonal repetida: visible sobre fondo claro u oscuro (borde negro + relleno blanco)
+    function drawWatermark(ctx, w, h){
+      ctx.save();
+      const txt = 'SHOTPILOT';
+      const f = Math.max(13, Math.round(Math.min(w, h) * 0.045));
+      ctx.font = `800 ${f}px Manrope, system-ui, sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.lineWidth = Math.max(1, f * 0.06); ctx.lineJoin = 'round';
+      ctx.translate(w / 2, h / 2); ctx.rotate(-Math.PI / 6); ctx.translate(-w / 2, -h / 2);
+      const stepX = f * 9, stepY = f * 4.2;
+      for (let y = -h; y < h * 2; y += stepY){
+        for (let x = -w; x < w * 2; x += stepX){
+          ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.strokeText(txt, x, y);
+          ctx.fillStyle = 'rgba(255,255,255,0.42)'; ctx.fillText(txt, x, y);
+        }
+      }
+      ctx.restore();
+    }
+    // blob a descargar: limpio si está pago, con marca de agua si no
+    async function exportBlob(){
+      if (paid) return new Promise(r => canvas.toBlob(r, 'image/png'));
+      const wc = document.createElement('canvas'); wc.width = canvas.width; wc.height = canvas.height;
+      const wx = wc.getContext('2d'); wx.drawImage(canvas, 0, 0); drawWatermark(wx, wc.width, wc.height);
+      return new Promise(r => wc.toBlob(r, 'image/png'));
+    }
+    // deterrentes baratos: sin clic derecho ni arrastrar la imagen del preview/escenas (fricción, no seguridad)
+    document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest('#preview, #scene-results')) e.preventDefault(); });
+    document.addEventListener('dragstart', e => { if (e.target.closest && e.target.closest('#preview, #scene-results')) e.preventDefault(); });
+
     // dibuja el lienzo compuesto (offscreen) en la vista previa visible, a escala
     function drawPreview(){
       const pv = $('preview');
@@ -2058,6 +2099,7 @@
       c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high';
       c.clearRect(0, 0, pv.width, pv.height);
       c.drawImage(canvas, 0, 0, pv.width, pv.height);
+      if (!paid) drawWatermark(c, pv.width, pv.height);   // captura de pantalla = imagen marcada
       // handles de las puntas (solo en la previa, no en la descarga)
       if (dimsVisible() && dimLines){
         const hr = 6 * dpr;
@@ -3094,7 +3136,7 @@
     async function downloadLayers(key){
       const p = P(), v = DL_VARIANTS[key];
       compose(p.w, p.h, shadowOn, p.fill, { dims: v.dims, banners: v.banners });
-      downloadBlob(await toBlob(), `shotpilot-${presetKey}-${v.sfx}-${p.w}x${p.h}.png`);
+      downloadBlob(await exportBlob(), `shotpilot-${presetKey}-${v.sfx}-${p.w}x${p.h}.png`);
       renderResult();   // restaurar la previa a la vista completa
     }
     function updateDlVariants(){
@@ -3107,7 +3149,7 @@
       const p = P();
       compose(p.w, p.h, shadowOn, p.fill, viewLayers());   // baja la vista que se está mirando
       const sfx = previewView === 'todo' ? 'completa' : previewView === 'medidas' ? 'medidas' : previewView === 'banner' ? 'banner' : 'limpia';
-      downloadBlob(await toBlob(), `shotpilot-${presetKey}-${sfx}-${p.w}x${p.h}.png`);
+      downloadBlob(await exportBlob(), `shotpilot-${presetKey}-${sfx}-${p.w}x${p.h}.png`);
       renderResult();
     });
     // descargar separadas: limpia + cada capa activa como archivos aparte
@@ -3126,7 +3168,7 @@
       for (const k of Object.keys(PRESETS)){
         const p = PRESETS[k];
         compose(p.w, p.h, shadowOn, p.fill);
-        downloadBlob(await toBlob(), `shotpilot-${k}-${p.w}x${p.h}.png`);
+        downloadBlob(await exportBlob(), `shotpilot-${k}-${p.w}x${p.h}.png`);
         await new Promise(r => setTimeout(r, 350));   // separar las descargas para que el navegador no las bloquee
       }
       btn.disabled = false;
@@ -3376,7 +3418,7 @@
         const pr = P(), L = viewLayers();
         compose(pr.w, pr.h, shadowOn, pr.fill, L);
         const sfx = previewView === 'medidas' ? 'medidas' : previewView === 'banner' ? 'banner' : 'limpia';
-        downloadBlob(await toBlob(), `shotpilot-foto${i + 1}-${sfx}-${pr.w}x${pr.h}.png`);
+        downloadBlob(await exportBlob(), `shotpilot-foto${i + 1}-${sfx}-${pr.w}x${pr.h}.png`);
         await new Promise(r => setTimeout(r, 350));
       }
       activePhoto = cur; await loadPhotoInto(cur);
