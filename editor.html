@@ -1239,6 +1239,7 @@
     import { createSupabase } from './js/supabaseClient.js';
     import { mountNav } from './js/ui/nav.js';   // placeholder (Prompt 4)
     import { saveDraft, loadDraft, clearDraft } from './js/draft.js';
+    import { removeBg, spend, inpaint, lifestyle, getPacks, checkout } from './js/api.js';
 
     const $ = (id) => document.getElementById(id);
 
@@ -1964,7 +1965,7 @@
       fd.append('main_only', mainOnly ? 'true' : 'false');
 
       try {
-        const resp = await fetch(`${MOTOR_URL}/remove`, { method:'POST', body: fd });
+        const resp = await removeBg(MOTOR_URL, fd);
         if (!resp.ok) throw new Error(t('engineError')(resp.status));
         const blob = await resp.blob();
         const outSize = resp.headers.get('X-Out-Size');
@@ -2432,7 +2433,7 @@
       const token = await authToken();
       if (!token) return { ok: false, reason: 'auth' };
       const fd = new FormData(); fd.append('kind', kind);
-      try { const r = await fetch(`${MOTOR_URL}/spend`, { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd }); return await r.json(); }
+      try { const r = await spend(MOTOR_URL, token, fd); return await r.json(); }
       catch { return { ok: false, reason: 'net' }; }
     }
     async function refreshBalance(){ await loadProfile(); renderAuthSlot(); updateQuota(); }
@@ -2813,7 +2814,7 @@
         const fd = new FormData();
         fd.append('image', imgBlob, 'i.png');
         fd.append('mask', maskBlob, 'm.png');
-        const resp = await fetch(`${MOTOR_URL}/inpaint`, { method:'POST', body: fd });
+        const resp = await inpaint(MOTOR_URL, fd);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const img = await loadImg(URL.createObjectURL(await resp.blob()));
         workCtx.clearRect(0, 0, workCanvas.width, workCanvas.height);
@@ -3917,7 +3918,7 @@
         fd.append('image', blob, 'product.png');
         fd.append('scene', scene);
         fd.append('num_results', '2');
-        const resp = await fetch(`${MOTOR_URL}/lifestyle`, { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
+        const resp = await lifestyle(MOTOR_URL, token, fd);
         const data = await resp.json().catch(() => ({}));
         if (resp.status === 401){ sceneStatus(t('sceneNeedLogin'), true); authModal(true); return; }
         if (resp.status === 402){ sceneStatus(t('sceneLocked'), true); openPacks(); return; }   // sin créditos -> ofrecer packs
@@ -4426,7 +4427,7 @@
       packsModal(true);
       const list = $('packs-list'); list.innerHTML = '<p class="packs-loading">…</p>';
       try {
-        const r = await fetch(`${MOTOR_URL}/packs`); const data = await r.json();
+        const r = await getPacks(MOTOR_URL); const data = await r.json();
         list.innerHTML = '';
         (data.packs || []).forEach(p => {
           const pop = p.id === PACK_POPULAR;
@@ -4447,7 +4448,7 @@
       if (btn){ btn.disabled = true; btn.classList.add('busy'); }
       try {
         const fd = new FormData(); fd.append('pack', id);
-        const r = await fetch(`${MOTOR_URL}/checkout`, { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
+        const r = await checkout(MOTOR_URL, token, fd);
         const data = await r.json().catch(() => ({}));
         if (r.ok && data.init_point){ location.href = data.init_point; return; }
         throw new Error(data.error || 'error');
