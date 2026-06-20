@@ -1709,12 +1709,15 @@
       ctx.stroke();
     }
     function dimLabel(ctx, text, x, y, f){
+      // el halo acompaña el fondo (en vez de blanco fijo) y el texto contrasta
+      const bg = bgColor || '#ffffff';
+      const dark = bgColor && bnLum(bgColor) < 0.5;
       ctx.font = '800 ' + f + 'px Manrope, system-ui, sans-serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.save();
-      ctx.lineJoin = 'round'; ctx.lineWidth = f * 0.4; ctx.strokeStyle = '#ffffff';
-      ctx.strokeText(text, x, y);            // halo blanco para que se lea
-      ctx.fillStyle = '#241E1A'; ctx.fillText(text, x, y);
+      ctx.lineJoin = 'round'; ctx.lineWidth = f * 0.42; ctx.strokeStyle = bg;
+      ctx.strokeText(text, x, y);            // halo = color del fondo, así no deja reborde blanco
+      ctx.fillStyle = dark ? '#ffffff' : '#241E1A'; ctx.fillText(text, x, y);
       ctx.restore();
     }
     function drawDimsLines(ctx, tw, th, pr){
@@ -2374,9 +2377,10 @@
         const tf = fitFont(ctx, title, maxW, Math.round(bh * 0.40), '800');
         ctx.textBaseline = 'middle';
         ctx.font = bnFont(800, tf); ctx.fillText(title, tx, y + bh * 0.38);
-        const sf = Math.round(tf * 0.5);
+        const subTxt = sub.toUpperCase();
+        const sf = fitFont(ctx, subTxt, maxW, Math.round(tf * 0.5), '700');   // la bajada también se achica para no salirse
         ctx.save(); ctx.globalAlpha = 0.85; ctx.font = bnFont(700, sf);
-        ctx.fillText(sub.toUpperCase(), tx, y + bh * 0.72); ctx.restore();
+        ctx.fillText(subTxt, tx, y + bh * 0.72); ctx.restore();
       } else {
         const tf = fitFont(ctx, title, maxW, Math.round(bh * 0.5), '800');
         ctx.textBaseline = 'middle'; ctx.font = bnFont(800, tf);
