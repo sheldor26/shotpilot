@@ -1417,7 +1417,7 @@
         wizSeguir: 'Seguir', wizAtras: '← Atrás', wizSaltear: 'Saltear por ahora', wizDescargar: 'Descargar galería',
         wizHint: 'Tu galería ya está lista', wizHintListo: 'Último paso',
         marcaTitle: '¿Sumás tu marca?', marcaSub: 'Tu logo y colores, aplicados a todas las placas. Lo cargás una vez.',
-        marcaLogo: '+ Logo', marcaSoon: 'Lo completás en "Mi marca" (pronto).',
+        marcaLogo: '+ Logo', marcaSoon: 'Lo completás en "Mi marca" (pronto).', draftUnnamed: 'Sin nombre',
         wzStep1: '¿Qué medidas tiene?',
         wzStep1Sub: 'Dejá vacío lo que no aplique.',
         wzStep2: 'Datos del producto',
@@ -1692,7 +1692,7 @@
         wizSeguir: 'Next', wizAtras: '← Back', wizSaltear: 'Skip for now', wizDescargar: 'Download gallery',
         wizHint: 'Your gallery is ready', wizHintListo: 'Last step',
         marcaTitle: 'Add your brand?', marcaSub: 'Your logo and colors, applied to every placa. Set it up once.',
-        marcaLogo: '+ Logo', marcaSoon: 'You complete it in "My brand" (soon).',
+        marcaLogo: '+ Logo', marcaSoon: 'You complete it in "My brand" (soon).', draftUnnamed: 'Untitled',
         wzStep1: 'What are its dimensions?',
         wzStep1Sub: 'Leave blank what doesn’t apply.',
         wzStep2: 'Product details',
@@ -4153,7 +4153,7 @@
       btn.disabled = false;
     });
 
-    $('another').addEventListener('click', () => { photos = []; activePhoto = -1; renderPhotoStrip(); fileInput.value = ''; show('drop'); clearDraft(); });
+    $('another').addEventListener('click', () => { photos = []; activePhoto = -1; renderPhotoStrip(); fileInput.value = ''; show('drop'); clearDraft(); currentGalleryId = null; });
     $('pv-prev').addEventListener('click', () => flipPreview(-1));
     $('pv-next').addEventListener('click', () => flipPreview(1));
 
@@ -4463,8 +4463,8 @@
       authUser = session ? session.user : null;
       renderAuthSlot();          // render inmediato con el estado de sesión (no bloquear esperando el perfil)
       updateQuota();
-      if (authUser){ authModal(false); loadProfile().then(() => { renderAuthSlot(); updateQuota(); }); }
-      else { authProfile = null; }
+      if (authUser){ authModal(false); loadProfile().then(() => { renderAuthSlot(); updateQuota(); }); if (photos.length) queueGalleryDraft(); }   // al loguearse, asociar el borrador anónimo a la cuenta
+      else { authProfile = null; currentGalleryId = null; }
     }
     if (sb){
       renderAuthSlot();   // botón inmediato, sin parpadeo
@@ -4583,6 +4583,26 @@
       return true;
     }
 
+    // ---------- borrador en Supabase (gallery status 'draft') ----------
+    // Si hay sesión, guarda/actualiza una galería 'draft' del usuario entre pasos del wizard.
+    // El estado del editor (snapshot serializable, sin blobs) va en gallery.state.
+    let currentGalleryId = null, syncGalleryTimer = null;
+    async function syncGalleryDraft(){
+      if (!sb || !authUser || !photos.length) return;
+      if (activePhoto >= 0 && photos[activePhoto]) photos[activePhoto].state = snapshotState();
+      const product = ($('bn-title') && $('bn-title').value || '').trim() || t('draftUnnamed');
+      const row = { user_id: authUser.id, product_name: product, platform: presetKey, status: 'draft', state: snapshotState(), updated_at: new Date().toISOString() };
+      try {
+        if (currentGalleryId){
+          await sb.from('galleries').update(row).eq('id', currentGalleryId);
+        } else {
+          const { data } = await sb.from('galleries').insert(row).select('id').single();
+          if (data) currentGalleryId = data.id;
+        }
+      } catch (e) { console.warn('syncGalleryDraft', e); }
+    }
+    function queueGalleryDraft(){ clearTimeout(syncGalleryTimer); syncGalleryTimer = setTimeout(syncGalleryDraft, 800); }
+
     // ---------- barra de progreso del wizard de 5 pasos ----------
     const WIZ_STEPS = [t('stepProducto'), t('stepDetalles'), t('stepGaleria'), t('stepMarca'), t('stepListo')];
     let wizStep = 1;
@@ -4609,6 +4629,7 @@
       const m = $('marca-step'); if (m) m.hidden = (n !== 4);
       updateWizFoot();
       if (n === 5) setTimeout(() => { const d = $('dl-main'); if (d) d.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 60);
+      syncGalleryDraft();   // persistir el borrador en Supabase al avanzar de paso
     }
     $('wiz-next-btn').addEventListener('click', () => { if (wizStep >= 5) $('dl-main').click(); else wizGo(wizStep + 1); });
     $('wiz-back-btn').addEventListener('click', () => wizGo(3));
