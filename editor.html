@@ -371,9 +371,19 @@
   .ed-controls > .extras-head{order:4}
   .ed-controls > #dims-panel{order:5}
   .ed-controls > #banner-panel{order:6}
-  .ed-controls > #adv-toggle{order:7;margin-top:1.2rem}
-  .ed-controls > #adv-wrap{order:8}
-  .ed-controls > #checklist{order:9}
+  .ed-controls > #logo-panel{order:7}
+  .ed-controls > #adv-toggle{order:8;margin-top:1.2rem}
+  .ed-controls > #adv-wrap{order:9}
+  .ed-controls > #checklist{order:10}
+  /* logo / marca de agua */
+  .logo-up-row{display:flex;align-items:center;gap:.7rem;margin-top:.9rem}
+  .logo-prevbox{flex:none;width:46px;height:46px;border-radius:9px;border:1px solid var(--line);background:repeating-conic-gradient(#ece6dd 0% 25%, #fff 0% 50%) 50% / 8px 8px;display:grid;place-items:center;overflow:hidden}
+  .logo-prevbox img{max-width:100%;max-height:100%;object-fit:contain}
+  #logo-controls{margin-top:.9rem;display:grid;gap:.7rem}
+  .logo-slider{display:flex;align-items:center;gap:.6rem}
+  .logo-slider input[type=range]{flex:1;accent-color:var(--accent)}
+  .logo-slider b{color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums;min-width:40px;text-transform:none;font-size:.8rem}
+  .logo-slider > span:first-child{font-size:.78rem;font-weight:600;color:var(--ink-soft);min-width:64px}
   .adv-collapsed{display:none}
   #adv-wrap{margin-top:.7rem}
   #adv-wrap > .engine{margin-top:0}
@@ -856,6 +866,50 @@
             </div>
           </div>
 
+          <!-- logo / marca de agua (opcional) -->
+          <div class="engine" id="logo-panel">
+            <div class="dims-head">
+              <span class="dims-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="9" cy="12" r="2"/><path d="m21 15-4-4-9 9"/></svg>
+                <span data-i18n="logoTitle">Logo / marca de agua</span>
+              </span>
+              <span class="dims-head-actions">
+                <button type="button" class="panel-fold" id="logo-fold" data-i18n-aria="foldPanel" aria-label="Plegar / desplegar" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+                <label class="dims-switch" data-i18n-title="logoSwitchTitle" title="Agregar tu logo o marca de agua">
+                  <input type="checkbox" id="logo-on">
+                  <span class="sw" aria-hidden="true"></span>
+                </label>
+              </span>
+            </div>
+            <div id="logo-fields" style="display:none">
+              <input type="file" id="logo-file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>
+              <div class="logo-up-row">
+                <button type="button" class="mini" id="logo-upload" data-i18n="logoUpload">Subir logo</button>
+                <span class="logo-prevbox" id="logo-prevbox" style="display:none"><img id="logo-prev-img" alt=""></span>
+              </div>
+              <div id="logo-controls" style="display:none">
+                <div class="bn-row">
+                  <span class="dims-mini-label" data-i18n="logoMode">Tipo</span>
+                  <div class="seg seg-sm" id="logo-mode" role="group">
+                    <button type="button" class="chip" data-mode="corner" aria-pressed="true" data-i18n="logoCornerMode">Logo en esquina</button>
+                    <button type="button" class="chip" data-mode="watermark" aria-pressed="false" data-i18n="logoWmMode">Marca de agua</button>
+                  </div>
+                </div>
+                <div class="bn-row" id="logo-corner-row">
+                  <span class="dims-mini-label" data-i18n="position">Posición</span>
+                  <div class="seg seg-sm" id="logo-corner" role="group">
+                    <button type="button" class="chip" data-corner="tr" aria-pressed="false" data-i18n="cornerTR">Arr. der.</button>
+                    <button type="button" class="chip" data-corner="tl" aria-pressed="false" data-i18n="cornerTL">Arr. izq.</button>
+                    <button type="button" class="chip" data-corner="br" aria-pressed="true" data-i18n="cornerBR">Ab. der.</button>
+                    <button type="button" class="chip" data-corner="bl" aria-pressed="false" data-i18n="cornerBL">Ab. izq.</button>
+                  </div>
+                </div>
+                <label class="opt logo-slider"><span data-i18n="logoSize">Tamaño</span> <input type="range" id="logo-size" min="6" max="42" value="18"><b id="logo-size-v">18%</b></label>
+                <label class="opt logo-slider"><span data-i18n="logoOpacity">Opacidad</span> <input type="range" id="logo-op" min="10" max="100" value="100"><b id="logo-op-v">100%</b></label>
+              </div>
+            </div>
+          </div>
+
           <!-- checklist de cumplimiento (validación final) -->
           <div class="checklist" id="checklist"></div>
           </div><!-- /ed-controls -->
@@ -1006,6 +1060,15 @@
         posTL: 'Arriba izq.',
         posTR: 'Arriba der.',
         banners: 'Banners',
+        logoTitle: 'Logo / marca de agua',
+        logoSwitchTitle: 'Agregar tu logo o marca de agua',
+        logoUpload: 'Subir logo',
+        logoChange: 'Cambiar logo',
+        logoMode: 'Tipo',
+        logoCornerMode: 'Logo en esquina',
+        logoWmMode: 'Marca de agua',
+        logoSize: 'Tamaño',
+        logoOpacity: 'Opacidad',
         bannersSwitchTitle: 'Agregar banners sobre la imagen',
         font: 'Fuente',
         fontAria: 'Fuente',
@@ -1194,6 +1257,15 @@
         posTL: 'Top left',
         posTR: 'Top right',
         banners: 'Banners',
+        logoTitle: 'Logo / watermark',
+        logoSwitchTitle: 'Add your logo or watermark',
+        logoUpload: 'Upload logo',
+        logoChange: 'Change logo',
+        logoMode: 'Type',
+        logoCornerMode: 'Corner logo',
+        logoWmMode: 'Watermark',
+        logoSize: 'Size',
+        logoOpacity: 'Opacity',
         bannersSwitchTitle: 'Add banners on the image',
         font: 'Font',
         fontAria: 'Font',
@@ -1559,6 +1631,7 @@
       if (shadow) ctx.restore();
       if (L.dims) drawDims(ctx, tw, th, { x: dx, y: dy, w: dw, h: dh });
       if (L.banners) drawBanners(ctx, tw, th);
+      if (logoOn && logoImg) drawLogo(ctx, tw, th);
       return { scaleUsed: scale, fillPct: Math.round(100 * Math.max(dw, dh) / Math.min(tw, th)) };
     }
 
@@ -2247,6 +2320,24 @@
 
     // ---- banners promocionales ----
     const BN_COLORS = ['#1B49B8', '#C2186A', '#F2B705', '#D8381F', '#1A1614', '#1FA463'];
+    // ---- logo / marca de agua ----
+    let logoOn = false, logoFolded = false, logoImg = null;
+    let logoMode = 'corner', logoCorner = 'br', logoSize = 18, logoOpacity = 1;
+    function drawLogo(ctx, tw, th){
+      const base = Math.min(tw, th), iw = logoImg.naturalWidth || 1, ih = logoImg.naturalHeight || 1;
+      ctx.save(); ctx.globalAlpha = logoOpacity;
+      if (logoMode === 'watermark'){
+        const w = base * (logoSize / 100) * 2.4, h = w * ih / iw;
+        ctx.drawImage(logoImg, (tw - w) / 2, (th - h) / 2, w, h);
+      } else {
+        const w = base * (logoSize / 100), h = w * ih / iw, m = base * 0.04;
+        const x = logoCorner.includes('r') ? tw - w - m : m;
+        const y = logoCorner[0] === 't' ? m : th - h - m;
+        ctx.drawImage(logoImg, x, y, w, h);
+      }
+      ctx.restore();
+    }
+
     let bannerOn = false;
     const banner = {
       font: 'Montserrat',
@@ -2520,6 +2611,46 @@
     });
     $('bn-fold').addEventListener('click', () => { bannerFolded = !bannerFolded; syncBannerFold(); });
     $('bn-badge-on').addEventListener('change', e => { banner.badge.on = e.target.checked; $('bn-badge-fields').style.display = banner.badge.on ? 'block' : 'none'; renderResult(); });
+
+    // ---- logo / marca de agua ----
+    function syncLogoFold(){
+      $('logo-fields').style.display = (logoOn && !logoFolded) ? 'block' : 'none';
+      $('logo-fold').classList.toggle('folded', logoFolded);
+    }
+    $('logo-on').addEventListener('change', e => {
+      logoOn = e.target.checked;
+      if (logoOn) logoFolded = false;
+      $('logo-fold').style.display = logoOn ? 'grid' : 'none';
+      syncLogoFold(); buildPreviewTabs(); renderResult();
+    });
+    $('logo-fold').addEventListener('click', () => { logoFolded = !logoFolded; syncLogoFold(); });
+    $('logo-upload').addEventListener('click', () => $('logo-file').click());
+    $('logo-file').addEventListener('change', async e => {
+      const f = e.target.files[0]; e.target.value = '';
+      if (!f) return;
+      try {
+        const url = URL.createObjectURL(f);
+        logoImg = await loadImg(url);
+        $('logo-prev-img').src = url; $('logo-prevbox').style.display = 'grid';
+        $('logo-controls').style.display = 'grid';
+        $('logo-upload').textContent = t('logoChange');
+        buildPreviewTabs(); renderResult();
+      } catch {}
+    });
+    $('logo-mode').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+      $('logo-mode').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', 'false'));
+      c.setAttribute('aria-pressed', 'true'); logoMode = c.dataset.mode;
+      $('logo-corner-row').style.display = logoMode === 'corner' ? 'flex' : 'none';
+      const op = logoMode === 'watermark' ? 35 : 100;   // opacidad sugerida por modo
+      logoOpacity = op / 100; $('logo-op').value = op; $('logo-op-v').textContent = op + '%';
+      buildPreviewTabs(); renderResult();
+    }));
+    $('logo-corner').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+      $('logo-corner').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', 'false'));
+      c.setAttribute('aria-pressed', 'true'); logoCorner = c.dataset.corner; renderResult();
+    }));
+    $('logo-size').addEventListener('input', e => { logoSize = parseInt(e.target.value, 10); $('logo-size-v').textContent = logoSize + '%'; renderResult(); });
+    $('logo-op').addEventListener('input', e => { logoOpacity = parseInt(e.target.value, 10) / 100; $('logo-op-v').textContent = e.target.value + '%'; renderResult(); });
     ['bn-title', 'bn-sub', 'bn-big', 'bn-small'].forEach(id => $(id).addEventListener('input', renderResult));
     $('bn-panel-pos').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
       $('bn-panel-pos').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', 'false'));
@@ -2802,6 +2933,7 @@
         banner: JSON.parse(JSON.stringify(banner)),
         bnVals: { title: $('bn-title').value, sub: $('bn-sub').value, big: $('bn-big').value, small: $('bn-small').value, badgeOn: $('bn-badge-on').checked },
         presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn, previewView, bgColor,
+        logoOn, logoFolded, logoMode, logoCorner, logoSize, logoOpacity,
       };
     }
     function blankState(){
@@ -2812,6 +2944,7 @@
         banner:{ font:'Montserrat', effect:'metal', panel:{color:'#1B49B8',pos:'bottom',style:'card'}, badge:{on:false,color:'#D8381F',corner:'tr'} },
         bnVals:{title:'',sub:'',big:'',small:'',badgeOn:false},
         presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn:false, previewView:'producto', bgColor:'#FFFFFF',
+        logoOn:false, logoFolded:false, logoMode:'corner', logoCorner:'br', logoSize:18, logoOpacity:1,
       };
     }
     function restoreState(s){
@@ -2846,6 +2979,14 @@
       $('custom-size').style.display = presetKey === 'custom' ? 'flex' : 'none';
       shadowOn=s.shadowOn; $('shadow').checked=shadowOn;
       bgColor = (s.bgColor === undefined ? '#FFFFFF' : s.bgColor); syncBgUI();
+      logoOn = !!s.logoOn; logoFolded = !!s.logoFolded; logoMode = s.logoMode || 'corner'; logoCorner = s.logoCorner || 'br'; logoSize = s.logoSize || 18; logoOpacity = (s.logoOpacity == null ? 1 : s.logoOpacity);
+      $('logo-on').checked = logoOn; $('logo-fold').style.display = logoOn ? 'grid' : 'none'; syncLogoFold();
+      syncSeg('logo-mode','mode',logoMode); syncSeg('logo-corner','corner',logoCorner);
+      $('logo-corner-row').style.display = logoMode === 'corner' ? 'flex' : 'none';
+      $('logo-size').value = logoSize; $('logo-size-v').textContent = logoSize + '%';
+      $('logo-op').value = Math.round(logoOpacity * 100); $('logo-op-v').textContent = Math.round(logoOpacity * 100) + '%';
+      $('logo-controls').style.display = logoImg ? 'grid' : 'none';
+      $('logo-prevbox').style.display = logoImg ? 'grid' : 'none';
       previewView = s.previewView || 'producto';
       ensureBannerFont(); refreshProductColors(); updateDlVariants(); buildPreviewTabs();
     }
