@@ -198,6 +198,7 @@
   .dl-main{width:100%;margin-top:.6rem;padding:.9rem 1rem;border:none;border-radius:12px;background:var(--accent);color:#fff;font-family:"Manrope",sans-serif;font-weight:800;font-size:1rem;cursor:pointer;box-shadow:0 8px 18px -10px rgba(216,56,31,.6);transition:background .15s,transform .12s}
   .dl-main:hover{background:var(--accent-deep);transform:translateY(-1px)}
   .dl-note{font-size:.72rem;color:var(--ink-faint);line-height:1.35;margin:.5rem .1rem 0}
+  .dl-msg{font-size:.82rem;font-weight:700;color:var(--accent-deep);background:var(--accent-tint);border-radius:10px;padding:.55rem .7rem;margin:.55rem 0 0;text-align:center}
   .scene-card{margin-top:.9rem;border:1px solid #E7D9C4;border-radius:14px;background:linear-gradient(135deg,#FFFDF8,#FBF1E2);overflow:hidden}
   .scene-head{width:100%;display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.7rem .8rem;background:none;border:0;cursor:pointer;font-family:inherit}
   .scene-title{display:inline-flex;align-items:center;gap:.4rem;font-weight:800;color:var(--ink)}
@@ -1034,6 +1035,7 @@
 
           <span class="eng-label" style="margin-top:.2rem;display:block"><span data-i18n="downloadLabel">Descargar · formato</span> <b id="dl-label">MercadoLibre</b></span>
           <button type="button" class="dl-main" id="dl-main" data-i18n="dlMain">Descargar</button>
+          <p class="dl-msg" id="dl-msg" role="status" style="display:none"></p>
           <p class="dl-note" id="dl-note" data-i18n="dlNote" style="display:none">La imagen principal de ML va sin texto. Usá "cada versión por separado" para tener también la limpia.</p>
           <button type="button" class="btn btn-ghost" id="dl-all-photos" data-i18n="dlAllPhotos" style="display:none;min-width:100%;margin-top:.55rem">Bajar todas las fotos</button>
           <div class="row" style="margin-top:.55rem">
@@ -1096,6 +1098,10 @@
         lede: 'Subí la foto de tu producto y bajala con <strong>fondo blanco</strong>, en la medida exacta de cada plataforma. Sumá medidas y banners si querés.',
         quota: 'Te quedan 5 de 5 gratis',
         quotaLeft: (n) => `Te quedan ${n} de 5 gratis`,
+        quotaAnon: 'Iniciá sesión y llevate 5 fotos gratis',
+        quotaAcct: (free, cred) => `${free} fotos gratis · ${cred} créditos`,
+        noCredits: 'Te quedaste sin créditos. Los packs llegan pronto.',
+        sceneNeedLogin: 'Iniciá sesión para generar escenas.',
         addPhoto: 'Foto',
         photoRemove: 'Quitar foto',
         dlAllPhotos: 'Bajar todas las fotos',
@@ -1331,6 +1337,10 @@
         lede: 'Upload your product photo and download it on a <strong>white background</strong>, at the exact size for each platform. Add dimensions and banners if you want.',
         quota: 'You have 5 of 5 free left',
         quotaLeft: (n) => `${n} of 5 free left`,
+        quotaAnon: 'Sign in and get 5 free photos',
+        quotaAcct: (free, cred) => `${free} free photos · ${cred} credits`,
+        noCredits: "You're out of credits. Packs coming soon.",
+        sceneNeedLogin: 'Sign in to generate scenes.',
         addPhoto: 'Photo',
         photoRemove: 'Remove photo',
         dlAllPhotos: 'Download all photos',
@@ -1742,11 +1752,9 @@
         } else if (mode === 'add'){
           restoreState(blankState());          // foto nueva arranca limpia (mismo tamaño)
           registerPhoto(blob, false);
-          creditsUsed++; updateQuota();
           updateDlVariants(); buildPreviewTabs(); show('result');
         } else {                                // 'first'
           registerPhoto(blob, true);
-          creditsUsed++; updateQuota();
           updateDlVariants();
           if (!wizardSkipped) openWizard(); else { buildPreviewTabs(); show('result'); }
         }
@@ -2129,9 +2137,32 @@
         if (localStorage.getItem('sp_paid') === '1') paid = true;
       } catch {}
     })();
-    // ¿lleva marca de agua? Las primeras FREE_CREDITS fotos van limpias (free tier).
-    // Recién al pasarse del free (Etapa 2: y sin pagar) aparece la marca. El dueño (paid) siempre limpio.
-    function wmOn(){ return !paid && creditsUsed > FREE_CREDITS; }
+    // ---- créditos server-side: una foto se "desbloquea" (sale limpia) al gastar 1 crédito ----
+    const unlocked = new Set();   // ids de fotos desbloqueadas (pagadas) esta sesión
+    function activePhotoId(){ return (photos[activePhoto] && photos[activePhoto].id) || null; }
+    function wmOn(){ return !paid && !unlocked.has(activePhotoId()); }   // limpio solo si la foto activa está desbloqueada
+    async function authToken(){ if (!sb) return null; try { const { data } = await sb.auth.getSession(); return data.session ? data.session.access_token : null; } catch { return null; } }
+    async function motorSpend(kind){
+      const token = await authToken();
+      if (!token) return { ok: false, reason: 'auth' };
+      const fd = new FormData(); fd.append('kind', kind);
+      try { const r = await fetch(`${MOTOR_URL}/spend`, { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd }); return await r.json(); }
+      catch { return { ok: false, reason: 'net' }; }
+    }
+    async function refreshBalance(){ await loadProfile(); renderAuthSlot(); updateQuota(); }
+    let dlMsgTimer = null;
+    function showDlMsg(text){ const m = $('dl-msg'); if (!m) return; m.textContent = text; m.style.display = 'block'; clearTimeout(dlMsgTimer); dlMsgTimer = setTimeout(() => { m.style.display = 'none'; }, 6000); }
+    // asegura que la foto activa quede desbloqueada (gasta 1 crédito si hace falta). true = quedó limpia.
+    async function ensureUnlocked(){
+      if (paid) return true;
+      const id = activePhotoId();
+      if (id && unlocked.has(id)) return true;
+      const token = await authToken();
+      if (!token){ authModal(true); return false; }            // pedir login
+      const res = await motorSpend('photo');
+      if (res && res.ok){ if (id) unlocked.add(id); await refreshBalance(); renderResult(); return true; }
+      await refreshBalance(); showDlMsg(t('noCredits')); return false;   // sin créditos
+    }
     // marca de agua diagonal repetida: visible sobre fondo claro u oscuro (borde negro + relleno blanco)
     function drawWatermark(ctx, w, h){
       ctx.save();
@@ -3050,11 +3081,7 @@
       { key: 'scDesk',    en: 'product on a modern desk next to a laptop, cozy office, morning light, clean lifestyle scene' },
     ];
     let scenePreset = null;
-    // escenas IA: 1 gratis de muestra por navegador (persistida, protege el saldo de Bria), después paga.
-    const SCENE_FREE = 1;
-    let sceneFreeUsed = 0;
-    try { sceneFreeUsed = parseInt(localStorage.getItem('sp_scene_free') || '0', 10) || 0; } catch {}
-    function sceneAllowed(){ return paid || sceneFreeUsed < SCENE_FREE; }
+    // escenas IA: el saldo (1 gratis + créditos) lo gobierna el motor/Supabase, no el cliente.
     function renderScenePresets(){
       const box = $('scene-presets'); if (!box) return;
       box.innerHTML = '';
@@ -3090,7 +3117,8 @@
       const preset = SCENE_PRESETS.find(p => p.key === scenePreset);
       const scene = free || (preset && preset.en) || '';
       if (!scene){ sceneStatus(t('sceneEmptyErr'), true); return; }
-      if (!sceneAllowed()){ sceneStatus(t('sceneLocked'), true); return; }   // ya usó la de muestra (Etapa 2: pedir pack)
+      const token = await authToken();
+      if (!token){ sceneStatus(t('sceneNeedLogin'), true); authModal(true); return; }   // las escenas piden login
       const go = $('scene-go'); go.disabled = true;
       const prevTxt = go.textContent; go.textContent = t('sceneBusy');
       sceneStatus('', false); $('scene-results').innerHTML = '';
@@ -3100,13 +3128,15 @@
         fd.append('image', blob, 'product.png');
         fd.append('scene', scene);
         fd.append('num_results', '4');
-        const resp = await fetch(`${MOTOR_URL}/lifestyle`, { method: 'POST', body: fd });
+        const resp = await fetch(`${MOTOR_URL}/lifestyle`, { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
         const data = await resp.json().catch(() => ({}));
+        if (resp.status === 401){ sceneStatus(t('sceneNeedLogin'), true); authModal(true); return; }
+        if (resp.status === 402){ sceneStatus(t('sceneLocked'), true); return; }   // sin créditos para escena
         if (!resp.ok || data.error) throw new Error(data.error || ('HTTP ' + resp.status));
         const urls = data.images || [];
         if (!urls.length) throw new Error('0');
         renderSceneResults(urls);
-        if (!paid){ sceneFreeUsed++; try { localStorage.setItem('sp_scene_free', String(sceneFreeUsed)); } catch {} }
+        if (data.balance) await refreshBalance();
       } catch (e) {
         sceneStatus(t('sceneErr')(String(e.message || e)), true);
       } finally {
@@ -3229,6 +3259,7 @@
     }
     // botón principal: baja exactamente lo que se ve en la preview (con las capas que estén activas)
     $('dl-main').addEventListener('click', async () => {
+      await ensureUnlocked();   // desbloquea la foto (gasta 1 crédito) o pide login / avisa sin créditos
       const p = P();
       compose(p.w, p.h, shadowOn, p.fill, viewLayers());   // baja la vista que se está mirando
       const sfx = previewView === 'todo' ? 'completa' : previewView === 'medidas' ? 'medidas' : previewView === 'banner' ? 'banner' : 'limpia';
@@ -3238,6 +3269,7 @@
     // descargar separadas: limpia + cada capa activa como archivos aparte
     $('dl-separate').addEventListener('click', async () => {
       const btn = $('dl-separate'); btn.disabled = true;
+      await ensureUnlocked();
       const keys = ['clean'];
       if (dimsOn) keys.push('dims');
       if (bannerOn) keys.push('banner');
@@ -3248,6 +3280,7 @@
     // pack: una foto -> todos los formatos de un saque
     $('download-pack').addEventListener('click', async () => {
       const btn = $('download-pack'); btn.disabled = true;
+      await ensureUnlocked();
       for (const k of Object.keys(PRESETS)){
         const p = PRESETS[k];
         compose(p.w, p.h, shadowOn, p.fill);
@@ -3366,8 +3399,13 @@
     let photos = [], activePhoto = -1, photoSeq = 0, creditsUsed = 0;
 
     function updateQuota(){
-      const left = Math.max(0, FREE_CREDITS - creditsUsed);
-      const el = $('quota-text'); if (el) el.textContent = t('quotaLeft')(left);
+      const el = $('quota-text'); if (!el) return;
+      if (authUser && authProfile){
+        const free = Math.max(0, 5 - (authProfile.free_photos_used || 0));
+        el.textContent = t('quotaAcct')(free, authProfile.credits || 0);
+      } else {
+        el.textContent = t('quotaAnon');   // sin login: invitar a registrarse
+      }
     }
     function snapshotState(){
       const dv = d => { const el = document.querySelector(`#dims-fields .dim-v[data-dim="${d}"]`); return el ? el.value : ''; };
@@ -3467,7 +3505,7 @@
       });
       const add = document.createElement('button'); add.type = 'button'; add.className = 'photo-add';
       add.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span>' + t('addPhoto') + '</span>';
-      add.disabled = !(photos.length < MAX_PHOTOS && (FREE_CREDITS - creditsUsed) > 0);
+      add.disabled = !(photos.length < MAX_PHOTOS);   // procesar es gratis; el límite es la cantidad de fotos
       add.addEventListener('click', () => $('add-file').click());
       strip.appendChild(add);
       $('dl-all-photos').style.display = photos.length > 1 ? 'block' : 'none';
@@ -3498,6 +3536,8 @@
       const cur = activePhoto;
       for (let i = 0; i < photos.length; i++){
         await loadPhotoInto(i);
+        activePhoto = i;            // para que el desbloqueo/marca de agua apunten a ESTA foto
+        await ensureUnlocked();     // cada foto gasta su propio crédito
         const pr = P(), L = viewLayers();
         compose(pr.w, pr.h, shadowOn, pr.fill, L);
         const sfx = previewView === 'medidas' ? 'medidas' : previewView === 'banner' ? 'banner' : 'limpia';
@@ -3542,6 +3582,7 @@
       authUser = session ? session.user : null;
       await loadProfile();
       renderAuthSlot();
+      updateQuota();
       if (authUser) authModal(false);
     }
     if (sb){

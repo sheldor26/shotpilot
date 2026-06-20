@@ -16,7 +16,7 @@ import urllib.request
 
 import cv2
 import numpy as np
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from PIL import Image, ImageOps, ImageEnhance, ImageFilter
@@ -259,9 +259,81 @@ async def remove_bg(
 
 BRIA_LIFESTYLE_URL = "https://engine.prod.bria-api.com/v1/product/lifestyle_shot_by_text"
 
+# --- Cuentas + créditos (Supabase). El motor es la ÚNICA autoridad que muta saldos. ---
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
+SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "").strip()
+
+
+def _bearer(headers) -> str:
+    auth = headers.get("authorization") or ""
+    return auth[7:].strip() if auth[:7].lower() == "bearer " else ""
+
+
+def _supabase_user(token: str):
+    """Verifica el token del usuario contra Supabase y devuelve su id (o None)."""
+    if not (SUPABASE_URL and SUPABASE_SERVICE_KEY and token):
+        return None
+    req = urllib.request.Request(
+        f"{SUPABASE_URL}/auth/v1/user",
+        headers={"Authorization": f"Bearer {token}", "apikey": SUPABASE_SERVICE_KEY},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            data = json.loads(r.read().decode("utf-8"))
+            return data if data.get("id") else None
+    except Exception:
+        return None
+
+
+def _spend_credit(user_id: str, kind: str) -> dict:
+    """Llama la función atómica spend_credit en Supabase con la service key."""
+    payload = json.dumps({"p_user": user_id, "p_kind": kind}).encode("utf-8")
+    req = urllib.request.Request(
+        f"{SUPABASE_URL}/rest/v1/rpc/spend_credit",
+        data=payload, method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "apikey": SUPABASE_SERVICE_KEY,
+            "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=15) as r:
+        return json.loads(r.read().decode("utf-8"))
+
+
+def _profile(user_id: str):
+    """Lee el saldo del usuario (para el pre-chequeo, sin descontar)."""
+    req = urllib.request.Request(
+        f"{SUPABASE_URL}/rest/v1/profiles?id=eq.{user_id}&select=free_scenes_used,credits",
+        headers={"apikey": SUPABASE_SERVICE_KEY, "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            rows = json.loads(r.read().decode("utf-8"))
+            return rows[0] if rows else None
+    except Exception:
+        return None
+
+
+@app.post("/spend")
+def spend(request: Request, kind: str = Form(...)):
+    """Descuenta 1 crédito (kind='photo') o 3 (kind='scene') de la cuenta del usuario.
+    Verifica la sesión de Supabase. El cliente NUNCA puede mutar su saldo."""
+    user = _supabase_user(_bearer(request.headers))
+    if not user:
+        return Response(json.dumps({"ok": False, "reason": "auth"}), status_code=401, media_type="application/json")
+    if kind not in ("photo", "scene"):
+        return Response(json.dumps({"ok": False, "reason": "bad_kind"}), status_code=400, media_type="application/json")
+    try:
+        result = _spend_credit(user["id"], kind)
+    except Exception as e:
+        return Response(json.dumps({"ok": False, "reason": f"db:{e}"}), status_code=502, media_type="application/json")
+    return Response(json.dumps(result), media_type="application/json")
+
 
 @app.post("/lifestyle")
 def lifestyle(
+    request: Request,
     image: UploadFile = File(...),
     scene: str = Form(...),
     num_results: int = Form(4),
@@ -269,7 +341,23 @@ def lifestyle(
     """Coloca el producto (recorte) en una escena realista (perfume en el baño,
     heladera en la cocina, etc.) via la API de Bria. La key vive SOLO en el
     servidor (env BRIA_API_TOKEN), nunca en el frontend. Devuelve JSON con las
-    URLs de las variantes generadas: {"images": [url, ...]}."""
+    URLs de las variantes generadas: {"images": [url, ...]}.
+    Requiere sesión y consume 1 escena (gratis) o 3 créditos."""
+    user = _supabase_user(_bearer(request.headers))
+    if not user:
+        return Response(
+            content=json.dumps({"error": "auth", "msg": "Iniciá sesión para generar escenas"}),
+            status_code=401, media_type="application/json",
+        )
+    # pre-chequeo de saldo: no llamamos (ni pagamos) a Bria si no le alcanza
+    prof = _profile(user["id"]) or {}
+    can = prof.get("free_scenes_used", 1) < 1 or prof.get("credits", 0) >= 3
+    if not can:
+        return Response(
+            content=json.dumps({"error": "no_credits", "credits": prof.get("credits", 0)}),
+            status_code=402, media_type="application/json",
+        )
+
     token = os.environ.get("BRIA_API_TOKEN", "").strip()
     if not token:
         return Response(
@@ -312,8 +400,16 @@ def lifestyle(
     # Bria devuelve {"result": [[url, seed, filename], ...]}
     result = data.get("result") or []
     urls = [row[0] for row in result if isinstance(row, list) and row][:n]
+    if not urls:
+        return Response(content=json.dumps({"error": "Bria no devolvió imágenes"}),
+                        status_code=502, media_type="application/json")
+    # recién al tener imágenes, descontamos (1 escena gratis o 3 créditos)
+    try:
+        balance = _spend_credit(user["id"], "scene")
+    except Exception:
+        balance = None
     return Response(
-        content=json.dumps({"images": urls, "elapsed_ms": elapsed_ms}),
+        content=json.dumps({"images": urls, "elapsed_ms": elapsed_ms, "balance": balance}),
         media_type="application/json",
     )
 
