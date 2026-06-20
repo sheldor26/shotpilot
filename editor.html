@@ -453,6 +453,8 @@
   .logo-slider input[type=range]{flex:1;accent-color:var(--accent)}
   .logo-slider b{color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums;min-width:40px;text-transform:none;font-size:.8rem}
   .logo-slider > span:first-child{font-size:.78rem;font-weight:600;color:var(--ink-soft);min-width:64px}
+  .size-auto{border:1px solid var(--line);background:var(--white);color:var(--ink-soft);font-size:.72rem;font-weight:700;border-radius:7px;padding:.18rem .42rem;cursor:pointer;text-transform:none;letter-spacing:0}
+  .size-auto:hover{border-color:var(--accent);color:var(--accent)}
   .adv-collapsed{display:none}
   #adv-wrap{margin-top:.7rem}
   #adv-wrap > .engine{margin-top:0}
@@ -783,6 +785,12 @@
                 <button type="button" class="bg-prod" id="bg-prod" data-i18n-title="bgProduct" title="Estudio con el color del producto" aria-pressed="false" aria-label="Del producto">✦</button>
                 <div class="swatches bg-grads" id="bg-grads"></div>
               </div>
+              <label class="opt logo-slider" style="margin-top:.7rem">
+                <span data-i18n="prodSize">Tamaño del producto</span>
+                <input type="range" id="prod-size" min="60" max="120" value="100">
+                <b id="prod-size-v">100%</b>
+                <button type="button" id="prod-size-auto" class="size-auto" data-i18n-title="prodSizeAuto" title="Volver al tamaño automático" data-i18n="autoLbl">Auto</button>
+              </label>
               <label class="toggle" style="margin-top:.7rem">
                 <input type="checkbox" id="shadow">
                 <span class="sw" aria-hidden="true"></span>
@@ -1186,6 +1194,9 @@
         customSize: 'Tamaño',
         destinationAria: 'Destino',
         softShadow: 'Sombra suave',
+        prodSize: 'Tamaño del producto',
+        prodSizeAuto: 'Volver al tamaño automático',
+        autoLbl: 'Auto',
         dimsTitle: 'Medidas del producto',
         dimsSwitchTitle: 'Mostrar medidas sobre la imagen',
         dimsStyleAria: 'Estilo de medidas',
@@ -1436,6 +1447,9 @@
         customSize: 'Size',
         destinationAria: 'Destination',
         softShadow: 'Soft shadow',
+        prodSize: 'Product size',
+        prodSizeAuto: 'Back to automatic size',
+        autoLbl: 'Auto',
         dimsTitle: 'Product dimensions',
         dimsSwitchTitle: 'Show dimensions on the image',
         dimsStyleAria: 'Dimension style',
@@ -1641,6 +1655,7 @@
 
     let srcBlob = null, origImageEl = null;
     let cutoutUrl = null, originalUrl = null, cutoutBox = null;
+    let productScale = 1;   // ajuste manual de tamaño del producto (1 = automático)
     // presets por destino: medida exacta + resolución de origen recomendada + relleno del cuadro
     const PRESETS = {
       ml:      { name:'MercadoLibre', w:1200, h:1200, minSrc:1200, fill:.82, group:'market' },
@@ -1885,7 +1900,7 @@
       let colMax = 0, rowMax = 0;
       for (let i = 0; i < w; i++) if (colCount[i] > colMax) colMax = colCount[i];
       for (let i = 0; i < h; i++) if (rowCount[i] > rowMax) rowMax = rowCount[i];
-      const colThr = colMax * 0.02, rowThr = rowMax * 0.02;
+      const colThr = colMax * 0.008, rowThr = rowMax * 0.008;   // tira motas sueltas sin comer partes finas reales
       let minX = w, maxX = -1, minY = h, maxY = -1;
       for (let xx = 0; xx < w; xx++){ if (colCount[xx] > colThr){ if (xx < minX) minX = xx; if (xx > maxX) maxX = xx; } }
       for (let yy = 0; yy < h; yy++){ if (rowCount[yy] > rowThr){ if (yy < minY) minY = yy; if (yy > maxY) maxY = yy; } }
@@ -1913,7 +1928,10 @@
       // del área libre para que no quede tan chico (cap 0.91 para no pegarse a los bordes)
       const reserving = res.top + res.bottom > 0;
       const eff = reserving ? Math.min(fill + 0.14, 0.96) : fill;
-      const scale = Math.min(tw * eff / b.w, availH * eff / b.h);
+      const autoScale = Math.min(tw * eff / b.w, availH * eff / b.h);
+      // tamaño manual (productScale): tope = llenar el área libre sin invadir el banner
+      const maxScale = Math.min(tw / b.w, availH / b.h);
+      const scale = Math.min(autoScale * productScale, maxScale);
       const dw = b.w * scale, dh = b.h * scale;
       const dx = (tw - dw) / 2, dy = availTop + (availH - dh) / 2;
       if (shadow){
@@ -3126,6 +3144,8 @@
     }));
     $('logo-size').addEventListener('input', e => { logoSize = parseInt(e.target.value, 10); $('logo-size-v').textContent = logoSize + '%'; renderResult(); });
     $('logo-op').addEventListener('input', e => { logoOpacity = parseInt(e.target.value, 10) / 100; $('logo-op-v').textContent = e.target.value + '%'; renderResult(); });
+    $('prod-size').addEventListener('input', e => { productScale = parseInt(e.target.value, 10) / 100; $('prod-size-v').textContent = e.target.value + '%'; renderResult(); });
+    $('prod-size-auto').addEventListener('click', () => { productScale = 1; $('prod-size').value = 100; $('prod-size-v').textContent = '100%'; renderResult(); });
 
     // ---- realce de la foto ----
     function syncEnhFold(){ $('enh-fields').style.display = (enhanceFx && !enhFolded) ? 'block' : 'none'; $('enh-fold').classList.toggle('folded', enhFolded); }
