@@ -3551,8 +3551,14 @@
     // ---------- cuentas + créditos (Supabase) ----------
     const SB_URL = 'https://ntybvdfyxesxpoukyqpf.supabase.co';
     const SB_KEY = 'sb_publishable_slLrGZt-yt-mIfgBcaUfDA_KSKUeRbN';
+    // URL canónica (sin .html) para que el login NO pase por el redirect 308 que puede tirar la sesión
+    const AUTH_REDIRECT = location.origin + location.pathname.replace(/\.html$/, '');
     let sb = null, authUser = null, authProfile = null;
-    try { if (window.supabase) sb = window.supabase.createClient(SB_URL, SB_KEY); } catch (e) { console.error('Supabase init', e); }
+    try {
+      if (window.supabase) sb = window.supabase.createClient(SB_URL, SB_KEY, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: window.localStorage, storageKey: 'sb-ntybvdfyxesxpoukyqpf-auth-token' },
+      });
+    } catch (e) { console.error('Supabase init', e); }
 
     function authModal(open){
       const m = $('auth-modal'); if (!m) return;
@@ -3595,14 +3601,14 @@
         if (!email || !email.includes('@')){ st.textContent = t('authErr')('email'); st.className = 'auth-status err'; return; }
         const btn = $('auth-send'); btn.disabled = true; const prev = btn.textContent; btn.textContent = t('authSending');
         try {
-          const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } });
+          const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: AUTH_REDIRECT } });
           if (error) throw error;
           st.textContent = t('authSent'); st.className = 'auth-status ok';
         } catch (e) { st.textContent = t('authErr')(e.message || e); st.className = 'auth-status err'; }
         finally { btn.disabled = false; btn.textContent = prev; }
       });
       $('auth-google').addEventListener('click', async () => {
-        try { await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } }); }
+        try { await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: AUTH_REDIRECT } }); }
         catch (e) { const st = $('auth-status'); st.textContent = t('authErr')(e.message || e); st.className = 'auth-status err'; }
       });
       $('auth-close').addEventListener('click', () => authModal(false));
