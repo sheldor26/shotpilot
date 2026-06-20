@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Anton&family=Archivo+Black&family=Oswald:wght@600;700&family=Montserrat:wght@700;800;900&family=Poppins:wght@600;700;800&family=Inter:wght@600;700;800&family=Sora:wght@600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chroma-js@2.4.2/chroma.min.js"></script>
 <style>
   :root{
     --ink:#1A1614;--ink-soft:#5C524B;--ink-faint:#8A7F77;
@@ -395,6 +396,8 @@
   .bg-transparent{width:24px;height:24px;border-radius:50%;border:2px solid transparent;cursor:pointer;box-shadow:0 0 0 1px var(--line);padding:0;background:repeating-conic-gradient(#d8d2ca 0% 25%, #fff 0% 50%) 50% / 9px 9px}
   .bg-transparent[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
   .bigprev.is-transparent{background-image:repeating-conic-gradient(rgba(0,0,0,.05) 0% 25%, transparent 0% 50%);background-size:18px 18px}
+  .bg-prod{width:24px;height:24px;border-radius:50%;border:2px solid transparent;cursor:pointer;box-shadow:0 0 0 1px var(--line);padding:0;font-size:12px;line-height:1;color:#fff;background:conic-gradient(from 210deg,#F4513C,#C2186A,#1B49B8,#13A05B,#F4513C);display:grid;place-items:center;flex:none}
+  .bg-prod[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
 
   /* ---- selector de destino (dropdown con glifo de proporción) ---- */
   .dest-select{position:relative;margin-top:.5rem}
@@ -677,6 +680,7 @@
               </div>
               <div class="bg-row bg-grad-row">
                 <span class="dims-mini-label" data-i18n="bgPremium">Estudio</span>
+                <button type="button" class="bg-prod" id="bg-prod" data-i18n-title="bgProduct" title="Estudio con el color del producto" aria-pressed="false" aria-label="Del producto">✦</button>
                 <div class="swatches bg-grads" id="bg-grads"></div>
               </div>
               <label class="toggle" style="margin-top:.7rem">
@@ -1153,6 +1157,7 @@
         chkBgNone: 'Sin fondo · PNG transparente',
         bgLabel: 'Fondo',
         bgPremium: 'Estudio',
+        bgProduct: 'Estudio con el color del producto (automático)',
         bgNone: 'Sin fondo (PNG transparente)',
         chkBgGrad: 'Fondo estudio premium (la principal de ML va en blanco)',
         chkCentered: (p) => `Producto centrado al ${p}% del cuadro`,
@@ -1352,6 +1357,7 @@
         chkBgNone: 'No background · transparent PNG',
         bgLabel: 'Background',
         bgPremium: 'Studio',
+        bgProduct: 'Studio matched to product color (auto)',
         bgNone: 'No background (transparent PNG)',
         chkBgGrad: 'Premium studio background (ML main image must be white)',
         chkCentered: (p) => `Product fills ${p}% of the frame, centered`,
@@ -1436,6 +1442,16 @@
       ctx.fillStyle = grad; ctx.fillRect(0, 0, tw, th);
     }
     function gradCSS(g){ return g.type === 'radial' ? `radial-gradient(circle at 50% 40%, ${g.from}, ${g.to})` : `linear-gradient(180deg, ${g.from}, ${g.to})`; }
+    // backdrop derivado del color dominante del producto (con chroma.js) — "auto del producto"
+    let productGrad = null;
+    function computeProductGrad(){
+      const cols = (typeof productColors === 'function') ? productColors(1) : [];
+      if (typeof chroma === 'undefined'){ productGrad = null; return null; }
+      if (!cols.length){ productGrad = { type: 'radial', from: '#FBF7F2', to: '#EADFD0' }; return productGrad; }   // producto sin color dominante (negro/gris) -> crema neutra
+      const base = chroma(cols[0]);
+      productGrad = { type: 'radial', from: base.set('hsl.l', 0.96).hex(), to: base.set('hsl.l', 0.84).hex() };
+      return productGrad;
+    }
     const P = () => PRESETS[presetKey];
     let model = 'isnet-general-use', enhance = false, wb = false, mainOnly = true;
 
@@ -1645,7 +1661,8 @@
       canvas.width = tw; canvas.height = th;
       const ctx = canvas.getContext('2d');
       ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-      if (bgGrad >= 0){ drawGradient(ctx, tw, th, GRADIENTS[bgGrad]); }       // gradiente premium
+      if (bgGrad === -2 && productGrad){ drawGradient(ctx, tw, th, productGrad); }   // auto del producto
+      else if (bgGrad >= 0){ drawGradient(ctx, tw, th, GRADIENTS[bgGrad]); }       // gradiente premium
       else if (bgColor){ ctx.fillStyle = bgColor; ctx.fillRect(0, 0, tw, th); }   // null = sin fondo (PNG transparente)
       if (!workCtx || !cutoutBox || !cutoutBox.w) return { scaleUsed: 0, fillPct: 0 };
       const b = cutoutBox;
@@ -2788,15 +2805,17 @@
 
     // ---- selector de fondo ----
     function syncBgUI(){
-      const solidOn = bgGrad < 0;
+      const solidOn = bgGrad === -1;
       $('bg-swatches').querySelectorAll('.swatch').forEach(s => s.setAttribute('aria-pressed', (solidOn && bgColor && s.dataset.hex.toLowerCase() === bgColor.toLowerCase()) ? 'true' : 'false'));
       $('bg-none').setAttribute('aria-pressed', (solidOn && bgColor === null) ? 'true' : 'false');
+      $('bg-prod').setAttribute('aria-pressed', bgGrad === -2 ? 'true' : 'false');
       [...$('bg-grads').children].forEach((el, i) => el.setAttribute('aria-pressed', i === bgGrad ? 'true' : 'false'));
       if (solidOn && bgColor) $('bg-pick').value = bgColor;
       $('bigprev').classList.toggle('is-transparent', solidOn && bgColor === null);
     }
     function setBg(color){ bgGrad = -1; bgColor = color; syncBgUI(); renderResult(); }
     function setGrad(i){ bgGrad = i; syncBgUI(); renderResult(); }
+    function setProductGrad(){ computeProductGrad(); bgGrad = -2; syncBgUI(); renderResult(); }
     function renderBgSwatches(){
       const wrap = $('bg-swatches'); wrap.innerHTML = '';
       BG_COLORS.forEach(hex => {
@@ -2817,6 +2836,7 @@
     renderBgSwatches();
     $('bg-none').addEventListener('click', () => setBg(null));
     $('bg-pick').addEventListener('input', e => setBg(e.target.value));
+    $('bg-prod').addEventListener('click', setProductGrad);
 
     // descarga por capas
     const DL_VARIANTS = {
@@ -3035,7 +3055,7 @@
       updateDestTrigger();
       $('custom-size').style.display = presetKey === 'custom' ? 'flex' : 'none';
       shadowOn=s.shadowOn; $('shadow').checked=shadowOn;
-      bgColor = (s.bgColor === undefined ? '#FFFFFF' : s.bgColor); bgGrad = (s.bgGrad == null ? -1 : s.bgGrad); syncBgUI();
+      bgColor = (s.bgColor === undefined ? '#FFFFFF' : s.bgColor); bgGrad = (s.bgGrad == null ? -1 : s.bgGrad); if (bgGrad === -2) computeProductGrad(); syncBgUI();
       logoOn = !!s.logoOn; logoFolded = !!s.logoFolded; logoMode = s.logoMode || 'corner'; logoCorner = s.logoCorner || 'br'; logoSize = s.logoSize || 18; logoOpacity = (s.logoOpacity == null ? 1 : s.logoOpacity);
       $('logo-on').checked = logoOn; $('logo-fold').style.display = logoOn ? 'grid' : 'none'; syncLogoFold();
       syncSeg('logo-mode','mode',logoMode); syncSeg('logo-corner','corner',logoCorner);
