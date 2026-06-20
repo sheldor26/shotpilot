@@ -12,6 +12,11 @@ Es lo que reemplaza a remove.bg: corre con **rembg** (gratis, sin créditos, ful
   - `enhance` · `wb` · `main_only` — `"true"`/`"false"`
   - Devuelve PNG. Headers: `X-Dims` (cotas sugeridas, JSON), `X-Out-Size`, `X-Elapsed-Ms`, `X-Model`.
 - `POST /inpaint` — rellena lo marcado. Campos: `image`, `mask` (PNG, blanco = a rellenar), `radius`.
+- `POST /lifestyle` — coloca el producto en una escena realista (perfume en el baño, heladera en la cocina) usando la API de Bria. Campos (form-data):
+  - `image` (archivo, requerido) — el recorte del producto (idealmente PNG con transparencia).
+  - `scene` (texto, requerido) — descripción de la escena en inglés (ej. `"product on a marble bathroom counter, soft window light"`).
+  - `num_results` — cuántas variantes (1–4, default 4).
+  - Devuelve JSON `{ "images": ["https://...", ...] }`. **Requiere la variable de entorno `BRIA_API_TOKEN`** (la key de Bria; nunca va en el frontend). Sin ella devuelve 500.
 - `GET /health` — `{ "ok": true }`.
 
 ## Correr local
@@ -29,6 +34,8 @@ python -m venv venv && ./venv/bin/pip install -r requirements.txt
 4. (Opcional, recomendado) En **Variables** agregar `ALLOWED_ORIGINS` con los dominios del frontend, coma-separado:
    `https://shotpilot.vercel.app,https://shotpilot.com.ar`
    Si no se setea, acepta cualquier origen (`*`).
+5. (Para la función de Escena/lifestyle) En **Variables** agregar `BRIA_API_TOKEN` con la API key de Bria
+   (de https://platform.bria.ai). Sin esta variable, `/lifestyle` devuelve 500. El resto del motor anda igual.
 5. Probar: `GET https://<tu-dominio>/health` → `{"ok":true}`.
 
 La primera build tarda (instala onnxruntime + opencv + baja el modelo). Después, cada request de recorte ~1-3 s en CPU.

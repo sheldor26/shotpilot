@@ -6,10 +6,13 @@ Motor de imagenes de ShotPilot (produccion).
 - /health  : healthcheck.
 Levantar local:  uvicorn server:app --port 8000
 """
+import base64
 import io
 import json
 import os
 import time
+import urllib.error
+import urllib.request
 
 import cv2
 import numpy as np
@@ -251,6 +254,67 @@ async def remove_bg(
             "X-Model": model,
             "X-Dims": json.dumps(dims) if dims else "",
         },
+    )
+
+
+BRIA_LIFESTYLE_URL = "https://engine.prod.bria-api.com/v1/product/lifestyle_shot_by_text"
+
+
+@app.post("/lifestyle")
+def lifestyle(
+    image: UploadFile = File(...),
+    scene: str = Form(...),
+    num_results: int = Form(4),
+):
+    """Coloca el producto (recorte) en una escena realista (perfume en el baño,
+    heladera en la cocina, etc.) via la API de Bria. La key vive SOLO en el
+    servidor (env BRIA_API_TOKEN), nunca en el frontend. Devuelve JSON con las
+    URLs de las variantes generadas: {"images": [url, ...]}."""
+    token = os.environ.get("BRIA_API_TOKEN", "").strip()
+    if not token:
+        return Response(
+            content=json.dumps({"error": "BRIA_API_TOKEN no configurado en el servidor"}),
+            status_code=500, media_type="application/json",
+        )
+
+    raw = image.file.read()
+    b64 = base64.b64encode(raw).decode("ascii")
+    n = max(1, min(4, int(num_results)))
+    payload = json.dumps({
+        "file": b64,
+        "scene_description": scene,
+        "placement_type": "automatic",
+        "num_results": n,
+        "sync": True,
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        BRIA_LIFESTYLE_URL, data=payload, method="POST",
+        headers={"Content-Type": "application/json", "api_token": token},
+    )
+
+    t0 = time.time()
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            data = json.loads(r.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", "ignore")
+        return Response(
+            content=json.dumps({"error": f"Bria {e.code}: {body[:300]}"}),
+            status_code=502, media_type="application/json",
+        )
+    except Exception as e:  # red, timeout, etc.
+        return Response(
+            content=json.dumps({"error": f"Fallo al llamar a Bria: {e}"}),
+            status_code=502, media_type="application/json",
+        )
+
+    elapsed_ms = int((time.time() - t0) * 1000)
+    # Bria devuelve {"result": [[url, seed, filename], ...]}
+    result = data.get("result") or []
+    urls = [row[0] for row in result if isinstance(row, list) and row][:n]
+    return Response(
+        content=json.dumps({"images": urls, "elapsed_ms": elapsed_ms}),
+        media_type="application/json",
     )
 
 

@@ -172,6 +172,28 @@
   .dl-main{width:100%;margin-top:.6rem;padding:.9rem 1rem;border:none;border-radius:12px;background:var(--accent);color:#fff;font-family:"Manrope",sans-serif;font-weight:800;font-size:1rem;cursor:pointer;box-shadow:0 8px 18px -10px rgba(216,56,31,.6);transition:background .15s,transform .12s}
   .dl-main:hover{background:var(--accent-deep);transform:translateY(-1px)}
   .dl-note{font-size:.72rem;color:var(--ink-faint);line-height:1.35;margin:.5rem .1rem 0}
+  .scene-card{margin-top:.9rem;border:1px solid #E7D9C4;border-radius:14px;background:linear-gradient(135deg,#FFFDF8,#FBF1E2);overflow:hidden}
+  .scene-head{width:100%;display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.7rem .8rem;background:none;border:0;cursor:pointer;font-family:inherit}
+  .scene-title{display:inline-flex;align-items:center;gap:.4rem;font-weight:800;color:var(--ink)}
+  .scene-spark{color:#C8962B}
+  .scene-tag{font-size:.62rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#fff;background:#C8962B;border-radius:999px;padding:.1rem .4rem}
+  .scene-head .panel-chevron{transition:transform .2s;color:var(--ink-faint);font-size:1rem}
+  .scene-head[aria-expanded="true"] .panel-chevron{transform:rotate(180deg)}
+  .scene-body{padding:0 .8rem .8rem}
+  .scene-presets{display:flex;flex-wrap:wrap;gap:.4rem;margin:.5rem 0}
+  .scene-chip{font-size:.78rem;font-weight:600;color:var(--ink-soft);background:#fff;border:1px solid var(--line);border-radius:999px;padding:.32rem .65rem;cursor:pointer;transition:all .14s}
+  .scene-chip:hover{border-color:#C8962B}
+  .scene-chip[aria-pressed="true"]{background:#C8962B;color:#fff;border-color:#C8962B}
+  #scene-prompt{width:100%;box-sizing:border-box;margin-top:.2rem;padding:.55rem .7rem;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:.85rem;background:#fff}
+  #scene-prompt:focus{outline:none;border-color:#C8962B}
+  .scene-go{margin-top:.55rem}
+  .scene-go:disabled{opacity:.6;cursor:default}
+  .scene-status{margin-top:.5rem;text-align:center}
+  .scene-results{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-top:.6rem}
+  .scene-thumb{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#fff;aspect-ratio:1}
+  .scene-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .scene-thumb .scene-dl{position:absolute;left:0;right:0;bottom:0;border:0;padding:.4rem;font-family:inherit;font-weight:700;font-size:.74rem;color:#fff;background:rgba(36,30,26,.82);cursor:pointer;transition:background .14s}
+  .scene-thumb .scene-dl:hover{background:var(--accent)}
 
   /* ---- banners ---- */
   #bn-fields{margin-top:1rem;display:grid;gap:1rem}
@@ -974,6 +996,21 @@
           <div class="row" style="margin-top:.55rem">
             <button type="button" class="btn btn-ghost" id="another" data-i18n="another" style="min-width:100%">Otra foto</button>
           </div>
+
+          <div class="scene-card" id="scene-card">
+            <button type="button" class="scene-head" id="scene-head" aria-expanded="false">
+              <span class="scene-title"><span class="scene-spark" aria-hidden="true">✦</span> <span data-i18n="sceneTitle">Escena (IA)</span> <span class="scene-tag" data-i18n="sceneTag">nuevo</span></span>
+              <span class="panel-chevron" aria-hidden="true">⌄</span>
+            </button>
+            <div class="scene-body" id="scene-body" style="display:none">
+              <p class="eng-hint" data-i18n="sceneHint">Poné tu producto en una escena real (perfume en el baño, heladera en la cocina). Genera 4 variantes para usar como imágenes secundarias de la publicación.</p>
+              <div class="scene-presets" id="scene-presets"></div>
+              <input id="scene-prompt" type="text" data-i18n-ph="scenePh" placeholder="O describí la escena (en inglés rinde mejor)…" autocomplete="off">
+              <button type="button" class="dl-main scene-go" id="scene-go" data-i18n="sceneGo">Generar escena</button>
+              <p class="eng-hint scene-status" id="scene-status" style="display:none"></p>
+              <div class="scene-results" id="scene-results"></div>
+            </div>
+          </div>
           </div><!-- /ed-visual -->
           </div><!-- /ed-grid -->
         </div>
@@ -1156,6 +1193,21 @@
         pvPrev: 'Vista anterior',
         pvNext: 'Vista siguiente',
         bigprevHint: 'Arrastrá las puntas (círculos) para ajustar cada medida.',
+        sceneTitle: 'Escena (IA)',
+        sceneTag: 'nuevo',
+        sceneHint: 'Poné tu producto en una escena real (perfume en el baño, heladera en la cocina). Genera 4 variantes para usar como imágenes secundarias de la publicación.',
+        scenePh: 'O describí la escena (en inglés rinde mejor)…',
+        sceneGo: 'Generar escena',
+        sceneBusy: 'Generando escena… (10–30 s)',
+        sceneEmptyErr: 'Elegí una escena o escribí una.',
+        sceneErr: (m) => `No se pudo generar: ${m}`,
+        sceneDownload: 'Descargar',
+        scBath: 'Baño / mármol',
+        scKitchen: 'Cocina',
+        scWood: 'Mesa de madera',
+        scMarble: 'Estudio mármol',
+        scOutdoor: 'Exterior / jardín',
+        scDesk: 'Escritorio',
         downloadLabel: 'Descargar · formato',
         dlClean: 'Foto limpia',
         dlCleanSub: 'sin texto · imagen principal de ML',
@@ -1363,6 +1415,21 @@
         pvPrev: 'Previous view',
         pvNext: 'Next view',
         bigprevHint: 'Drag the endpoints (circles) to adjust each dimension.',
+        sceneTitle: 'Scene (AI)',
+        sceneTag: 'new',
+        sceneHint: 'Place your product in a real scene (perfume in a bathroom, fridge in a kitchen). Generates 4 variants to use as secondary listing images.',
+        scenePh: 'Or describe the scene…',
+        sceneGo: 'Generate scene',
+        sceneBusy: 'Generating scene… (10–30 s)',
+        sceneEmptyErr: 'Pick a scene or write one.',
+        sceneErr: (m) => `Could not generate: ${m}`,
+        sceneDownload: 'Download',
+        scBath: 'Bathroom / marble',
+        scKitchen: 'Kitchen',
+        scWood: 'Wood table',
+        scMarble: 'Marble studio',
+        scOutdoor: 'Outdoor / garden',
+        scDesk: 'Desk',
         downloadLabel: 'Download · size',
         dlClean: 'Clean photo',
         dlCleanSub: 'no text · ML main image',
@@ -2854,6 +2921,82 @@
     }
     // PNG sin pérdida: máxima nitidez, cero artefactos de compresión
     const toBlob = () => new Promise(r => canvas.toBlob(r, 'image/png'));
+
+    // ---- Escena (IA): producto en escena realista via motor /lifestyle (Bria) ----
+    const SCENE_PRESETS = [
+      { key: 'scBath',    en: 'product placed on a white marble bathroom counter, soft natural window light, blurred luxury spa background, professional product photography' },
+      { key: 'scKitchen', en: 'product placed in a modern bright kitchen interior, wooden floor and cabinets, natural daylight, realistic home photography' },
+      { key: 'scWood',    en: 'product on a rustic wooden table, warm cozy ambiance, soft daylight, shallow depth of field, lifestyle photography' },
+      { key: 'scMarble',  en: 'product on a polished marble surface, clean studio lighting, soft reflection, premium minimal background' },
+      { key: 'scOutdoor', en: 'product outdoors on natural stone, green garden bokeh background, warm sunlight, lifestyle photography' },
+      { key: 'scDesk',    en: 'product on a modern desk next to a laptop, cozy office, morning light, clean lifestyle scene' },
+    ];
+    let scenePreset = null;
+    function renderScenePresets(){
+      const box = $('scene-presets'); if (!box) return;
+      box.innerHTML = '';
+      SCENE_PRESETS.forEach(p => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'scene-chip'; b.dataset.key = p.key;
+        b.setAttribute('data-i18n', p.key); b.textContent = t(p.key);
+        b.setAttribute('aria-pressed', p.key === scenePreset ? 'true' : 'false');
+        b.addEventListener('click', () => {
+          scenePreset = (scenePreset === p.key) ? null : p.key;
+          box.querySelectorAll('.scene-chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.key === scenePreset ? 'true' : 'false'));
+        });
+        box.appendChild(b);
+      });
+    }
+    function sceneStatus(msg, show){ const s = $('scene-status'); if (!s) return; s.textContent = msg || ''; s.style.display = show ? 'block' : 'none'; }
+    function renderSceneResults(urls){
+      const box = $('scene-results'); box.innerHTML = '';
+      urls.forEach((url, i) => {
+        const card = document.createElement('div'); card.className = 'scene-thumb';
+        const img = document.createElement('img'); img.src = url; img.loading = 'lazy'; img.alt = '';
+        img.addEventListener('click', () => window.open(url, '_blank'));
+        const dl = document.createElement('button'); dl.type = 'button'; dl.className = 'scene-dl'; dl.textContent = t('sceneDownload');
+        dl.addEventListener('click', async () => {
+          try { const b = await (await fetch(url)).blob(); downloadBlob(b, `shotpilot-escena-${i + 1}.png`); }
+          catch { window.open(url, '_blank'); }
+        });
+        card.appendChild(img); card.appendChild(dl); box.appendChild(card);
+      });
+    }
+    async function generateScene(){
+      const free = $('scene-prompt').value.trim();
+      const preset = SCENE_PRESETS.find(p => p.key === scenePreset);
+      const scene = free || (preset && preset.en) || '';
+      if (!scene){ sceneStatus(t('sceneEmptyErr'), true); return; }
+      const go = $('scene-go'); go.disabled = true;
+      const prevTxt = go.textContent; go.textContent = t('sceneBusy');
+      sceneStatus('', false); $('scene-results').innerHTML = '';
+      try {
+        const blob = await new Promise(r => workCanvas.toBlob(r, 'image/png'));
+        const fd = new FormData();
+        fd.append('image', blob, 'product.png');
+        fd.append('scene', scene);
+        fd.append('num_results', '4');
+        const resp = await fetch(`${MOTOR_URL}/lifestyle`, { method: 'POST', body: fd });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data.error) throw new Error(data.error || ('HTTP ' + resp.status));
+        const urls = data.images || [];
+        if (!urls.length) throw new Error('0');
+        renderSceneResults(urls);
+      } catch (e) {
+        sceneStatus(t('sceneErr')(String(e.message || e)), true);
+      } finally {
+        go.disabled = false; go.textContent = prevTxt;
+      }
+    }
+    $('scene-head').addEventListener('click', () => {
+      const head = $('scene-head'), body = $('scene-body');
+      const open = head.getAttribute('aria-expanded') === 'true';
+      head.setAttribute('aria-expanded', open ? 'false' : 'true');
+      body.style.display = open ? 'none' : 'block';
+    });
+    $('scene-go').addEventListener('click', generateScene);
+    $('scene-prompt').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); generateScene(); } });
+    renderScenePresets();
 
     // ---- dropdown de destino ----
     function destGlyphHTML(w, h){

@@ -11,5 +11,9 @@ __pycache__/
 # salidas de prueba
 salida-*.png
 
+# tooling local de agentes (skills instaladas con `npx skills add`)
+.agents/
+skills-lock.json
+
 # sistema
 .DS_Store
