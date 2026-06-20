@@ -263,6 +263,20 @@ BRIA_LIFESTYLE_URL = "https://engine.prod.bria-api.com/v1/product/lifestyle_shot
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "").strip()
 
+# --- Pagos (MercadoPago Checkout Pro). El precio vive en el SERVIDOR: el cliente
+# solo manda el id del pack, nunca el monto -> no se puede falsear el precio. ---
+MP_ACCESS_TOKEN = os.environ.get("MP_ACCESS_TOKEN", "").strip()
+MP_API = "https://api.mercadopago.com"
+SITE_URL = os.environ.get("SITE_URL", "https://shotpilot.app").rstrip("/")
+MOTOR_PUBLIC_URL = os.environ.get("MOTOR_PUBLIC_URL", "https://shotpilot-production.up.railway.app").rstrip("/")
+
+# Packs: créditos + precio en ARS. AJUSTAR los ARS al dólar del día (ver nota).
+PACKS = {
+    "probe":    {"credits": 20,  "ars": 7990,  "title": "ShotPilot · 20 créditos"},
+    "vendedor": {"credits": 60,  "ars": 17990, "title": "ShotPilot · 60 créditos"},
+    "tienda":   {"credits": 200, "ars": 44990, "title": "ShotPilot · 200 créditos"},
+}
+
 
 def _bearer(headers) -> str:
     auth = headers.get("authorization") or ""
@@ -329,6 +343,102 @@ def spend(request: Request, kind: str = Form(...)):
     except Exception as e:
         return Response(json.dumps({"ok": False, "reason": f"db:{e}"}), status_code=502, media_type="application/json")
     return Response(json.dumps(result), media_type="application/json")
+
+
+def _grant_credits(user_id: str, amount: int, reason: str, ext_ref: str) -> dict:
+    """Suma créditos pagos (idempotente por ext_ref = id de pago)."""
+    payload = json.dumps({"p_user": user_id, "p_amount": amount, "p_reason": reason, "p_ext_ref": ext_ref}).encode("utf-8")
+    req = urllib.request.Request(
+        f"{SUPABASE_URL}/rest/v1/rpc/grant_credits", data=payload, method="POST",
+        headers={"Content-Type": "application/json", "apikey": SUPABASE_SERVICE_KEY,
+                 "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}"},
+    )
+    with urllib.request.urlopen(req, timeout=15) as r:
+        return json.loads(r.read().decode("utf-8"))
+
+
+@app.get("/packs")
+def packs():
+    """Catálogo de packs (precio único, fuente de verdad). Lo lee el editor para mostrar los botones."""
+    out = [{"id": k, "credits": v["credits"], "ars": v["ars"]} for k, v in PACKS.items()]
+    return Response(json.dumps({"packs": out}), media_type="application/json")
+
+
+@app.post("/checkout")
+def checkout(request: Request, pack: str = Form(...)):
+    """Crea una preferencia de Checkout Pro para el pack elegido y devuelve el link de pago.
+    Verifica la sesión; el precio lo pone el servidor (no el cliente)."""
+    user = _supabase_user(_bearer(request.headers))
+    if not user:
+        return Response(json.dumps({"error": "auth"}), status_code=401, media_type="application/json")
+    p = PACKS.get(pack)
+    if not p:
+        return Response(json.dumps({"error": "bad_pack"}), status_code=400, media_type="application/json")
+    if not MP_ACCESS_TOKEN:
+        return Response(json.dumps({"error": "MP_ACCESS_TOKEN no configurado"}), status_code=500, media_type="application/json")
+
+    pref = {
+        "items": [{"title": p["title"], "quantity": 1, "unit_price": p["ars"], "currency_id": "ARS"}],
+        "metadata": {"user_id": user["id"], "pack": pack, "credits": p["credits"]},
+        "external_reference": f"{user['id']}:{pack}",
+        "back_urls": {
+            "success": f"{SITE_URL}/editor?pago=ok",
+            "failure": f"{SITE_URL}/editor?pago=fail",
+            "pending": f"{SITE_URL}/editor?pago=pending",
+        },
+        "auto_return": "approved",
+        "notification_url": f"{MOTOR_PUBLIC_URL}/mp-webhook",
+        "statement_descriptor": "SHOTPILOT",
+    }
+    data = json.dumps(pref).encode("utf-8")
+    req = urllib.request.Request(
+        f"{MP_API}/checkout/preferences", data=data, method="POST",
+        headers={"Content-Type": "application/json", "Authorization": f"Bearer {MP_ACCESS_TOKEN}"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            resp = json.loads(r.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        return Response(json.dumps({"error": f"MP {e.code}: {e.read().decode('utf-8', 'ignore')[:300]}"}),
+                        status_code=502, media_type="application/json")
+    except Exception as e:
+        return Response(json.dumps({"error": f"MP: {e}"}), status_code=502, media_type="application/json")
+    init_point = resp.get("init_point") or resp.get("sandbox_init_point")
+    return Response(json.dumps({"init_point": init_point}), media_type="application/json")
+
+
+@app.post("/mp-webhook")
+def mp_webhook(request: Request):
+    """MercadoPago avisa cuando hay un pago. Verificamos contra MP que esté 'approved'
+    y acreditamos los créditos a la cuenta (idempotente por id de pago)."""
+    qp = request.query_params
+    topic = qp.get("type") or qp.get("topic") or ""
+    payment_id = qp.get("data.id") or qp.get("id")
+    if topic and topic != "payment":
+        return Response("ignored", status_code=200)
+    if not payment_id or not MP_ACCESS_TOKEN:
+        return Response("no id", status_code=200)
+
+    req = urllib.request.Request(f"{MP_API}/v1/payments/{payment_id}",
+                                 headers={"Authorization": f"Bearer {MP_ACCESS_TOKEN}"})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            pay = json.loads(r.read().decode("utf-8"))
+    except Exception:
+        return Response("payment fetch failed", status_code=200)   # 200 = que MP no reintente para siempre
+
+    if pay.get("status") != "approved":
+        return Response("not approved", status_code=200)
+    meta = pay.get("metadata") or {}
+    user_id = meta.get("user_id")
+    credits = meta.get("credits")
+    if not user_id or not credits:
+        return Response("no meta", status_code=200)
+    try:
+        _grant_credits(str(user_id), int(credits), f"pago_mp_{meta.get('pack', '')}", str(payment_id))
+    except Exception as e:
+        return Response(f"grant failed: {e}", status_code=500)
+    return Response("ok", status_code=200)
 
 
 @app.post("/lifestyle")

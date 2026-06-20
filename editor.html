@@ -62,6 +62,23 @@
   .auth-send:disabled{opacity:.6;cursor:default}
   .auth-status{font-size:.82rem;color:var(--ink-soft);margin:.8rem 0 0;text-align:center;min-height:1.1rem;line-height:1.4}
   .auth-status.ok{color:#1a7f4b}.auth-status.err{color:var(--accent-deep)}
+  .packs-box{width:min(440px,94vw)}
+  .packs-list{display:grid;gap:.6rem;margin:1rem 0 .4rem}
+  .pack-card{position:relative;display:grid;grid-template-columns:1fr auto;align-items:center;gap:.3rem .8rem;text-align:left;padding:.85rem 1rem;border:1.5px solid var(--line);border-radius:13px;background:var(--white);cursor:pointer;font-family:inherit;transition:border-color .15s,transform .12s}
+  .pack-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .pack-card.pop{border-color:var(--accent)}
+  .pack-card.busy{opacity:.6;pointer-events:none}
+  .pack-name{font-weight:800;font-size:1.02rem;color:var(--ink)}
+  .pack-credits{grid-column:1;font-size:.82rem;color:var(--ink-soft)}
+  .pack-price{grid-column:2;grid-row:1 / span 2;font-family:"Space Grotesk";font-weight:800;font-size:1.15rem;color:var(--ink)}
+  .pack-tag{position:absolute;top:-9px;left:14px;font-size:.6rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#fff;background:var(--accent);border-radius:999px;padding:.12rem .5rem}
+  .packs-note{font-size:.74rem;color:var(--ink-faint);text-align:center;margin-top:.6rem;line-height:1.4}
+  .packs-loading{text-align:center;color:var(--ink-faint);font-size:.9rem;padding:1rem}
+  .auth-cred.buy{cursor:pointer;border:0;background:none;font:inherit;font-weight:800;color:var(--ink);padding:0;text-decoration:underline dotted;text-underline-offset:3px}
+  .auth-cred.buy:hover{color:var(--accent)}
+  #toast{position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-20px);z-index:200;background:#241E1A;color:#fff;font-size:.9rem;font-weight:600;padding:.7rem 1.1rem;border-radius:999px;box-shadow:var(--shadow-md);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.ok{background:#1a7f4b}#toast.err{background:var(--accent-deep)}
   .back:hover{color:var(--ink)}
   .back svg{width:18px;height:18px}
 
@@ -541,6 +558,20 @@
     </div>
   </div>
 
+  <!-- modal de packs (comprar créditos) -->
+  <div class="auth-modal" id="packs-modal" hidden>
+    <div class="auth-backdrop" id="packs-backdrop"></div>
+    <div class="auth-box packs-box" role="dialog" aria-modal="true" aria-labelledby="packs-title">
+      <button class="auth-x" id="packs-close" aria-label="Cerrar">&times;</button>
+      <h3 id="packs-title" data-i18n="packsTitle">Comprá créditos</h3>
+      <p class="auth-sub" data-i18n="packsSub">1 crédito = 1 foto limpia · 1 escena con IA = 3 créditos.</p>
+      <div class="packs-list" id="packs-list"></div>
+      <p class="packs-note" data-i18n="packsNote">Pago único con MercadoPago. Sin suscripción, sin tarjeta guardada.</p>
+    </div>
+  </div>
+
+  <!-- toast (avisos: resultado de pago, etc.) -->
+  <div id="toast" role="status" aria-live="polite"></div>
 
   <main>
     <div class="wrap">
@@ -1094,6 +1125,17 @@
         authErr: (m) => `No se pudo: ${m}`,
         authLogout: 'Salir',
         authCred: (n) => `${n} créd`,
+        packsTitle: 'Comprá créditos',
+        packsSub: '1 crédito = 1 foto limpia · 1 escena con IA = 3 créditos.',
+        packsNote: 'Pago único con MercadoPago. Sin suscripción, sin tarjeta guardada.',
+        packsErr: 'No pudimos abrir el pago. Probá de nuevo.',
+        packPopular: 'El más elegido',
+        packCreds: (n) => `${n} créditos`,
+        packBuy: 'Comprar +',
+        pagoOk: '¡Pago recibido! Sumando tus créditos…',
+        pagoPending: 'Pago pendiente. Te avisamos cuando se acredite.',
+        pagoFail: 'El pago no se completó. Probá de nuevo.',
+        pagoDone: (n) => `¡Listo! Ya tenés ${n} créditos.`,
         eyebrow: 'Editor',
         title: 'Probá gratis',
         lede: 'Subí la foto de tu producto y bajala con <strong>fondo blanco</strong>, en la medida exacta de cada plataforma. Sumá medidas y banners si querés.',
@@ -1333,6 +1375,17 @@
         authErr: (m) => `Failed: ${m}`,
         authLogout: 'Sign out',
         authCred: (n) => `${n} cred`,
+        packsTitle: 'Buy credits',
+        packsSub: '1 credit = 1 clean photo · 1 AI scene = 3 credits.',
+        packsNote: 'One-time payment. No subscription, no saved card.',
+        packsErr: "Couldn't open checkout. Try again.",
+        packPopular: 'Most popular',
+        packCreds: (n) => `${n} credits`,
+        packBuy: 'Buy +',
+        pagoOk: 'Payment received! Adding your credits…',
+        pagoPending: 'Payment pending. We\'ll let you know when it clears.',
+        pagoFail: "Payment didn't go through. Try again.",
+        pagoDone: (n) => `Done! You now have ${n} credits.`,
         eyebrow: 'Editor',
         title: 'Try it free',
         lede: 'Upload your product photo and download it on a <strong>white background</strong>, at the exact size for each platform. Add dimensions and banners if you want.',
@@ -2162,7 +2215,7 @@
       if (!token){ authModal(true); return false; }            // pedir login
       const res = await motorSpend('photo');
       if (res && res.ok){ if (id) unlocked.add(id); await refreshBalance(); renderResult(); return true; }
-      await refreshBalance(); showDlMsg(t('noCredits')); return false;   // sin créditos
+      await refreshBalance(); showDlMsg(t('noCredits')); openPacks(); return false;   // sin créditos -> ofrecer packs
     }
     // marca de agua diagonal repetida: visible sobre fondo claro u oscuro (borde negro + relleno blanco)
     function drawWatermark(ctx, w, h){
@@ -3132,7 +3185,7 @@
         const resp = await fetch(`${MOTOR_URL}/lifestyle`, { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
         const data = await resp.json().catch(() => ({}));
         if (resp.status === 401){ sceneStatus(t('sceneNeedLogin'), true); authModal(true); return; }
-        if (resp.status === 402){ sceneStatus(t('sceneLocked'), true); return; }   // sin créditos para escena
+        if (resp.status === 402){ sceneStatus(t('sceneLocked'), true); openPacks(); return; }   // sin créditos -> ofrecer packs
         if (!resp.ok || data.error) throw new Error(data.error || ('HTTP ' + resp.status));
         const urls = data.images || [];
         if (!urls.length) throw new Error('0');
@@ -3578,8 +3631,9 @@
       const slot = $('auth-slot'); if (!slot) return;
       if (authUser){
         const cred = authProfile ? authProfile.credits : 0;
-        slot.innerHTML = `<span class="auth-me"><span class="auth-mail">${esc(authUser.email)}</span> · <span class="auth-cred">${esc(t('authCred')(cred))}</span> <button type="button" class="auth-out" id="auth-out">${esc(t('authLogout'))}</button></span>`;
+        slot.innerHTML = `<span class="auth-me"><span class="auth-mail">${esc(authUser.email)}</span> · <button type="button" class="auth-cred buy" id="auth-buy" title="${esc(t('packsTitle'))}">${esc(t('authCred')(cred))} +</button> <button type="button" class="auth-out" id="auth-out">${esc(t('authLogout'))}</button></span>`;
         const out = $('auth-out'); if (out) out.addEventListener('click', () => sb.auth.signOut());
+        const buy = $('auth-buy'); if (buy) buy.addEventListener('click', openPacks);
       } else {
         slot.innerHTML = `<button type="button" class="auth-btn" id="auth-open">${esc(t('authLogin'))}</button>`;
         const op = $('auth-open'); if (op) op.addEventListener('click', () => authModal(true));
@@ -3617,6 +3671,69 @@
       $('auth-backdrop').addEventListener('click', () => authModal(false));
       $('auth-email').addEventListener('keydown', e => { if (e.key === 'Enter') $('auth-send').click(); });
     }
+
+    // ---------- toast ----------
+    let toastTimer = null;
+    function showToast(text, kind){
+      const el = $('toast'); if (!el) return;
+      el.textContent = text; el.className = (kind || '') + ' show';
+      clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.className = el.className.replace('show', '').trim(); }, 5000);
+    }
+
+    // ---------- packs / comprar créditos ----------
+    const PACK_NAMES = { probe: 'Probá', vendedor: 'Vendedor', tienda: 'Tienda' };
+    const PACK_POPULAR = 'vendedor';
+    function packsModal(open){ const m = $('packs-modal'); if (m) m.hidden = !open; }
+    async function openPacks(){
+      packsModal(true);
+      const list = $('packs-list'); list.innerHTML = '<p class="packs-loading">…</p>';
+      try {
+        const r = await fetch(`${MOTOR_URL}/packs`); const data = await r.json();
+        list.innerHTML = '';
+        (data.packs || []).forEach(p => {
+          const pop = p.id === PACK_POPULAR;
+          const b = document.createElement('button'); b.type = 'button'; b.className = 'pack-card' + (pop ? ' pop' : ''); b.dataset.pack = p.id;
+          const ars = Number(p.ars).toLocaleString('es-AR');
+          b.innerHTML = (pop ? `<span class="pack-tag">${esc(t('packPopular'))}</span>` : '')
+            + `<span class="pack-name">${esc(PACK_NAMES[p.id] || p.id)}</span>`
+            + `<span class="pack-credits">${esc(t('packCreds')(p.credits))}</span>`
+            + `<span class="pack-price">$${ars}</span>`;
+          b.addEventListener('click', () => buyPack(p.id, b));
+          list.appendChild(b);
+        });
+      } catch { list.innerHTML = `<p class="packs-loading">${esc(t('packsErr'))}</p>`; }
+    }
+    async function buyPack(id, btn){
+      const token = await authToken();
+      if (!token){ packsModal(false); authModal(true); return; }   // sin login: pedir login primero
+      if (btn){ btn.disabled = true; btn.classList.add('busy'); }
+      try {
+        const fd = new FormData(); fd.append('pack', id);
+        const r = await fetch(`${MOTOR_URL}/checkout`, { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
+        const data = await r.json().catch(() => ({}));
+        if (r.ok && data.init_point){ location.href = data.init_point; return; }
+        throw new Error(data.error || 'error');
+      } catch (e){ if (btn){ btn.disabled = false; btn.classList.remove('busy'); } showToast(t('packsErr'), 'err'); }
+    }
+    if ($('packs-close')) $('packs-close').addEventListener('click', () => packsModal(false));
+    if ($('packs-backdrop')) $('packs-backdrop').addEventListener('click', () => packsModal(false));
+
+    // ---------- regreso de MercadoPago (?pago=ok|pending|fail) ----------
+    (function handlePagoReturn(){
+      const pago = new URLSearchParams(location.search).get('pago'); if (!pago) return;
+      history.replaceState(null, '', location.pathname);   // limpiar el query
+      if (pago === 'ok'){
+        showToast(t('pagoOk'), 'ok');
+        let n = 0; const before = (authProfile && authProfile.credits) || 0;   // el webhook acredita async: polleamos el saldo
+        const iv = setInterval(async () => {
+          n++; await refreshBalance();
+          const now = (authProfile && authProfile.credits) || 0;
+          if (now > before){ showToast(t('pagoDone')(now), 'ok'); clearInterval(iv); }
+          else if (n >= 8) clearInterval(iv);
+        }, 2500);
+      } else if (pago === 'pending'){ showToast(t('pagoPending')); }
+      else { showToast(t('pagoFail'), 'err'); }
+    })();
 
     // ---------- aplicar traducciones al cargar ----------
     applyI18n();
