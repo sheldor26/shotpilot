@@ -1076,11 +1076,10 @@
           <span class="eng-label" style="margin-top:.2rem;display:block"><span data-i18n="downloadLabel">Descargar · formato</span> <b id="dl-label">MercadoLibre</b></span>
           <button type="button" class="dl-main" id="dl-main" data-i18n="dlMain">Descargar</button>
           <p class="dl-msg" id="dl-msg" role="status" style="display:none"></p>
-          <p class="dl-note" id="dl-note" data-i18n="dlNote" style="display:none">La imagen principal de ML va sin texto. Usá "cada versión por separado" para tener también la limpia.</p>
+          <p class="dl-note" id="dl-note" data-i18n="dlNote" style="display:none">La imagen principal de ML va sin texto. "Todas las placas" te baja producto, medidas y banner por separado, todas en este formato.</p>
           <button type="button" class="btn btn-ghost" id="dl-all-photos" data-i18n="dlAllPhotos" style="display:none;min-width:100%;margin-top:.55rem">Bajar todas las fotos</button>
           <div class="row" style="margin-top:.55rem">
-            <button type="button" class="btn btn-ghost" id="dl-separate" data-i18n="dlSeparate" style="display:none">Cada versión por separado</button>
-            <button type="button" class="btn btn-ghost" id="download-pack" data-i18n="dlPack">Pack (todos los formatos)</button>
+            <button type="button" class="btn btn-ghost" id="dl-separate" data-i18n="dlSeparate" style="display:none;min-width:100%">Descargar todas las placas</button>
           </div>
           <div class="row" style="margin-top:.55rem">
             <button type="button" class="btn btn-ghost" id="another" data-i18n="another" style="min-width:100%">Otra foto</button>
@@ -1338,8 +1337,8 @@
         dlAll: 'Todo aplicado',
         dlAllSub: 'medidas + banner',
         dlMain: 'Descargar',
-        dlNote: 'La imagen principal de ML va sin texto. Usá "cada versión por separado" para tener también la limpia.',
-        dlSeparate: 'Cada versión por separado',
+        dlNote: 'La imagen principal de ML va sin texto. "Todas las placas" te baja producto, medidas y banner por separado, todas en este formato.',
+        dlSeparate: 'Descargar todas las placas',
         dlPack: 'Pack (todos los formatos)',
         another: 'Producto nuevo',
         foot: 'Las primeras 5 fotos son gratis. Sin tarjeta.',
@@ -1591,8 +1590,8 @@
         dlAll: 'Everything applied',
         dlAllSub: 'dimensions + banner',
         dlMain: 'Download',
-        dlNote: 'The ML main image must have no text. Use "each version separately" to also get the clean one.',
-        dlSeparate: 'Each version separately',
+        dlNote: 'The ML main image must have no text. "All versions" downloads product, measurements and banner separately, all in this format.',
+        dlSeparate: 'Download all versions',
         dlPack: 'Pack (all sizes)',
         another: 'New product',
         foot: 'Your first 5 photos are free. No card required.',
@@ -3402,20 +3401,6 @@
       if (bannerOn) keys.push('banner');
       for (const k of keys){ await downloadLayers(k); await new Promise(r => setTimeout(r, 350)); }
       btn.disabled = false;
-    });
-
-    // pack: una foto -> todos los formatos de un saque
-    $('download-pack').addEventListener('click', async () => {
-      const btn = $('download-pack'); btn.disabled = true;
-      await ensureUnlocked();
-      for (const k of Object.keys(PRESETS)){
-        const p = PRESETS[k];
-        compose(p.w, p.h, shadowOn, p.fill);
-        downloadBlob(await exportBlob(), `shotpilot-${k}-${p.w}x${p.h}.png`);
-        await new Promise(r => setTimeout(r, 350));   // separar las descargas para que el navegador no las bloquee
-      }
-      btn.disabled = false;
-      renderResult();   // dejar el preview en el destino actual
     });
 
     $('another').addEventListener('click', () => { photos = []; activePhoto = -1; renderPhotoStrip(); fileInput.value = ''; show('drop'); });
