@@ -544,6 +544,13 @@
   .retouch-toggle[aria-expanded="true"]::after{transform:rotate(180deg)}
   #retouch-wrap{margin-top:.7rem}
   .retouch-collapsed{display:none}
+  /* modo "editar en grande": el editor se abre en un overlay grande sobre toda la pantalla */
+  #retouch-wrap.maxed{position:fixed;inset:0;z-index:200;margin:0;background:rgba(26,18,12,.62);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.8rem;padding:1.6vh 2vw;overflow:auto}
+  #retouch-wrap.maxed .compare{width:min(66vh,780px);height:min(66vh,780px);max-width:92vw;box-shadow:0 24px 70px rgba(0,0,0,.42)}
+  #retouch-wrap.maxed .toolbar{background:rgba(255,255,255,.97);border-radius:16px;padding:.6rem .9rem;box-shadow:0 14px 44px rgba(0,0,0,.32);max-width:94vw}
+  .retouch-done{display:none}
+  #retouch-wrap.maxed .retouch-done{display:inline-flex;align-items:center;gap:.4rem;position:fixed;top:max(2.2vh,14px);right:max(2vw,14px);z-index:201;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:.55rem 1rem;font-family:"Manrope",sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+  #retouch-wrap.maxed .retouch-done:hover{border-color:var(--accent);color:var(--accent)}
 
   /* ---- carrusel de fuentes ---- */
   .font-carousel{display:flex;align-items:center;gap:.35rem;flex:1;min-width:0}
@@ -694,6 +701,7 @@
           <div class="ed-controls">
           <button type="button" class="retouch-toggle" id="retouch-toggle" aria-expanded="false" data-i18n="retouchToggle">Comparar antes/después · retocar</button>
           <div id="retouch-wrap" class="retouch-collapsed">
+          <button type="button" class="retouch-done" id="retouch-done"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="editDone">Listo</span></button>
           <div class="compare" id="compare">
             <div class="cmp-layer cmp-after"><img id="img-cutout" alt=""></div>
             <img class="cmp-layer cmp-before" id="img-before" alt="">
@@ -738,6 +746,9 @@
               </button>
               <button type="button" class="tool ico-only" id="reset" data-i18n-title="reset" data-i18n-aria="reset" title="Reiniciar recorte" aria-label="Reiniciar recorte">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+              </button>
+              <button type="button" class="tool ico-only" id="retouch-max" data-i18n-title="editBig" data-i18n-aria="editBig" title="Editar en grande" aria-label="Editar en grande">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
               </button>
             </div>
             <div class="tbar-opts" id="opts" style="display:none">
@@ -1414,6 +1425,8 @@
         cornerBL: 'Ab. izq.',
         previewCap: 'Vista previa · lo que se descarga',
         retouchToggle: 'Comparar antes/después · retocar',
+        editBig: 'Editar en grande',
+        editDone: 'Listo',
         advToggle: 'Ajustes avanzados',
         extrasHead: 'Extras · opcional',
         foldPanel: 'Plegar / desplegar',
@@ -1425,6 +1438,7 @@
         pvPrev: 'Vista anterior',
         pvNext: 'Vista siguiente',
         bigprevHint: 'Arrastrá las puntas (círculos) para ajustar cada medida.',
+        featsDragHint: 'Arrastrá el borde para cambiar el tamaño · llevala al otro lado para moverla.',
         sceneTitle: 'Escena (IA)',
         sceneTag: 'nuevo',
         sceneHint: 'Poné tu producto en una escena real (perfume en el baño, heladera en la cocina). Genera 2 variantes para imágenes secundarias. La primera es gratis.',
@@ -1680,6 +1694,8 @@
         cornerBL: 'Bottom left',
         previewCap: 'Preview · what gets downloaded',
         retouchToggle: 'Compare before/after · retouch',
+        editBig: 'Edit large',
+        editDone: 'Done',
         advToggle: 'Advanced settings',
         extrasHead: 'Extras · optional',
         foldPanel: 'Fold / unfold',
@@ -1691,6 +1707,7 @@
         pvPrev: 'Previous view',
         pvNext: 'Next view',
         bigprevHint: 'Drag the endpoints (circles) to adjust each dimension.',
+        featsDragHint: 'Drag the edge to resize · drag it to the other side to move it.',
         sceneTitle: 'Scene (AI)',
         sceneTag: 'new',
         sceneHint: 'Place your product in a real scene (perfume in a bathroom, fridge in a kitchen). Generates 2 variants for secondary listing images. The first one is free.',
@@ -2283,10 +2300,14 @@
       };
     }
     function dimsVisible(){ return dimsOn && dimsStyle === 'lines' && (previewView === 'medidas' || previewView === 'todo'); }
+    function featsVisible(){ return featsOn && featItems().length > 0 && (previewView === 'caracteristicas' || previewView === 'todo'); }
     function updateBigprevDraggable(){
-      const dimsDrag = dimsVisible();
-      $('bigprev').classList.toggle('draggable', dimsDrag || (logoOn && logoImg));
-      $('bigprev-hint').style.display = dimsDrag ? 'block' : 'none';
+      const dimsDrag = dimsVisible(), featsDrag = featsVisible();
+      $('bigprev').classList.toggle('draggable', dimsDrag || featsDrag || (logoOn && logoImg));
+      const hint = $('bigprev-hint');
+      if (dimsDrag){ hint.textContent = t('bigprevHint'); hint.style.display = 'block'; }
+      else if (featsDrag){ hint.textContent = t('featsDragHint'); hint.style.display = 'block'; }
+      else hint.style.display = 'none';
     }
     function setPreviewView(v){
       previewView = v;
@@ -2431,6 +2452,17 @@
             c.fillStyle = '#fff'; c.fill(); c.lineWidth = 2.5 * dpr; c.strokeStyle = '#F4513C'; c.stroke();
           });
         });
+      }
+      // handle de tamaño de la placa de características (solo en la previa)
+      if (featsVisible()){
+        const ex = featInnerEdge() * pv.width, hy = pv.height / 2;
+        const hh = Math.min(pv.height * 0.16, 70 * dpr), hw = 8 * dpr;
+        c.save();
+        c.shadowColor = 'rgba(40,24,16,.3)'; c.shadowBlur = 6 * dpr;
+        c.fillStyle = '#F4513C'; c.beginPath(); c.roundRect(ex - hw / 2, hy - hh / 2, hw, hh, hw / 2); c.fill();
+        c.shadowColor = 'transparent'; c.fillStyle = '#fff';
+        for (let i = -1; i <= 1; i++){ c.beginPath(); c.arc(ex, hy + i * 9 * dpr, 1.7 * dpr, 0, Math.PI * 2); c.fill(); }
+        c.restore();
       }
     }
 
@@ -2679,6 +2711,22 @@
       } else opts.style.display = 'none';
       const hints = { erase: t('hintErase'), restore: t('hintRestore'), inpaint: t('hintInpaint') };
       $('cmp-hint').textContent = editing ? hints[m] : t('cmpHint');
+      if (editing) enterMax();   // editar = trabajar en grande (sobre toda la pantalla)
+    }
+    // ---- "editar en grande": el retoque se abre en un overlay grande ----
+    // se mueve a <body> para que position:fixed cubra toda la pantalla (un ancestro con
+    // backdrop-filter lo confinaría). Al cerrar vuelve a su lugar original.
+    let retouchHome = null;
+    function enterMax(){
+      const w = $('retouch-wrap');
+      if (w.classList.contains('retouch-collapsed')){ w.classList.remove('retouch-collapsed'); $('retouch-toggle').setAttribute('aria-expanded', 'true'); }
+      if (!retouchHome){ retouchHome = { parent: w.parentNode, next: w.nextSibling }; document.body.appendChild(w); }
+      w.classList.add('maxed'); document.body.style.overflow = 'hidden';
+    }
+    function exitMax(){
+      const w = $('retouch-wrap');
+      w.classList.remove('maxed'); document.body.style.overflow = '';
+      if (retouchHome){ retouchHome.parent.insertBefore(w, retouchHome.next); retouchHome = null; }
     }
 
     // #2 — quitar logo/marca: manda imagen + máscara al server (OpenCV inpaint)
@@ -2715,6 +2763,9 @@
     tools.querySelectorAll('.tool[data-tool]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.tool)));
     $('undo').addEventListener('click', doUndo);
     $('reset').addEventListener('click', doReset);
+    $('retouch-max').addEventListener('click', enterMax);
+    $('retouch-done').addEventListener('click', () => { setMode('compare'); exitMax(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('retouch-wrap').classList.contains('maxed')) exitMax(); });
     // comparador/retoque colapsable: el inspector abre en los controles; esto se despliega si querés
     $('retouch-toggle').addEventListener('click', () => {
       const collapsed = $('retouch-wrap').classList.toggle('retouch-collapsed');
@@ -2784,6 +2835,12 @@
         try { preview.setPointerCapture(e.pointerId); } catch {}
         return;
       }
+      if (featsVisible()){   // placa de características: borde = redimensionar · adentro = mover al otro lado
+        const edge = featInnerEdge();
+        const inCol = feats.side === 'r' ? f.x >= edge - 0.02 : f.x <= edge + 0.02;
+        if (Math.abs(f.x - edge) < 0.05){ e.preventDefault(); grab = { feats: 'resize' }; try { preview.setPointerCapture(e.pointerId); } catch {} return; }
+        if (inCol){ e.preventDefault(); grab = { feats: 'move' }; try { preview.setPointerCapture(e.pointerId); } catch {} return; }
+      }
       if (!dimsVisible() || !dimLines) return;
       const g = hit(f);
       if (!g) return;
@@ -2795,6 +2852,18 @@
       e.preventDefault();
       const f = pvFrac(e);
       if (grab.logo){ logoPos = { x: clampF(f.x - grab.ox), y: clampF(f.y - grab.oy) }; renderResult(); return; }
+      if (grab.feats === 'resize'){
+        const target = feats.side === 'r' ? (1 - f.x) : f.x;
+        const scale = Math.max(0.6, Math.min(1.4, target / (FEAT_FRAC[feats.layout] || 0.40)));
+        feats.scale = scale;
+        $('feats-size').value = Math.round(scale * 100); $('feats-size-v').textContent = Math.round(scale * 100) + '%';
+        renderResult(); return;
+      }
+      if (grab.feats === 'move'){
+        const side = f.x < 0.5 ? 'l' : 'r';
+        if (side !== feats.side){ feats.side = side; syncSeg('feats-side', 'side', side); }
+        renderResult(); return;
+      }
       const l = grab.line;
       if (grab.which === 'line'){
         const dx = f.x - grab.start.x, dy = f.y - grab.start.y;
@@ -3097,12 +3166,12 @@
     }
     function rr(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
     // espacio reservado para que la placa no tape el producto (a un costado)
+    const FEAT_FRAC = { cards: 0.42, chips: 0.34, bubbles: 0.40, leader: 0.30 };
+    function featColFrac(){ return Math.max(0.22, Math.min(0.54, (FEAT_FRAC[feats.layout] || 0.40) * feats.scale)); }
+    function featInnerEdge(){ const fr = featColFrac(); return feats.side === 'r' ? 1 - fr : fr; }   // fracción x del borde interno (hacia el producto)
     function featsReserve(tw, th){
       if (!featsOn || !featItems().length) return { left: 0, right: 0, top: 0, bottom: 0 };
-      const fracByLayout = { cards: 0.42, chips: 0.34, bubbles: 0.40, leader: 0.30 };
-      let frac = (fracByLayout[feats.layout] || 0.40) * feats.scale;
-      frac = Math.max(0.22, Math.min(0.54, frac));
-      const w = Math.round(tw * frac);
+      const w = Math.round(tw * featColFrac());
       return feats.side === 'l' ? { left: w, right: 0, top: 0, bottom: 0 } : { left: 0, right: w, top: 0, bottom: 0 };
     }
     function drawFeats(ctx, tw, th, pr){
