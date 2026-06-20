@@ -360,7 +360,8 @@
   /* ---------- pricing ---------- */
   #pricing{background:var(--white)}
   .tiers{display:grid;gap:var(--space-3);grid-template-columns:1fr;align-items:stretch}
-  @media(min-width:880px){.tiers{grid-template-columns:repeat(3,1fr);gap:var(--space-2)}}
+  @media(min-width:640px){.tiers{grid-template-columns:repeat(2,1fr);gap:var(--space-2)}}
+  @media(min-width:1080px){.tiers{grid-template-columns:repeat(4,1fr)}}
   .tier{display:flex;flex-direction:column;background:var(--cream);border:1px solid var(--line);border-radius:var(--radius);padding:var(--space-4);transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
   .tier:hover{transform:translateY(-6px);box-shadow:var(--shadow-md)}
   .tier.feat{background:var(--ink);color:#fff;border-color:var(--ink);position:relative;box-shadow:var(--shadow-lg)}
@@ -793,7 +794,20 @@
           <a href="#contact" class="btn btn-ghost">Get my 5 free photos</a>
         </div>
 
-        <div class="tier feat reveal d2">
+        <div class="tier reveal d2">
+          <span class="name">Try</span>
+          <div class="price">US$5<small>one-time</small></div>
+          <p class="sub">20 credits. To get started.</p>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> 20 clean photos</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> AI scenes</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Every marketplace size</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Credits never expire</li>
+          </ul>
+          <a href="/editor" class="btn btn-ghost">Buy credits</a>
+        </div>
+
+        <div class="tier feat reveal d3">
           <span class="badge">Most popular</span>
           <span class="name">Seller</span>
           <div class="price">US$12<small>one-time</small></div>
@@ -807,7 +821,7 @@
           <a href="/editor" class="btn btn-primary">Buy credits</a>
         </div>
 
-        <div class="tier reveal d3">
+        <div class="tier reveal d4">
           <span class="name">Store</span>
           <div class="price">US$30<small>one-time</small></div>
           <p class="sub">200 credits. For big catalogs.</p>
