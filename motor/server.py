@@ -266,6 +266,8 @@ SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "").strip()
 # --- Pagos (MercadoPago Checkout Pro). El precio vive en el SERVIDOR: el cliente
 # solo manda el id del pack, nunca el monto -> no se puede falsear el precio. ---
 MP_ACCESS_TOKEN = os.environ.get("MP_ACCESS_TOKEN", "").strip()
+# MP_SANDBOX=true mientras testeás (usa el checkout de prueba explícito). Sacalo en producción.
+MP_SANDBOX = os.environ.get("MP_SANDBOX", "").strip().lower() in ("1", "true", "yes")
 MP_API = "https://api.mercadopago.com"
 SITE_URL = os.environ.get("SITE_URL", "https://shotpilot.app").rstrip("/")
 MOTOR_PUBLIC_URL = os.environ.get("MOTOR_PUBLIC_URL", "https://shotpilot-production.up.railway.app").rstrip("/")
@@ -403,8 +405,12 @@ def checkout(request: Request, pack: str = Form(...)):
                         status_code=502, media_type="application/json")
     except Exception as e:
         return Response(json.dumps({"error": f"MP: {e}"}), status_code=502, media_type="application/json")
-    init_point = resp.get("init_point") or resp.get("sandbox_init_point")
-    return Response(json.dumps({"init_point": init_point}), media_type="application/json")
+    # En modo sandbox usamos el checkout de prueba explícito; en producción, el real.
+    if MP_SANDBOX:
+        init_point = resp.get("sandbox_init_point") or resp.get("init_point")
+    else:
+        init_point = resp.get("init_point") or resp.get("sandbox_init_point")
+    return Response(json.dumps({"init_point": init_point, "sandbox": MP_SANDBOX}), media_type="application/json")
 
 
 @app.post("/mp-webhook")
