@@ -541,6 +541,9 @@
     </div>
   </div>
 
+  <!-- DIAGNÓSTICO TEMPORAL (sacar después): muestra dominio + si la sesión se guardó -->
+  <div id="authdbg" style="position:fixed;bottom:8px;left:8px;z-index:9999;background:#241E1A;color:#fff;font:11px/1.4 monospace;padding:6px 9px;border-radius:7px;max-width:92vw;word-break:break-all;opacity:.92"></div>
+
   <main>
     <div class="wrap">
       <span class="eyebrow" id="t-eyebrow" data-i18n="eyebrow">Editor</span>
@@ -3584,15 +3587,21 @@
         const op = $('auth-open'); if (op) op.addEventListener('click', () => authModal(true));
       }
     }
+    function authDbg(tag){
+      const d = $('authdbg'); if (!d) return;
+      let ls = '?'; try { ls = localStorage.getItem('sb-ntybvdfyxesxpoukyqpf-auth-token') ? 'SÍ' : 'no'; } catch { ls = 'ERR'; }
+      d.textContent = `[${tag}] ${location.host}${location.pathname}${location.hash ? ' +#hash' : ''} · storage:${ls} · user:${authUser ? authUser.email : 'no'}`;
+    }
     async function onAuth(session){
       authUser = session ? session.user : null;
       await loadProfile();
       renderAuthSlot();
       updateQuota();
+      authDbg('auth');
       if (authUser) authModal(false);
     }
     if (sb){
-      renderAuthSlot();   // botón inmediato, sin parpadeo
+      renderAuthSlot(); authDbg('init');   // botón inmediato, sin parpadeo
       sb.auth.getSession().then(({ data }) => onAuth(data.session));
       sb.auth.onAuthStateChange((_e, session) => onAuth(session));
       $('auth-send').addEventListener('click', async () => {
