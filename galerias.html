@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mis galerías — ShotPilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/app.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="sp-page">
+    <p class="sp-eyebrow">Galerías</p>
+    <h1>Mis galerías</h1>
+    <p class="sp-sub">Acá guardás cada publicación que armás. Volvés cuando quieras a editarla o descargarla.</p>
+    <div class="sp-card sp-empty">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+      Todavía no tenés galerías.<br>Armá la primera y aparece acá.
+      <div style="margin-top:1rem"><a class="sp-btn" href="/editor">Armá mi galería</a></div>
+    </div>
+  </div>
+  <script type="module">
+    import { mountNav } from '/js/ui/nav.js';
+    mountNav({ active: 'galerias' });
+  </script>
+</body>
+</html>

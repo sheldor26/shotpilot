@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mi marca — ShotPilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/app.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="sp-page">
+    <p class="sp-eyebrow">Mi marca</p>
+    <h1>Tu marca en todas las placas</h1>
+    <p class="sp-sub">Cargá tu logo y tus colores una vez. Los aplicamos solos a cada galería que armes, para que todo se vea tuyo y prolijo.</p>
+    <div class="sp-card sp-empty">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2 4.5 6.5v5c0 4.7 3.2 7.2 7.5 8.6 4.3-1.4 7.5-3.9 7.5-8.6v-5z"/><path d="m9 11.8 2 2 4-4"/></svg></div>
+      Pronto vas a poder cargar tu logo y colores acá.
+    </div>
+  </div>
+  <script type="module">
+    import { mountNav } from '/js/ui/nav.js';
+    mountNav({ active: 'marca' });
+  </script>
+</body>
+</html>

@@ -6,10 +6,14 @@ export const SB_URL = 'https://ntybvdfyxesxpoukyqpf.supabase.co';
 export const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50eWJ2ZGZ5eGVzeHBvdWt5cXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3OTk5NzcsImV4cCI6MjA5NzM3NTk3N30.txWMTF34NaN_NDVtcbgx_69kDSX4Bm9mBfJYf7PIvAw';
 const STORAGE_KEY = 'sb-ntybvdfyxesxpoukyqpf-auth-token';
 
-// Crea el cliente con la MISMA config que tenía editor.html inline.
+// Cliente único por página (singleton): evita "Multiple GoTrueClient instances"
+// y el doble refresh de token cuando nav.js y el script de la página lo piden.
+let _client = null;
 export function createSupabase(){
+  if (_client) return _client;
   if (!window.supabase){ console.error('supabase-js no cargado (falta el <script> del CDN)'); return null; }
-  return window.supabase.createClient(SB_URL, SB_KEY, {
+  _client = window.supabase.createClient(SB_URL, SB_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: window.localStorage, storageKey: STORAGE_KEY },
   });
+  return _client;
 }

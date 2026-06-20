@@ -1,0 +1,21 @@
+/* Base compartida de las páginas-shell de la app (Home, Galerías, Marca, Score, Cuenta). */
+:root{
+  --coral:#F4513C; --ink:#1A1614; --soft:#5C524B; --faint:#8A7F77;
+  --line:#E9DFD3; --cream:#FBF7F2; --cream2:#F4ECE2; --white:#fff;
+}
+*{ box-sizing:border-box; }
+html,body{ margin:0; }
+body{ font-family:Manrope,system-ui,sans-serif; color:var(--ink); background:var(--cream); -webkit-font-smoothing:antialiased; }
+.sp-page{ max-width:760px; margin:0 auto; padding:1.3rem 1.1rem 2.4rem; }
+h1{ font-family:'Bricolage Grotesque',Manrope,sans-serif; font-weight:700; font-size:1.7rem; line-height:1.15; margin:.25rem 0 .35rem; }
+.sp-eyebrow{ font-size:.72rem; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--coral); margin:0; }
+.sp-sub{ color:var(--soft); margin:.25rem 0 1.3rem; line-height:1.55; }
+.sp-card{ background:var(--white); border:1px solid var(--line); border-radius:16px; padding:1.1rem 1.2rem; margin-bottom:.9rem; }
+.sp-empty{ text-align:center; padding:2.6rem 1.1rem; color:var(--soft); line-height:1.5; }
+.sp-empty .ic{ width:46px; height:46px; margin:0 auto .7rem; color:var(--faint); }
+.sp-empty .ic svg{ width:100%; height:100%; }
+.sp-btn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; background:var(--coral); color:#fff; font-weight:700; border:none; border-radius:12px; padding:.75rem 1.3rem; font-size:.95rem; text-decoration:none; cursor:pointer; }
+.sp-btn svg{ width:19px; height:19px; }
+.sp-btn-ghost{ background:var(--white); color:var(--ink); border:1px solid var(--line); }
+.sp-row{ display:flex; align-items:center; justify-content:space-between; gap:.8rem; }
+.sp-muted{ color:var(--faint); font-size:.86rem; }

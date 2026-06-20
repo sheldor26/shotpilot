@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mi cuenta — ShotPilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/app.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="sp-page">
+    <p class="sp-eyebrow">Cuenta</p>
+    <h1>Mi cuenta</h1>
+    <p class="sp-sub">Tu sesión, tus créditos y tu plan.</p>
+    <div class="sp-card" id="acc"><p class="sp-muted">Cargando…</p></div>
+  </div>
+  <script type="module">
+    import { mountNav } from '/js/ui/nav.js';
+    import { createSupabase } from '/js/supabaseClient.js';
+    mountNav({ active: 'cuenta' });
+    const sb = createSupabase();
+    (async () => {
+      const box = document.getElementById('acc');
+      if (!sb){ box.innerHTML = '<p class="sp-muted">No se pudo conectar.</p>'; return; }
+      let session = null;
+      try { ({ data: { session } } = await sb.auth.getSession()); } catch {}
+      if (!session){
+        box.innerHTML = '<p class="sp-sub" style="margin:.2rem 0 1rem">Todavía no iniciaste sesión. Entrá para guardar tus galerías y tus créditos.</p><a class="sp-btn" href="/editor">Entrar</a>';
+        return;
+      }
+      let credits = 0;
+      try { const { data } = await sb.from('profiles').select('credits').eq('id', session.user.id).single(); credits = data ? data.credits : 0; } catch {}
+      box.innerHTML = `<div class="sp-row"><div><b>${session.user.email}</b><div class="sp-muted">${credits} crédito${credits === 1 ? '' : 's'} · plan Free</div></div><button class="sp-btn sp-btn-ghost" id="out">Salir</button></div>`;
+      document.getElementById('out').onclick = async () => { try { await sb.auth.signOut(); } catch {} location.reload(); };
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ShotPilot Score — ShotPilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/app.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="sp-page">
+    <p class="sp-eyebrow">Score</p>
+    <h1>ShotPilot Score</h1>
+    <p class="sp-sub">Te decimos cuánto vende tu publicación hoy y cuánto puede vender con una galería completa. Pegás el link y listo.</p>
+    <div class="sp-card sp-empty">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13l3.5-2.6"/><path d="M4.7 16a8 8 0 1 1 14.6 0z"/></svg></div>
+      Pronto vas a poder medir tu publicación acá.
+    </div>
+  </div>
+  <script type="module">
+    import { mountNav } from '/js/ui/nav.js';
+    mountNav({ active: 'score' });
+  </script>
+</body>
+</html>
