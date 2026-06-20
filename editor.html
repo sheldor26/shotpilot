@@ -379,6 +379,13 @@
   #adv-wrap > .engine{margin-top:0}
   .extras-head{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:1.5rem;margin-bottom:-.3rem;padding-left:.15rem}
 
+  /* ---- plegar paneles aunque estén activos ---- */
+  .dims-head-actions{display:flex;align-items:center;gap:.35rem}
+  .panel-fold{flex:none;width:30px;height:30px;border-radius:8px;border:0;background:transparent;color:var(--ink-faint);cursor:pointer;display:grid;place-items:center}
+  .panel-fold:hover{color:var(--ink)}
+  .panel-fold svg{width:18px;height:18px;transition:transform .2s var(--ease)}
+  .panel-fold.folded svg{transform:rotate(-90deg)}
+
   /* ---- comparador / retoque colapsable ---- */
   .retouch-toggle{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.62rem 1rem;border:1.5px solid var(--line);border-radius:var(--radius);background:rgba(255,255,255,.5);-webkit-backdrop-filter:blur(10px) saturate(135%);backdrop-filter:blur(10px) saturate(135%);font-family:"Manrope",sans-serif;font-size:.86rem;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:border-color .15s,color .15s}
   .retouch-toggle:hover{border-color:var(--ink-faint);color:var(--ink)}
@@ -626,10 +633,13 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/></svg>
                 <span data-i18n="dimsTitle">Medidas del producto</span>
               </span>
-              <label class="dims-switch" data-i18n-title="dimsSwitchTitle" title="Mostrar medidas sobre la imagen">
-                <input type="checkbox" id="dims-on">
-                <span class="sw" aria-hidden="true"></span>
-              </label>
+              <span class="dims-head-actions">
+                <button type="button" class="panel-fold" id="dims-fold" data-i18n-aria="foldPanel" aria-label="Plegar / desplegar" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+                <label class="dims-switch" data-i18n-title="dimsSwitchTitle" title="Mostrar medidas sobre la imagen">
+                  <input type="checkbox" id="dims-on">
+                  <span class="sw" aria-hidden="true"></span>
+                </label>
+              </span>
             </div>
             <div id="dims-fields" style="display:none">
               <div class="seg seg-sm" id="dims-style" role="group" data-i18n-aria="dimsStyleAria" aria-label="Estilo de medidas">
@@ -691,10 +701,13 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v5l-3 3 3 3v5H4z"/><path d="M4 12h13"/></svg>
                 <span data-i18n="banners">Banners</span>
               </span>
-              <label class="dims-switch" data-i18n-title="bannersSwitchTitle" title="Agregar banners sobre la imagen">
-                <input type="checkbox" id="bn-on">
-                <span class="sw" aria-hidden="true"></span>
-              </label>
+              <span class="dims-head-actions">
+                <button type="button" class="panel-fold" id="bn-fold" data-i18n-aria="foldPanel" aria-label="Plegar / desplegar" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+                <label class="dims-switch" data-i18n-title="bannersSwitchTitle" title="Agregar banners sobre la imagen">
+                  <input type="checkbox" id="bn-on">
+                  <span class="sw" aria-hidden="true"></span>
+                </label>
+              </span>
             </div>
             <div id="bn-fields" style="display:none">
               <div class="bn-tpl-wrap">
@@ -975,6 +988,7 @@
         retouchToggle: 'Comparar antes/después · retocar',
         advToggle: 'Ajustes avanzados',
         extrasHead: 'Extras · opcional',
+        foldPanel: 'Plegar / desplegar',
         viewProducto: 'Producto',
         viewMedidas: 'Medidas',
         viewBanner: 'Banner',
@@ -1152,6 +1166,7 @@
         retouchToggle: 'Compare before/after · retouch',
         advToggle: 'Advanced settings',
         extrasHead: 'Extras · optional',
+        foldPanel: 'Fold / unfold',
         viewProducto: 'Product',
         viewMedidas: 'Dimensions',
         viewBanner: 'Banner',
@@ -1974,15 +1989,22 @@
     $('zoom-out').addEventListener('click', () => setZoom(zoom - 0.5));
 
     // ---- placa de medidas ----
+    let dimsFolded = false;
+    function syncDimsFold(){
+      $('dims-fields').style.display = (dimsOn && !dimsFolded) ? 'block' : 'none';
+      $('dims-fold').classList.toggle('folded', dimsFolded);
+    }
     $('dims-on').addEventListener('change', e => {
       dimsOn = e.target.checked;
-      $('dims-fields').style.display = dimsOn ? 'block' : 'none';
-      if (dimsOn) initDimLines();   // (re)posicionar las cotas para este producto
+      if (dimsOn){ dimsFolded = false; initDimLines(); }   // (re)posicionar las cotas para este producto
+      $('dims-fold').style.display = dimsOn ? 'grid' : 'none';
+      syncDimsFold();
       updateDimsConf();
       updateDlVariants();
       buildPreviewTabs(dimsOn);     // al activar, saltar a la vista que muestra las medidas
       renderResult();
     });
+    $('dims-fold').addEventListener('click', () => { dimsFolded = !dimsFolded; syncDimsFold(); });
     document.querySelectorAll('#dims-fields .dim-v').forEach(i => i.addEventListener('input', () => { if (!dimLines) initDimLines(); renderResult(); }));
 
     // ---- editar cada cota en la previa: arrastrar PUNTAS (estirar) o la LÍNEA (mover) ----
@@ -2379,7 +2401,19 @@
     // re-render cuando las fuentes de Google terminen de cargar
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (workCtx) renderResult(); });
 
-    $('bn-on').addEventListener('change', e => { bannerOn = e.target.checked; $('bn-fields').style.display = bannerOn ? 'block' : 'none'; updateDlVariants(); buildPreviewTabs(bannerOn); renderResult(); });
+    let bannerFolded = false;
+    function syncBannerFold(){
+      $('bn-fields').style.display = (bannerOn && !bannerFolded) ? 'block' : 'none';
+      $('bn-fold').classList.toggle('folded', bannerFolded);
+    }
+    $('bn-on').addEventListener('change', e => {
+      bannerOn = e.target.checked;
+      if (bannerOn) bannerFolded = false;
+      $('bn-fold').style.display = bannerOn ? 'grid' : 'none';
+      syncBannerFold();
+      updateDlVariants(); buildPreviewTabs(bannerOn); renderResult();
+    });
+    $('bn-fold').addEventListener('click', () => { bannerFolded = !bannerFolded; syncBannerFold(); });
     $('bn-badge-on').addEventListener('change', e => { banner.badge.on = e.target.checked; $('bn-badge-fields').style.display = banner.badge.on ? 'block' : 'none'; renderResult(); });
     ['bn-title', 'bn-sub', 'bn-big', 'bn-small'].forEach(id => $(id).addEventListener('input', renderResult));
     $('bn-panel-pos').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
