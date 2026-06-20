@@ -2818,12 +2818,27 @@
     // espacio que el panel reserva arriba/abajo para no tapar el producto
     function bannerReserve(tw, th){
       if (!bannerOn) return { top: 0, bottom: 0 };
-      const title = $('bn-title').value.trim(), sub = $('bn-sub').value.trim();
-      if (!title && !sub) return { top: 0, bottom: 0 };
       const base = Math.min(tw, th);
-      const m = banner.panel.style === 'band' ? 0 : base * 0.04;
-      const reserve = bannerPanelH(th, sub) + m + base * 0.012;   // panel + margen + respiro mínimo
-      return banner.panel.pos === 'top' ? { top: reserve, bottom: 0 } : { top: 0, bottom: reserve };
+      let top = 0, bottom = 0;
+      // panel: reserva su alto del lado donde está
+      const title = $('bn-title').value.trim(), sub = $('bn-sub').value.trim();
+      if (title || sub){
+        const m = banner.panel.style === 'band' ? 0 : base * 0.04;
+        const r = bannerPanelH(th, sub) + m + base * 0.012;   // panel + margen + respiro mínimo
+        if (banner.panel.pos === 'top') top += r; else bottom += r;
+      }
+      // chapa: reserva su alto para no tapar el producto. Va al lado opuesto del panel
+      // (que es donde bestBadgeCorner la ubica); sin panel, a su propia esquina.
+      const big = $('bn-big').value.trim(), small = $('bn-small').value.trim();
+      if (banner.badge.on && (big || small)){
+        const bigF = Math.round(base * 0.062), smallF = Math.round(base * 0.03), padY = base * 0.03;
+        const ch = bigF + (small ? smallF * 1.35 : 0) + padY * 2;
+        const r = ch + base * 0.035 + base * 0.012;   // chapa + margen + respiro
+        const hasPanel = !!(title || sub);
+        const side = hasPanel ? (banner.panel.pos === 'top' ? 'bottom' : 'top') : (banner.badge.corner[0] === 't' ? 'top' : 'bottom');
+        if (side === 'top') top += r; else bottom += r;
+      }
+      return { top, bottom };
     }
 
     // ¿qué fracción de un recuadro del lienzo (x,y,w,h) está cubierta por el producto?
