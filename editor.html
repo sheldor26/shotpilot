@@ -399,6 +399,17 @@
   .wz-dots{display:flex;gap:.4rem}
   .wz-dots i{width:8px;height:8px;border-radius:50%;background:var(--line);transition:background .2s,width .2s}
   .wz-dots i.on{background:var(--accent);width:22px;border-radius:5px}
+  /* barra de progreso del wizard de 5 pasos */
+  .wiz-bar{margin:0 0 1.1rem}
+  .wiz-track{height:5px;background:var(--line);border-radius:3px;overflow:hidden}
+  .wiz-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s ease;width:0}
+  .wiz-steps{display:none;justify-content:space-between;margin-top:.55rem}
+  .wiz-step{display:flex;align-items:center;gap:.35rem;font-size:.78rem;color:var(--ink-faint);font-weight:600}
+  .wiz-step b{width:20px;height:20px;border-radius:50%;background:var(--line);color:var(--ink-soft);display:grid;place-items:center;font-size:.7rem;font-weight:700}
+  .wiz-step.on{color:var(--accent)} .wiz-step.on b,.wiz-step.done b{background:var(--accent);color:#fff}
+  .wiz-mini{margin-top:.5rem;font-size:.85rem;color:var(--ink-soft);font-weight:600}
+  .wiz-mini b{color:var(--accent)}
+  @media(min-width:640px){ .wiz-steps{display:flex} .wiz-mini{display:none} }
   .wz-h{font-size:1.35rem;margin-bottom:.25rem}
   .wz-sub{color:var(--ink-faint);font-size:.88rem;margin-bottom:1rem;line-height:1.4}
   .wz-step .dim-rows{margin-top:.3rem}
@@ -621,6 +632,12 @@
       <p class="lede" id="t-lede" data-i18n-html="lede">Subí la foto de tu producto y bajala con <strong>fondo blanco</strong>, en la medida exacta de cada plataforma. Sumá medidas y banners si querés.</p>
 
       <div class="quota"><span class="dot"></span><span id="quota-text" data-i18n="quota">Te quedan 5 de 5 gratis</span></div>
+
+      <div id="wiz-bar" class="wiz-bar" hidden>
+        <div class="wiz-track"><div class="wiz-fill" id="wiz-fill"></div></div>
+        <div class="wiz-steps" id="wiz-steps"></div>
+        <div class="wiz-mini" id="wiz-mini"></div>
+      </div>
 
       <div class="card">
         <!-- subir -->
@@ -1349,6 +1366,7 @@
         dimNamePh: 'Nombre (ej. Largo patilla)',
         dimRemove: 'Quitar medida',
         wzTitle: 'Armemos tus fichas',
+        stepProducto: 'Producto', stepDetalles: 'Detalles', stepGaleria: 'Galería', stepMarca: 'Marca', stepListo: 'Listo',
         wzStep1: '¿Qué medidas tiene?',
         wzStep1Sub: 'Dejá vacío lo que no aplique.',
         wzStep2: 'Datos del producto',
@@ -1619,6 +1637,7 @@
         dimNamePh: 'Name (e.g. Temple length)',
         dimRemove: 'Remove measurement',
         wzTitle: 'Let’s build your shots',
+        stepProducto: 'Product', stepDetalles: 'Details', stepGaleria: 'Gallery', stepMarca: 'Brand', stepListo: 'Done',
         wzStep1: 'What are its dimensions?',
         wzStep1Sub: 'Leave blank what doesn’t apply.',
         wzStep2: 'Product details',
@@ -1899,6 +1918,10 @@
       $('wizard').classList.toggle('hidden', state !== 'wizard');
       document.body.classList.toggle('result-mode', state === 'result');
       if (state !== 'err') errEl.classList.add('hidden');
+      // barra de progreso: drop=Producto(1) · wizard=Detalles(2) · result=Galería(3)
+      if (state === 'drop') setWizStep(1);
+      else if (state === 'wizard') setWizStep(2);
+      else if (state === 'result' && wizStep < 3) setWizStep(3);
     }
     function showError(msg){ errEl.textContent = msg; errEl.classList.remove('hidden'); }
 
@@ -4500,6 +4523,18 @@
       return true;
     }
 
+    // ---------- barra de progreso del wizard de 5 pasos ----------
+    const WIZ_STEPS = [t('stepProducto'), t('stepDetalles'), t('stepGaleria'), t('stepMarca'), t('stepListo')];
+    let wizStep = 1;
+    function renderWizBar(){
+      const bar = $('wiz-bar'); if (!bar) return;
+      bar.hidden = false;
+      $('wiz-fill').style.width = ((wizStep - 1) / (WIZ_STEPS.length - 1) * 100) + '%';
+      $('wiz-steps').innerHTML = WIZ_STEPS.map((s, i) => { const n = i + 1, c = n < wizStep ? 'done' : n === wizStep ? 'on' : ''; return `<span class="wiz-step ${c}"><b>${n}</b>${s}</span>`; }).join('');
+      $('wiz-mini').innerHTML = `Paso <b>${wizStep}</b> de ${WIZ_STEPS.length} · ${WIZ_STEPS[wizStep - 1]}`;
+    }
+    function setWizStep(n){ wizStep = n; renderWizBar(); }
+
     // ---------- producto de ejemplo (?demo=1) — nunca pantalla en blanco ----------
     // genera un recorte transparente sintético (frasco) y lo mete por el mismo pipeline
     // que una foto procesada, para probar el flujo sin subir nada.
@@ -4534,7 +4569,8 @@
 
     // ---------- aplicar traducciones al cargar ----------
     applyI18n();
-    if (new URLSearchParams(location.search).get('demo')) loadDemoProduct();
+    setWizStep(1);   // barra de progreso visible desde el arranque (Producto)
+    if (new URLSearchParams(location.search).get('demo')) loadDemoProduct();   // → Galería (paso 3)
     else restoreDraft();   // value-first: si había trabajo en progreso, lo traemos (nunca pantalla en blanco)
   </script>
 </body>
