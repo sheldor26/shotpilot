@@ -675,6 +675,10 @@
                 <button type="button" class="bg-swatch bg-transparent" id="bg-none" data-i18n-title="bgNone" title="Sin fondo (PNG transparente)" aria-pressed="false" aria-label="Sin fondo"></button>
                 <input type="color" class="color-pick" id="bg-pick" value="#FFFFFF" data-i18n-title="customColor" title="Color personalizado">
               </div>
+              <div class="bg-row bg-grad-row">
+                <span class="dims-mini-label" data-i18n="bgPremium">Estudio</span>
+                <div class="swatches bg-grads" id="bg-grads"></div>
+              </div>
               <label class="toggle" style="margin-top:.7rem">
                 <input type="checkbox" id="shadow">
                 <span class="sw" aria-hidden="true"></span>
@@ -1148,7 +1152,9 @@
         chkBgColor: 'Fondo de color (la principal de ML va en blanco)',
         chkBgNone: 'Sin fondo · PNG transparente',
         bgLabel: 'Fondo',
+        bgPremium: 'Estudio',
         bgNone: 'Sin fondo (PNG transparente)',
+        chkBgGrad: 'Fondo estudio premium (la principal de ML va en blanco)',
         chkCentered: (p) => `Producto centrado al ${p}% del cuadro`,
         chkCenteredWarn: (p) => `Producto al ${p}% (lo ideal es 75–90%)`,
         chkRes: 'Resolución suficiente para el zoom',
@@ -1345,7 +1351,9 @@
         chkBgColor: 'Colored background (ML main image must be white)',
         chkBgNone: 'No background · transparent PNG',
         bgLabel: 'Background',
+        bgPremium: 'Studio',
         bgNone: 'No background (transparent PNG)',
+        chkBgGrad: 'Premium studio background (ML main image must be white)',
         chkCentered: (p) => `Product fills ${p}% of the frame, centered`,
         chkCenteredWarn: (p) => `Product fills ${p}% (75–90% is ideal)`,
         chkRes: 'Enough resolution for zoom',
@@ -1403,7 +1411,31 @@
     ];
     let presetKey = 'ml', shadowOn = false;
     let bgColor = '#FFFFFF';   // fondo del lienzo · null = transparente (solo producto)
+    let bgGrad = -1;           // -1 = sin gradiente · >=0 = índice de GRADIENTS (tiene prioridad sobre bgColor)
     const BG_COLORS = ['#FFFFFF', '#FCE9EE', '#E4F4EA', '#ECE7FB', '#FFEBD8', '#E4F0FB', '#F6F1E7'];   // blanco + pasteles
+    // backdrops premium tipo estudio (radial = producto resaltado · linear = parejo)
+    const GRADIENTS = [
+      { type:'radial', from:'#FFF1F4', to:'#F6D2DD' },   // rosa estudio
+      { type:'radial', from:'#FFFBF3', to:'#F0E2CB' },   // crema cálido
+      { type:'radial', from:'#F1FBF6', to:'#D2EEDD' },   // menta
+      { type:'radial', from:'#F5F1FE', to:'#DED2F4' },   // lavanda
+      { type:'radial', from:'#EFF6FF', to:'#D2E5FB' },   // cielo
+      { type:'linear', from:'#FFF4EA', to:'#F8DCC3' },   // durazno
+      { type:'linear', from:'#FCEBE6', to:'#F3D6EA' },   // atardecer
+      { type:'linear', from:'#30313A', to:'#15151A' },   // grafito (oscuro premium)
+    ];
+    function drawGradient(ctx, tw, th, g){
+      let grad;
+      if (g.type === 'radial'){
+        const r = Math.max(tw, th) * 0.80;
+        grad = ctx.createRadialGradient(tw / 2, th * 0.40, r * 0.04, tw / 2, th * 0.55, r);
+      } else {
+        grad = ctx.createLinearGradient(0, 0, 0, th);
+      }
+      grad.addColorStop(0, g.from); grad.addColorStop(1, g.to);
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, tw, th);
+    }
+    function gradCSS(g){ return g.type === 'radial' ? `radial-gradient(circle at 50% 40%, ${g.from}, ${g.to})` : `linear-gradient(180deg, ${g.from}, ${g.to})`; }
     const P = () => PRESETS[presetKey];
     let model = 'isnet-general-use', enhance = false, wb = false, mainOnly = true;
 
@@ -1613,7 +1645,8 @@
       canvas.width = tw; canvas.height = th;
       const ctx = canvas.getContext('2d');
       ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-      if (bgColor){ ctx.fillStyle = bgColor; ctx.fillRect(0, 0, tw, th); }   // null = sin fondo (PNG transparente)
+      if (bgGrad >= 0){ drawGradient(ctx, tw, th, GRADIENTS[bgGrad]); }       // gradiente premium
+      else if (bgColor){ ctx.fillStyle = bgColor; ctx.fillRect(0, 0, tw, th); }   // null = sin fondo (PNG transparente)
       if (!workCtx || !cutoutBox || !cutoutBox.w) return { scaleUsed: 0, fillPct: 0 };
       const b = cutoutBox;
       // reservar el espacio del banner solo si se va a dibujar (si no, producto centrado full)
@@ -1626,9 +1659,17 @@
       const scale = Math.min(tw * eff / b.w, availH * eff / b.h);
       const dw = b.w * scale, dh = b.h * scale;
       const dx = (tw - dw) / 2, dy = availTop + (availH - dh) / 2;
-      if (shadow){ ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.20)'; ctx.shadowBlur = Math.min(tw, th) * 0.045; ctx.shadowOffsetY = Math.min(tw, th) * 0.03; }
+      if (shadow){
+        // sombra de contacto difusa bajo el producto (look de estudio premium)
+        const cx2 = dx + dw / 2, baseY = dy + dh - dh * 0.012, ew = dw * 0.66, eh = Math.max(6, dh * 0.05);
+        ctx.save();
+        ctx.translate(cx2, baseY); ctx.scale(1, eh / (ew / 2)); ctx.translate(-cx2, -baseY);
+        const sg = ctx.createRadialGradient(cx2, baseY, 0, cx2, baseY, ew / 2);
+        sg.addColorStop(0, 'rgba(0,0,0,.30)'); sg.addColorStop(0.7, 'rgba(0,0,0,.12)'); sg.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(cx2, baseY, ew / 2, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
       ctx.drawImage(workCanvas, b.x, b.y, b.w, b.h, dx, dy, dw, dh);
-      if (shadow) ctx.restore();
       if (L.dims) drawDims(ctx, tw, th, { x: dx, y: dy, w: dw, h: dh });
       if (L.banners) drawBanners(ctx, tw, th);
       if (logoOn && logoImg) drawLogo(ctx, tw, th);
@@ -1905,7 +1946,8 @@
     }
 
     function updateChecklist(p, info){
-      const bgItem = bgColor === null ? { state:'tip', text: t('chkBgNone') }
+      const bgItem = bgGrad >= 0 ? { state:'tip', text: t('chkBgGrad') }
+        : bgColor === null ? { state:'tip', text: t('chkBgNone') }
         : (bgColor.toLowerCase() === '#ffffff' ? { state:'ok', text: t('chkWhiteBg') } : { state:'tip', text: t('chkBgColor') });
       const items = [
         { state:'ok', text: t('chkSize')(p.w, p.h) },
@@ -2746,20 +2788,31 @@
 
     // ---- selector de fondo ----
     function syncBgUI(){
-      $('bg-swatches').querySelectorAll('.swatch').forEach(s => s.setAttribute('aria-pressed', (bgColor && s.dataset.hex.toLowerCase() === bgColor.toLowerCase()) ? 'true' : 'false'));
-      $('bg-none').setAttribute('aria-pressed', bgColor === null ? 'true' : 'false');
-      if (bgColor) $('bg-pick').value = bgColor;
-      $('bigprev').classList.toggle('is-transparent', bgColor === null);
+      const solidOn = bgGrad < 0;
+      $('bg-swatches').querySelectorAll('.swatch').forEach(s => s.setAttribute('aria-pressed', (solidOn && bgColor && s.dataset.hex.toLowerCase() === bgColor.toLowerCase()) ? 'true' : 'false'));
+      $('bg-none').setAttribute('aria-pressed', (solidOn && bgColor === null) ? 'true' : 'false');
+      [...$('bg-grads').children].forEach((el, i) => el.setAttribute('aria-pressed', i === bgGrad ? 'true' : 'false'));
+      if (solidOn && bgColor) $('bg-pick').value = bgColor;
+      $('bigprev').classList.toggle('is-transparent', solidOn && bgColor === null);
     }
-    function setBg(color){ bgColor = color; syncBgUI(); renderResult(); }
+    function setBg(color){ bgGrad = -1; bgColor = color; syncBgUI(); renderResult(); }
+    function setGrad(i){ bgGrad = i; syncBgUI(); renderResult(); }
     function renderBgSwatches(){
       const wrap = $('bg-swatches'); wrap.innerHTML = '';
       BG_COLORS.forEach(hex => {
         const b = document.createElement('button'); b.type = 'button'; b.className = 'swatch'; b.dataset.hex = hex; b.style.background = hex;
-        b.setAttribute('aria-pressed', hex.toLowerCase() === (bgColor || '').toLowerCase() ? 'true' : 'false'); b.setAttribute('aria-label', hex);
+        b.setAttribute('aria-label', hex);
         b.addEventListener('click', () => setBg(hex));
         wrap.appendChild(b);
       });
+      const gw = $('bg-grads'); gw.innerHTML = '';
+      GRADIENTS.forEach((g, i) => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'swatch'; b.style.background = gradCSS(g);
+        b.setAttribute('aria-label', 'Fondo estudio ' + (i + 1));
+        b.addEventListener('click', () => setGrad(i));
+        gw.appendChild(b);
+      });
+      syncBgUI();
     }
     renderBgSwatches();
     $('bg-none').addEventListener('click', () => setBg(null));
@@ -2936,7 +2989,7 @@
         bannerOn, bannerFolded, bnTplIdx,
         banner: JSON.parse(JSON.stringify(banner)),
         bnVals: { title: $('bn-title').value, sub: $('bn-sub').value, big: $('bn-big').value, small: $('bn-small').value, badgeOn: $('bn-badge-on').checked },
-        presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn, previewView, bgColor,
+        presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn, previewView, bgColor, bgGrad,
         logoOn, logoFolded, logoMode, logoCorner, logoSize, logoOpacity,
       };
     }
@@ -2947,7 +3000,7 @@
         bannerOn:false, bannerFolded:false, bnTplIdx:-1,
         banner:{ font:'Montserrat', effect:'metal', panel:{color:'#1B49B8',pos:'bottom',style:'card'}, badge:{on:false,color:'#D8381F',corner:'tr'} },
         bnVals:{title:'',sub:'',big:'',small:'',badgeOn:false},
-        presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn:false, previewView:'producto', bgColor:'#FFFFFF',
+        presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn:false, previewView:'producto', bgColor:'#FFFFFF', bgGrad:-1,
         logoOn:false, logoFolded:false, logoMode:'corner', logoCorner:'br', logoSize:18, logoOpacity:1,
       };
     }
@@ -2982,7 +3035,7 @@
       updateDestTrigger();
       $('custom-size').style.display = presetKey === 'custom' ? 'flex' : 'none';
       shadowOn=s.shadowOn; $('shadow').checked=shadowOn;
-      bgColor = (s.bgColor === undefined ? '#FFFFFF' : s.bgColor); syncBgUI();
+      bgColor = (s.bgColor === undefined ? '#FFFFFF' : s.bgColor); bgGrad = (s.bgGrad == null ? -1 : s.bgGrad); syncBgUI();
       logoOn = !!s.logoOn; logoFolded = !!s.logoFolded; logoMode = s.logoMode || 'corner'; logoCorner = s.logoCorner || 'br'; logoSize = s.logoSize || 18; logoOpacity = (s.logoOpacity == null ? 1 : s.logoOpacity);
       $('logo-on').checked = logoOn; $('logo-fold').style.display = logoOn ? 'grid' : 'none'; syncLogoFold();
       syncSeg('logo-mode','mode',logoMode); syncSeg('logo-corner','corner',logoCorner);
