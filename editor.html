@@ -379,6 +379,19 @@
   #adv-wrap > .engine{margin-top:0}
   .extras-head{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:1.5rem;margin-bottom:-.3rem;padding-left:.15rem}
 
+  /* ---- multi-foto: tira de miniaturas ---- */
+  .photo-strip{display:flex;align-items:center;gap:.5rem;margin-bottom:.7rem;overflow-x:auto;scrollbar-width:none;padding:3px 1px}
+  .photo-strip::-webkit-scrollbar{display:none}
+  .photo-thumb{flex:0 0 auto;width:56px;height:56px;border-radius:11px;border:2px solid var(--line);overflow:visible;cursor:pointer;background:#fff;position:relative;transition:border-color .15s,box-shadow .15s}
+  .photo-thumb img{width:100%;height:100%;object-fit:contain;border-radius:9px;display:block}
+  .photo-thumb[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+  .photo-thumb .photo-del{position:absolute;top:-7px;right:-7px;width:19px;height:19px;border-radius:50%;background:var(--ink);color:#fff;border:2px solid var(--white);font-size:11px;line-height:1;cursor:pointer;display:none;place-items:center;padding:0}
+  .photo-thumb:hover .photo-del{display:grid}
+  .photo-add{flex:0 0 auto;width:56px;height:56px;border-radius:11px;border:1.5px dashed var(--line);background:rgba(255,255,255,.5);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:var(--ink-soft);font-size:.58rem;font-weight:700;transition:border-color .15s,color .15s}
+  .photo-add svg{width:17px;height:17px}
+  .photo-add:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+  .photo-add:disabled{opacity:.4;cursor:default}
+
   /* ---- plegar paneles aunque estén activos ---- */
   .dims-head-actions{display:flex;align-items:center;gap:.35rem}
   .panel-fold{flex:none;width:30px;height:30px;border-radius:8px;border:0;background:transparent;color:var(--ink-faint);cursor:pointer;display:grid;place-items:center}
@@ -813,6 +826,9 @@
           </div><!-- /ed-controls -->
 
           <div class="ed-visual">
+          <!-- fotos del producto (varias vistas/ángulos), cada una con sus propios ajustes -->
+          <div class="photo-strip" id="photo-strip" style="display:none"></div>
+          <input type="file" id="add-file" accept="image/png,image/jpeg,image/webp" hidden>
           <!-- selector de vistas (producto / medidas / banner / todo) -->
           <div class="pv-tabs" id="pv-tabs" style="display:none">
             <button type="button" class="pv-nav" id="pv-prev" data-i18n-aria="pvPrev" aria-label="Vista anterior">‹</button>
@@ -829,6 +845,7 @@
           <span class="eng-label" style="margin-top:.2rem;display:block"><span data-i18n="downloadLabel">Descargar · formato</span> <b id="dl-label">MercadoLibre</b></span>
           <button type="button" class="dl-main" id="dl-main" data-i18n="dlMain">Descargar</button>
           <p class="dl-note" id="dl-note" data-i18n="dlNote" style="display:none">La imagen principal de ML va sin texto. Usá "cada versión por separado" para tener también la limpia.</p>
+          <button type="button" class="btn btn-ghost" id="dl-all-photos" data-i18n="dlAllPhotos" style="display:none;min-width:100%;margin-top:.55rem">Bajar todas las fotos</button>
           <div class="row" style="margin-top:.55rem">
             <button type="button" class="btn btn-ghost" id="dl-separate" data-i18n="dlSeparate" style="display:none">Cada versión por separado</button>
             <button type="button" class="btn btn-ghost" id="download-pack" data-i18n="dlPack">Pack (todos los formatos)</button>
@@ -861,6 +878,10 @@
         title: 'Probá gratis',
         lede: 'Subí la foto de tu producto y bajala con <strong>fondo blanco</strong>, en la medida exacta de cada plataforma. Sumá medidas y banners si querés.',
         quota: 'Te quedan 5 de 5 gratis',
+        quotaLeft: (n) => `Te quedan ${n} de 5 gratis`,
+        addPhoto: 'Foto',
+        photoRemove: 'Quitar foto',
+        dlAllPhotos: 'Bajar todas las fotos',
         dropTitle: 'Arrastrá tu foto o tocá para elegir',
         dropHint: 'JPG o PNG · una foto del celular sirve · la primera puede tardar (baja el modelo)',
         procText: 'Sacando el fondo…',
@@ -1009,7 +1030,7 @@
         dlNote: 'La imagen principal de ML va sin texto. Usá "cada versión por separado" para tener también la limpia.',
         dlSeparate: 'Cada versión por separado',
         dlPack: 'Pack (todos los formatos)',
-        another: 'Otra foto',
+        another: 'Producto nuevo',
         foot: 'Las primeras 5 fotos son gratis. Sin tarjeta.',
         // ---- strings generados en JS ----
         hintErase: 'Pintá sobre lo que quieras borrar',
@@ -1039,6 +1060,10 @@
         title: 'Try it free',
         lede: 'Upload your product photo and download it on a <strong>white background</strong>, at the exact size for each platform. Add dimensions and banners if you want.',
         quota: 'You have 5 of 5 free left',
+        quotaLeft: (n) => `${n} of 5 free left`,
+        addPhoto: 'Photo',
+        photoRemove: 'Remove photo',
+        dlAllPhotos: 'Download all photos',
         dropTitle: 'Drag your photo or tap to choose',
         dropHint: 'JPG or PNG · a phone photo works fine · the first one may take a moment (loading the model)',
         procText: 'Removing the background…',
@@ -1187,7 +1212,7 @@
         dlNote: 'The ML main image must have no text. Use "each version separately" to also get the clean one.',
         dlSeparate: 'Each version separately',
         dlPack: 'Pack (all sizes)',
-        another: 'Another photo',
+        another: 'New product',
         foot: 'Your first 5 photos are free. No card required.',
         // ---- strings generados en JS ----
         hintErase: 'Paint over whatever you want to erase',
@@ -1303,25 +1328,33 @@
       });
     }
 
-    async function handleFile(file){
-      if (!/^image\/(png|jpe?g|webp)$/.test(file.type)){ show('drop'); showError(t('uploadJpgPng')); return; }
-      if (originalUrl) URL.revokeObjectURL(originalUrl);
-      originalUrl = URL.createObjectURL(file);
+    // primera foto / producto nuevo: resetea la galería
+    async function handleFile(file){ photos = []; activePhoto = -1; await prepAndProcess(file, 'first'); }
+    // agregar otra vista del MISMO producto (gasta crédito)
+    async function addFile(file){
+      if (photos.length >= MAX_PHOTOS) return;
+      if (activePhoto >= 0 && photos[activePhoto]) photos[activePhoto].state = snapshotState();
+      await prepAndProcess(file, 'add');
+    }
+    async function prepAndProcess(file, mode){
+      if (!/^image\/(png|jpe?g|webp)$/.test(file.type)){ if (mode === 'first') show('drop'); showError(t('uploadJpgPng')); return; }
+      originalUrl = URL.createObjectURL(file);   // cada foto guarda su propio "antes"; no revocamos las otras
       procImg.src = originalUrl;
       show('proc');
       try {
         srcBlob = await resizeForUpload(file);
         origImageEl = await loadImg(URL.createObjectURL(srcBlob));
-        await processCutout(true);
+        await processCutout(mode);
       } catch (e){
-        show('drop'); showError(e.message || t('processCantPhoto'));
+        show(mode === 'first' ? 'drop' : 'result'); showError(e.message || t('processCantPhoto'));
       }
     }
 
     // ---------- llamada al motor rembg ----------
-    async function processCutout(firstTime){
+    async function processCutout(mode){
       if (!srcBlob) return;
-      if (firstTime) { show('proc'); $('proc-text').textContent = t('procText'); }
+      const heavy = (mode !== 'reprocess');
+      if (heavy) { show('proc'); $('proc-text').textContent = t('procText'); }
       else { compare.classList.add('busy'); $('metric').textContent = t('processing'); }
 
       const fd = new FormData();
@@ -1344,14 +1377,28 @@
         imgBefore.src = originalUrl;
         setMode('compare');
 
-        const qKey = model === 'birefnet-general' ? 'qUltra' : model === 'u2net' ? 'qGood' : 'qExcellent';
+        const qKey = model === 'u2net' ? 'qGood' : 'qExcellent';
         $('metric').innerHTML = t('metric')((outSize || '').replace('x', ' × '), t(qKey));
         updateDimsConf();
         refreshProductColors();
-        updateDlVariants();
-        if (firstTime && !wizardSkipped) openWizard(); else show('result');
+
+        if (mode === 'reprocess'){
+          if (photos[activePhoto]) photos[activePhoto].cutoutBlob = blob;
+          updateDlVariants(); buildPreviewTabs(); show('result');
+        } else if (mode === 'add'){
+          restoreState(blankState());          // foto nueva arranca limpia (mismo tamaño)
+          registerPhoto(blob, false);
+          creditsUsed++; updateQuota();
+          updateDlVariants(); buildPreviewTabs(); show('result');
+        } else {                                // 'first'
+          registerPhoto(blob, true);
+          creditsUsed++; updateQuota();
+          updateDlVariants();
+          if (!wizardSkipped) openWizard(); else { buildPreviewTabs(); show('result'); }
+        }
       } catch (e){
-        if (firstTime){ show('drop'); showError(e.message); }
+        if (mode === 'first'){ show('drop'); showError(e.message); }
+        else if (mode === 'add'){ show('result'); showError(e.message); }
         else { $('metric').textContent = t('errorPrefix')(e.message); }
       } finally {
         compare.classList.remove('busy');
@@ -2435,12 +2482,12 @@
         $('models').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed','false'));
         c.setAttribute('aria-pressed','true');
         model = c.dataset.model;
-        processCutout(false);
+        processCutout('reprocess');
       });
     });
-    $('enhance').addEventListener('change', e => { enhance = e.target.checked; processCutout(false); });
-    $('wb').addEventListener('change', e => { wb = e.target.checked; processCutout(false); });
-    $('mainonly').addEventListener('change', e => { mainOnly = e.target.checked; processCutout(false); });
+    $('enhance').addEventListener('change', e => { enhance = e.target.checked; processCutout('reprocess'); });
+    $('wb').addEventListener('change', e => { wb = e.target.checked; processCutout('reprocess'); });
+    $('mainonly').addEventListener('change', e => { mainOnly = e.target.checked; processCutout('reprocess'); });
 
     // ---------- controles destino / descarga ----------
     function downloadBlob(blob, name){
@@ -2525,7 +2572,7 @@
       renderResult();   // dejar el preview en el destino actual
     });
 
-    $('another').addEventListener('click', () => { fileInput.value = ''; show('drop'); });
+    $('another').addEventListener('click', () => { photos = []; activePhoto = -1; renderPhotoStrip(); fileInput.value = ''; show('drop'); });
     $('pv-prev').addEventListener('click', () => flipPreview(-1));
     $('pv-next').addEventListener('click', () => flipPreview(1));
 
@@ -2627,6 +2674,138 @@
       show('result');
       renderResult();
     }
+
+    // ================= MULTI-FOTO (varias vistas del mismo producto) =================
+    const MAX_PHOTOS = 6, FREE_CREDITS = 5;
+    let photos = [], activePhoto = -1, photoSeq = 0, creditsUsed = 0;
+
+    function updateQuota(){
+      const left = Math.max(0, FREE_CREDITS - creditsUsed);
+      const el = $('quota-text'); if (el) el.textContent = t('quotaLeft')(left);
+    }
+    function snapshotState(){
+      const dv = d => { const el = document.querySelector(`#dims-fields .dim-v[data-dim="${d}"]`); return el ? el.value : ''; };
+      return {
+        dimsOn, dimsFolded, dimsStyle, dimsUnit, dimsPos, dimsLabelSide,
+        dimVals: { alto: dv('alto'), ancho: dv('ancho'), prof: dv('prof') },
+        dimLines: dimLines ? JSON.parse(JSON.stringify(dimLines)) : null,
+        customDims: JSON.parse(JSON.stringify(customDims)),
+        autoDims: autoDims ? JSON.parse(JSON.stringify(autoDims)) : null,
+        bannerOn, bannerFolded, bnTplIdx,
+        banner: JSON.parse(JSON.stringify(banner)),
+        bnVals: { title: $('bn-title').value, sub: $('bn-sub').value, big: $('bn-big').value, small: $('bn-small').value, badgeOn: $('bn-badge-on').checked },
+        presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn, previewView,
+      };
+    }
+    function blankState(){
+      return {
+        dimsOn:false, dimsFolded:false, dimsStyle:'lines', dimsUnit:'cm', dimsPos:'bl', dimsLabelSide:'out',
+        dimVals:{alto:'',ancho:'',prof:''}, dimLines:null, customDims:[], autoDims: autoDims ? JSON.parse(JSON.stringify(autoDims)) : null,
+        bannerOn:false, bannerFolded:false, bnTplIdx:-1,
+        banner:{ font:'Montserrat', effect:'metal', panel:{color:'#1B49B8',pos:'bottom',style:'card'}, badge:{on:false,color:'#D8381F',corner:'tr'} },
+        bnVals:{title:'',sub:'',big:'',small:'',badgeOn:false},
+        presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn:false, previewView:'producto',
+      };
+    }
+    function restoreState(s){
+      dimsOn=s.dimsOn; dimsFolded=s.dimsFolded; dimsStyle=s.dimsStyle; dimsUnit=s.dimsUnit; dimsPos=s.dimsPos; dimsLabelSide=s.dimsLabelSide;
+      dimLines = s.dimLines ? JSON.parse(JSON.stringify(s.dimLines)) : null;
+      customDims = JSON.parse(JSON.stringify(s.customDims || []));
+      autoDims = s.autoDims ? JSON.parse(JSON.stringify(s.autoDims)) : null;
+      ['alto','ancho','prof'].forEach(d => { const el = document.querySelector(`#dims-fields .dim-v[data-dim="${d}"]`); if (el) el.value = s.dimVals[d] || ''; });
+      const sys = UNIT_SYS.metric.includes(dimsUnit) ? 'metric' : 'imperial';
+      syncSeg('dims-system','sys',sys); applyUnitSystem('dims-unit', sys, () => {}); syncSeg('dims-unit','unit',dimsUnit);
+      document.querySelectorAll('#dims-fields .dim-u').forEach(u => u.textContent = dimsUnit);
+      syncSeg('dims-style','style',dimsStyle); syncSeg('dims-side','side',dimsLabelSide); syncSeg('dims-pos','pos',dimsPos);
+      const lines = dimsStyle === 'lines';
+      $('dims-pos-row').style.display = lines ? 'none' : 'block';
+      $('dims-side-row').style.display = lines ? 'flex' : 'none';
+      $('dims-lines-hint').style.display = lines ? 'block' : 'none';
+      $('dims-on').checked = dimsOn; $('dims-fold').style.display = dimsOn ? 'grid' : 'none'; syncDimsFold();
+      renderCustomRows(); updateDimsConf();
+      bannerOn=s.bannerOn; bannerFolded=s.bannerFolded; bnTplIdx=s.bnTplIdx;
+      banner.font=s.banner.font; banner.effect=s.banner.effect; banner.panel={...s.banner.panel}; banner.badge={...s.banner.badge};
+      $('bn-title').value=s.bnVals.title; $('bn-sub').value=s.bnVals.sub; $('bn-big').value=s.bnVals.big; $('bn-small').value=s.bnVals.small;
+      $('bn-badge-on').checked=s.bnVals.badgeOn; $('bn-badge-fields').style.display=s.bnVals.badgeOn ? 'block' : 'none';
+      $('bn-on').checked=bannerOn; $('bn-fold').style.display=bannerOn ? 'grid' : 'none'; syncBannerFold();
+      syncSeg('bn-font','font',banner.font); syncSeg('bn-effect','effect',banner.effect);
+      syncSeg('bn-panel-style','style',banner.panel.style); syncSeg('bn-panel-pos','pos',banner.panel.pos);
+      syncSeg('bn-badge-corner','corner',banner.badge.corner);
+      $('bn-panel-pick').value=banner.panel.color; $('bn-badge-pick').value=banner.badge.color;
+      [...$('bn-templates').children].forEach((el,idx) => el.setAttribute('aria-pressed', idx===bnTplIdx ? 'true' : 'false'));
+      presetKey=s.presetKey; PRESETS.custom.w=s.customW; PRESETS.custom.h=s.customH;
+      $('cs-w').value=s.customW; $('cs-h').value=s.customH;
+      syncSeg('presets','key',presetKey);
+      $('custom-size').style.display = presetKey === 'custom' ? 'flex' : 'none';
+      shadowOn=s.shadowOn; $('shadow').checked=shadowOn;
+      previewView = s.previewView || 'producto';
+      ensureBannerFont(); refreshProductColors(); updateDlVariants(); buildPreviewTabs();
+    }
+    function registerPhoto(cutoutBlob, isFirst){
+      const photo = { id: 'p' + (++photoSeq), originalUrl, cutoutBlob, thumbUrl: URL.createObjectURL(cutoutBlob), state: null };
+      if (isFirst){ photos = [photo]; activePhoto = 0; } else { photos.push(photo); activePhoto = photos.length - 1; }
+      photo.state = snapshotState();
+      renderPhotoStrip();
+    }
+    function renderPhotoStrip(){
+      const strip = $('photo-strip');
+      if (!photos.length){ strip.style.display = 'none'; $('dl-all-photos').style.display = 'none'; return; }
+      strip.style.display = 'flex'; strip.innerHTML = '';
+      photos.forEach((p, i) => {
+        const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'photo-thumb';
+        btn.setAttribute('aria-pressed', i === activePhoto ? 'true' : 'false');
+        const img = document.createElement('img'); img.src = p.thumbUrl; img.alt = '';
+        btn.appendChild(img);
+        if (photos.length > 1){
+          const del = document.createElement('button'); del.type = 'button'; del.className = 'photo-del'; del.textContent = '×'; del.setAttribute('aria-label', t('photoRemove'));
+          del.addEventListener('click', e => { e.stopPropagation(); removePhoto(i); });
+          btn.appendChild(del);
+        }
+        btn.addEventListener('click', () => switchPhoto(i));
+        strip.appendChild(btn);
+      });
+      const add = document.createElement('button'); add.type = 'button'; add.className = 'photo-add';
+      add.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span>' + t('addPhoto') + '</span>';
+      add.disabled = !(photos.length < MAX_PHOTOS && (FREE_CREDITS - creditsUsed) > 0);
+      add.addEventListener('click', () => $('add-file').click());
+      strip.appendChild(add);
+      $('dl-all-photos').style.display = photos.length > 1 ? 'block' : 'none';
+    }
+    async function loadPhotoInto(i){
+      const p = photos[i]; originalUrl = p.originalUrl;
+      await loadCutout(p.cutoutBlob); imgBefore.src = p.originalUrl; setMode('compare'); restoreState(p.state);
+    }
+    async function switchPhoto(i){
+      if (i === activePhoto || i < 0 || i >= photos.length) return;
+      if (activePhoto >= 0 && photos[activePhoto]) photos[activePhoto].state = snapshotState();
+      activePhoto = i; await loadPhotoInto(i); renderPhotoStrip();
+    }
+    async function removePhoto(i){
+      if (photos.length <= 1) return;
+      const wasActive = (i === activePhoto);
+      try { URL.revokeObjectURL(photos[i].thumbUrl); } catch {}
+      photos.splice(i, 1);
+      if (wasActive){ activePhoto = Math.min(i, photos.length - 1); await loadPhotoInto(activePhoto); }
+      else if (activePhoto > i){ activePhoto--; }
+      renderPhotoStrip();
+    }
+    $('add-file').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) addFile(f); });
+    $('dl-all-photos').addEventListener('click', async () => {
+      if (!photos.length) return;
+      const btn = $('dl-all-photos'); btn.disabled = true;
+      if (activePhoto >= 0) photos[activePhoto].state = snapshotState();
+      const cur = activePhoto;
+      for (let i = 0; i < photos.length; i++){
+        await loadPhotoInto(i);
+        const pr = P(), L = viewLayers();
+        compose(pr.w, pr.h, shadowOn, pr.fill, L);
+        const sfx = previewView === 'medidas' ? 'medidas' : previewView === 'banner' ? 'banner' : 'limpia';
+        downloadBlob(await toBlob(), `shotpilot-foto${i + 1}-${sfx}-${pr.w}x${pr.h}.png`);
+        await new Promise(r => setTimeout(r, 350));
+      }
+      activePhoto = cur; await loadPhotoInto(cur);
+      btn.disabled = false; renderPhotoStrip();
+    });
 
     // ---------- aplicar traducciones al cargar ----------
     applyI18n();
