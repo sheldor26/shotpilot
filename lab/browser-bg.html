@@ -36,9 +36,14 @@
   <p class="sub">Corre un modelo ONNX (isnet o u2net, Apache-2.0) <b>100% en el navegador</b> con onnxruntime-web. Sirve para medir velocidad y calidad real antes de migrar (y matar Railway).</p>
 
   <div class="card">
+    <label class="fld">Modelo (preprocesamiento)</label>
+    <select id="model-type" style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.9rem;margin-bottom:.9rem;background:#fff">
+      <option value="u2net">u2net / u2netp — 320×320 (default, ya cargado)</option>
+      <option value="isnet">isnet-general-use — 1024×1024 (más calidad, más pesado)</option>
+    </select>
     <label class="fld">URL del modelo .onnx (Apache-2.0)</label>
-    <input type="text" id="model-url" placeholder="https://tu-dominio/modelos/isnet-general-use.onnx" value="">
-    <p class="note">Hospedá el modelo en tu dominio/CDN con CORS abierto. Para probar rápido el pipeline usá <b>u2netp</b> (~4.7&nbsp;MB); para calidad final, <b>isnet-general-use</b> (~170&nbsp;MB) o una versión int8 quantizada (~45&nbsp;MB).</p>
+    <input type="text" id="model-url" placeholder="/lab/u2netp.onnx" value="/lab/u2netp.onnx">
+    <p class="note">Ya viene con <b>u2netp</b> hospedado acá mismo (sin CORS). Para calidad final, subí <b>isnet-general-use</b> (~170&nbsp;MB) o una versión int8 quantizada (~45&nbsp;MB) a tu dominio/CDN y pegá la URL, eligiendo "isnet" arriba.</p>
     <div class="row">
       <label class="fld" style="margin:0"><input type="checkbox" id="webgpu"> Usar WebGPU (más rápido si el equipo lo soporta)</label>
     </div>
@@ -62,9 +67,15 @@
 <script>
   const $ = id => document.getElementById(id);
   ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/';
-  const SIZE = 1024;                       // isnet/dis_general_use: 1024×1024
-  const MEAN = [0.5, 0.5, 0.5], STD = [1.0, 1.0, 1.0];
-  let session = null, imgEl = null, lastBlobUrl = null;
+  // preprocesamiento por modelo (idéntico a rembg)
+  const PROFILES = {
+    u2net: { size: 320,  mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225] },
+    isnet: { size: 1024, mean: [0.5, 0.5, 0.5],       std: [1.0, 1.0, 1.0] },
+  };
+  let SIZE = PROFILES.u2net.size, MEAN = PROFILES.u2net.mean, STD = PROFILES.u2net.std;
+  let session = null, imgEl = null, lastBlobUrl = null, loadedKey = null;
+  $('model-type').addEventListener('change', e => { const p = PROFILES[e.target.value]; SIZE = p.size; MEAN = p.mean; STD = p.std; session = null; });
+  $('model-url').addEventListener('input', () => { session = null; });
 
   function setMetric(t){ $('metric').textContent = t; }
 
