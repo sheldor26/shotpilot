@@ -417,7 +417,8 @@
   .wiz-foot .wiz-hint{margin-right:auto;color:var(--ink-faint);font-size:.84rem}
   body.has-wiz-foot{padding-bottom:74px}
   /* paso Marca (overlay salteable) */
-  .marca-step{position:fixed;inset:0;z-index:70;background:rgba(26,18,12,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:1.2rem}
+  .marca-step{position:fixed;inset:0;z-index:70;background:rgba(26,18,12,.62);display:flex;align-items:center;justify-content:center;padding:1.2rem}
+  .marca-step .marca-card,.marca-step button{pointer-events:auto}
   .marca-card{background:#fff;border-radius:18px;max-width:380px;width:100%;padding:1.6rem 1.3rem 1.3rem;position:relative;text-align:center;box-shadow:0 24px 60px rgba(40,24,16,.3)}
   .marca-x{position:absolute;top:.6rem;right:.85rem;background:none;border:0;font-size:1.6rem;line-height:1;color:var(--ink-faint);cursor:pointer}
   .marca-card h3{font-size:1.3rem;margin:.2rem 0 .35rem}
@@ -4636,6 +4637,7 @@
     $('marca-skip').addEventListener('click', () => wizGo(5));
     $('marca-apply').addEventListener('click', () => wizGo(5));
     $('marca-x').addEventListener('click', () => wizGo(3));
+    $('marca-step').addEventListener('click', (e) => { if (e.target === $('marca-step')) wizGo(3); });   // tocar afuera cierra
 
     // ---------- producto de ejemplo (?demo=1) — nunca pantalla en blanco ----------
     // genera un recorte transparente sintético (frasco) y lo mete por el mismo pipeline
