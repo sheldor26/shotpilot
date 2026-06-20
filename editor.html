@@ -373,9 +373,10 @@
   .ed-controls > #dims-panel{order:5}
   .ed-controls > #banner-panel{order:6}
   .ed-controls > #logo-panel{order:7}
-  .ed-controls > #adv-toggle{order:8;margin-top:1.2rem}
-  .ed-controls > #adv-wrap{order:9}
-  .ed-controls > #checklist{order:10}
+  .ed-controls > #enh-panel{order:8}
+  .ed-controls > #adv-toggle{order:9;margin-top:1.2rem}
+  .ed-controls > #adv-wrap{order:10}
+  .ed-controls > #checklist{order:11}
   /* logo / marca de agua */
   .logo-up-row{display:flex;align-items:center;gap:.7rem;margin-top:.9rem}
   .logo-prevbox{flex:none;width:46px;height:46px;border-radius:9px;border:1px solid var(--line);background:repeating-conic-gradient(#ece6dd 0% 25%, #fff 0% 50%) 50% / 8px 8px;display:grid;place-items:center;overflow:hidden}
@@ -918,6 +919,31 @@
             </div>
           </div>
 
+          <!-- realce premium (filtro GPU del navegador, sobre el producto) -->
+          <div class="engine" id="enh-panel">
+            <div class="dims-head">
+              <span class="dims-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v2M12 19v2M5 12H3M21 12h-2M6 6 4.5 4.5M18 6l1.5-1.5M6 18l-1.5 1.5M18 18l1.5 1.5"/><circle cx="12" cy="12" r="4"/></svg>
+                <span data-i18n="enhTitle">Realce de la foto</span>
+              </span>
+              <span class="dims-head-actions">
+                <button type="button" class="panel-fold" id="enh-fold" data-i18n-aria="foldPanel" aria-label="Plegar / desplegar" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+                <label class="dims-switch" data-i18n-title="enhSwitchTitle" title="Mejorar brillo, contraste y color">
+                  <input type="checkbox" id="enh-on">
+                  <span class="sw" aria-hidden="true"></span>
+                </label>
+              </span>
+            </div>
+            <div id="enh-fields" style="display:none">
+              <button type="button" class="mini" id="enh-auto" data-i18n="enhAuto" style="margin-top:.6rem">✨ Auto estudio</button>
+              <div id="enh-controls" style="margin-top:.7rem;display:grid;gap:.7rem">
+                <label class="opt logo-slider"><span data-i18n="enhBright">Brillo</span> <input type="range" id="enh-b" min="70" max="130" value="100"><b id="enh-b-v">100%</b></label>
+                <label class="opt logo-slider"><span data-i18n="enhContrast">Contraste</span> <input type="range" id="enh-c" min="80" max="130" value="100"><b id="enh-c-v">100%</b></label>
+                <label class="opt logo-slider"><span data-i18n="enhSat">Color</span> <input type="range" id="enh-s" min="50" max="180" value="100"><b id="enh-s-v">100%</b></label>
+              </div>
+            </div>
+          </div>
+
           <!-- checklist de cumplimiento (validación final) -->
           <div class="checklist" id="checklist"></div>
           </div><!-- /ed-controls -->
@@ -1077,6 +1103,12 @@
         logoWmMode: 'Marca de agua',
         logoSize: 'Tamaño',
         logoOpacity: 'Opacidad',
+        enhTitle: 'Realce de la foto',
+        enhSwitchTitle: 'Mejorar brillo, contraste y color',
+        enhAuto: '✨ Auto estudio',
+        enhBright: 'Brillo',
+        enhContrast: 'Contraste',
+        enhSat: 'Color',
         bannersSwitchTitle: 'Agregar banners sobre la imagen',
         font: 'Fuente',
         fontAria: 'Fuente',
@@ -1277,6 +1309,12 @@
         logoWmMode: 'Watermark',
         logoSize: 'Size',
         logoOpacity: 'Opacity',
+        enhTitle: 'Photo enhance',
+        enhSwitchTitle: 'Improve brightness, contrast and color',
+        enhAuto: '✨ Auto studio',
+        enhBright: 'Brightness',
+        enhContrast: 'Contrast',
+        enhSat: 'Color',
         bannersSwitchTitle: 'Add banners on the image',
         font: 'Font',
         fontAria: 'Font',
@@ -1686,7 +1724,9 @@
         ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(cx2, baseY, ew / 2, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
       }
+      ctx.filter = enhFilter();   // realce premium (brillo/contraste/color) solo sobre el producto
       ctx.drawImage(workCanvas, b.x, b.y, b.w, b.h, dx, dy, dw, dh);
+      ctx.filter = 'none';
       if (L.dims) drawDims(ctx, tw, th, { x: dx, y: dy, w: dw, h: dh });
       if (L.banners) drawBanners(ctx, tw, th);
       if (logoOn && logoImg) drawLogo(ctx, tw, th);
@@ -2382,6 +2422,10 @@
 
     // ---- banners promocionales ----
     const BN_COLORS = ['#1B49B8', '#C2186A', '#F2B705', '#D8381F', '#1A1614', '#1FA463'];
+    // ---- realce de la foto (filtro nativo del canvas sobre el producto) ----
+    let enhanceFx = false, enhFolded = false, enhB = 100, enhC = 100, enhS = 100;
+    function enhFilter(){ return enhanceFx ? `brightness(${enhB / 100}) contrast(${enhC / 100}) saturate(${enhS / 100})` : 'none'; }
+
     // ---- logo / marca de agua ----
     let logoOn = false, logoFolded = false, logoImg = null;
     let logoMode = 'corner', logoCorner = 'br', logoSize = 18, logoOpacity = 1;
@@ -2714,6 +2758,21 @@
     }));
     $('logo-size').addEventListener('input', e => { logoSize = parseInt(e.target.value, 10); $('logo-size-v').textContent = logoSize + '%'; renderResult(); });
     $('logo-op').addEventListener('input', e => { logoOpacity = parseInt(e.target.value, 10) / 100; $('logo-op-v').textContent = e.target.value + '%'; renderResult(); });
+
+    // ---- realce de la foto ----
+    function syncEnhFold(){ $('enh-fields').style.display = (enhanceFx && !enhFolded) ? 'block' : 'none'; $('enh-fold').classList.toggle('folded', enhFolded); }
+    function syncEnhUI(){ $('enh-b').value = enhB; $('enh-b-v').textContent = enhB + '%'; $('enh-c').value = enhC; $('enh-c-v').textContent = enhC + '%'; $('enh-s').value = enhS; $('enh-s-v').textContent = enhS + '%'; }
+    $('enh-on').addEventListener('change', e => {
+      enhanceFx = e.target.checked;
+      if (enhanceFx) enhFolded = false;
+      $('enh-fold').style.display = enhanceFx ? 'grid' : 'none';
+      syncEnhFold(); buildPreviewTabs(); renderResult();
+    });
+    $('enh-fold').addEventListener('click', () => { enhFolded = !enhFolded; syncEnhFold(); });
+    $('enh-b').addEventListener('input', e => { enhB = parseInt(e.target.value, 10); $('enh-b-v').textContent = enhB + '%'; renderResult(); });
+    $('enh-c').addEventListener('input', e => { enhC = parseInt(e.target.value, 10); $('enh-c-v').textContent = enhC + '%'; renderResult(); });
+    $('enh-s').addEventListener('input', e => { enhS = parseInt(e.target.value, 10); $('enh-s-v').textContent = enhS + '%'; renderResult(); });
+    $('enh-auto').addEventListener('click', () => { enhB = 105; enhC = 109; enhS = 122; syncEnhUI(); renderResult(); });
     ['bn-title', 'bn-sub', 'bn-big', 'bn-small'].forEach(id => $(id).addEventListener('input', renderResult));
     $('bn-panel-pos').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
       $('bn-panel-pos').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', 'false'));
@@ -3011,6 +3070,7 @@
         bnVals: { title: $('bn-title').value, sub: $('bn-sub').value, big: $('bn-big').value, small: $('bn-small').value, badgeOn: $('bn-badge-on').checked },
         presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn, previewView, bgColor, bgGrad,
         logoOn, logoFolded, logoMode, logoCorner, logoSize, logoOpacity,
+        enhanceFx, enhFolded, enhB, enhC, enhS,
       };
     }
     function blankState(){
@@ -3022,6 +3082,7 @@
         bnVals:{title:'',sub:'',big:'',small:'',badgeOn:false},
         presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn:false, previewView:'producto', bgColor:'#FFFFFF', bgGrad:-1,
         logoOn:false, logoFolded:false, logoMode:'corner', logoCorner:'br', logoSize:18, logoOpacity:1,
+        enhanceFx:false, enhFolded:false, enhB:100, enhC:100, enhS:100,
       };
     }
     function restoreState(s){
@@ -3064,6 +3125,8 @@
       $('logo-op').value = Math.round(logoOpacity * 100); $('logo-op-v').textContent = Math.round(logoOpacity * 100) + '%';
       $('logo-controls').style.display = logoImg ? 'grid' : 'none';
       $('logo-prevbox').style.display = logoImg ? 'grid' : 'none';
+      enhanceFx = !!s.enhanceFx; enhFolded = !!s.enhFolded; enhB = s.enhB || 100; enhC = s.enhC || 100; enhS = s.enhS || 100;
+      $('enh-on').checked = enhanceFx; $('enh-fold').style.display = enhanceFx ? 'grid' : 'none'; syncEnhFold(); syncEnhUI();
       previewView = s.previewView || 'producto';
       ensureBannerFont(); refreshProductColors(); updateDlVariants(); buildPreviewTabs();
     }
