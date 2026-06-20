@@ -8,22 +8,108 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/app.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  .cta-big{ width:100%; font-size:1.05rem; padding:1rem; border-radius:14px; margin-bottom:.55rem; }
+  .cred-line{ text-align:center; font-size:.86rem; color:var(--soft); margin:0 0 1.5rem; }
+  .cred-line a{ color:var(--coral); font-weight:700; text-decoration:none; }
+  .cred-line b{ color:var(--ink); }
+  .sec-h{ font-size:1.05rem; font-weight:700; margin:1.5rem 0 .6rem; }
+  .sc{ display:flex; align-items:center; gap:.8rem; background:#fff; border:1px solid var(--line); border-radius:14px; padding:.85rem 1rem; margin-bottom:.6rem; text-decoration:none; color:inherit; }
+  .sc:hover{ border-color:var(--coral); }
+  .sc .sc-ic{ width:38px; height:38px; border-radius:10px; background:#FAECE7; color:var(--coral); display:grid; place-items:center; flex:none; }
+  .sc .sc-ic svg{ width:20px; height:20px; }
+  .sc-t{ display:block; font-weight:700; font-size:.95rem; }
+  .sc-s{ display:block; font-size:.8rem; color:var(--soft); margin-top:1px; }
+  .sc-chev{ margin-left:auto; color:var(--faint); display:flex; }
+  .sc.disabled{ opacity:.6; }
+  .sc.disabled .sc-ic{ background:var(--cream2); color:var(--faint); }
+  .rec-card{ display:flex; align-items:center; gap:.8rem; background:#fff; border:1px solid var(--line); border-radius:14px; padding:.7rem .8rem; margin-bottom:.6rem; }
+  .rec-thumb{ width:48px; height:48px; border-radius:10px; background:var(--cream2); flex:none; display:grid; place-items:center; color:var(--faint); overflow:hidden; }
+  .rec-thumb img{ width:100%; height:100%; object-fit:cover; }
+  .rec-name{ font-weight:700; font-size:.92rem; }
+  .rec-status{ font-size:.78rem; color:var(--soft); }
+  .rec-open{ margin-left:auto; background:#FAECE7; color:var(--coral); font-weight:700; font-size:.85rem; border-radius:9px; padding:.45rem .8rem; text-decoration:none; flex:none; }
+  .ex-link{ display:block; text-align:center; margin-top:.8rem; color:var(--soft); font-size:.86rem; }
+  .ex-link a{ color:var(--coral); font-weight:700; text-decoration:none; }
+</style>
 </head>
 <body>
   <div class="sp-page">
     <p class="sp-eyebrow">Inicio</p>
-    <h1>Tu galería que vende, lista en 2 minutos</h1>
-    <p class="sp-sub">Decinos qué vendés y te armamos la galería completa: portada con fondo blanco, medidas, características y qué incluye. Vos no diseñás nada.</p>
-    <a class="sp-btn" href="/editor" style="width:100%;margin-bottom:1.6rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Armá mi galería</a>
-    <h2 style="font-size:1.05rem;font-weight:700;margin:0 0 .6rem">Tus galerías</h2>
-    <div class="sp-card sp-empty">
+    <h1>¿Qué vendés hoy?</h1>
+    <p class="sp-sub">Decinos qué es y te armamos la galería completa de la publicación. Vos no diseñás nada.</p>
+
+    <a class="sp-btn cta-big" href="/editor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Crear galería</a>
+    <p class="cred-line" id="cred-line">&nbsp;</p>
+
+    <div>
+      <a class="sc" href="/editor?import=ml">
+        <span class="sc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"/><path d="M11 6l1-1a3.5 3.5 0 0 1 5 5l-1 1"/><path d="M13 18l-1 1a3.5 3.5 0 0 1-5-5l1-1"/></svg></span>
+        <span><span class="sc-t">Importar de Mercado Libre</span><span class="sc-s">Pegá el link y traemos todo</span></span>
+        <span class="sc-chev"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>
+      </a>
+      <a class="sc" href="/score">
+        <span class="sc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13l3.5-2.6"/><path d="M4.7 16a8 8 0 1 1 14.6 0z"/></svg></span>
+        <span><span class="sc-t">Analizar mi publicación</span><span class="sc-s">Tu ShotPilot Score en segundos</span></span>
+        <span class="sc-chev"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>
+      </a>
+      <div class="sc disabled" title="Disponible en plan Negocio">
+        <span class="sc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3 7.5 12 12l9-4.5z"/><path d="M3 12l9 4.5L21 12"/><path d="M3 16.5 12 21l9-4.5"/></svg></span>
+        <span><span class="sc-t">Carga masiva</span><span class="sc-s">Disponible en plan Negocio</span></span>
+      </div>
+    </div>
+
+    <h2 class="sec-h">Seguí donde dejaste</h2>
+    <div id="recents" style="display:none"></div>
+    <div class="sp-card sp-empty" id="empty">
       <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
-      Todavía no armaste ninguna galería.<br>Tocá <b>Armá mi galería</b> y arrancamos.
+      Todavía no armaste ninguna galería.<br>Pegá el link de tu publicación y en 1 minuto la tenés lista.
+      <div style="margin-top:1rem"><a class="sp-btn" href="/editor">Armar mi primera galería</a></div>
+      <p class="ex-link">o <a href="/editor?demo=1">probá con un producto de ejemplo</a></p>
     </div>
   </div>
+
   <script type="module">
     import { mountNav } from '/js/ui/nav.js';
+    import { createSupabase } from '/js/supabaseClient.js';
     mountNav({ active: 'inicio' });
+    const sb = createSupabase();
+
+    const esc = s => String(s || '').replace(/[<>&]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;' }[c]));
+
+    (async () => {
+      let session = null;
+      try { ({ data: { session } } = await sb.auth.getSession()); } catch {}
+      const credEl = document.getElementById('cred-line');
+
+      if (!session){
+        credEl.innerHTML = 'Probá gratis, sin tarjeta. <a href="/editor">Empezá ahora</a>';
+        return;   // anónimo: ve el empty state guía + CTA dominante
+      }
+
+      // saldo desde Supabase
+      let credits = 0;
+      try { const { data } = await sb.from('profiles').select('credits').eq('id', session.user.id).single(); credits = data ? data.credits : 0; } catch {}
+      credEl.innerHTML = `Te quedan <b>${credits}</b> crédito${credits === 1 ? '' : 's'} · <a href="/cuenta">Recargar</a>`;
+
+      // galerías recientes desde Supabase
+      let gs = [];
+      try {
+        const { data } = await sb.from('galleries').select('id,product_name,status,updated_at').eq('user_id', session.user.id).order('updated_at', { ascending: false }).limit(4);
+        gs = data || [];
+      } catch {}
+      if (!gs.length) return;   // sin galerías: queda el empty state
+
+      const recents = document.getElementById('recents');
+      document.getElementById('empty').style.display = 'none';
+      recents.style.display = 'block';
+      recents.innerHTML = gs.map(g => `
+        <div class="rec-card">
+          <div class="rec-thumb"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></div>
+          <div><div class="rec-name">${esc(g.product_name) || 'Sin nombre'}</div><div class="rec-status">${g.status === 'done' ? 'Lista para descargar' : 'Borrador'}</div></div>
+          <a class="rec-open" href="/editor?gallery=${encodeURIComponent(g.id)}">Abrir</a>
+        </div>`).join('');
+    })();
   </script>
 </body>
 </html>
