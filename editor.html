@@ -1234,7 +1234,12 @@
 
   <canvas id="canvas" class="hidden"></canvas>
 
-  <script>
+  <script type="module">
+    // Módulos compartidos extraídos de este archivo (Prompt 1 — refactor base).
+    import { createSupabase } from './js/supabaseClient.js';
+    import { mountNav } from './js/ui/nav.js';   // placeholder (Prompt 4)
+    import { saveDraft, loadDraft, clearDraft } from './js/draft.js';
+
     const $ = (id) => document.getElementById(id);
 
     // ---------- i18n (ES por defecto, EN con ?lang=en) ----------
@@ -1977,15 +1982,16 @@
 
         if (mode === 'reprocess'){
           if (photos[activePhoto]) photos[activePhoto].cutoutBlob = blob;
-          updateDlVariants(); buildPreviewTabs(); show('result'); startReveal();
+          updateDlVariants(); buildPreviewTabs(); show('result'); startReveal(); stashDraft();
         } else if (mode === 'add'){
           restoreState(blankState());          // foto nueva arranca limpia (mismo tamaño)
           registerPhoto(blob, false);
-          updateDlVariants(); buildPreviewTabs(); show('result'); startReveal();
+          updateDlVariants(); buildPreviewTabs(); show('result'); startReveal(); stashDraft();
         } else {                                // 'first'
           registerPhoto(blob, true);
           updateDlVariants();
           if (!wizardSkipped) openWizard(); else { buildPreviewTabs(); show('result'); startReveal(); }
+          stashDraft();
         }
       } catch (e){
         if (mode === 'first'){ show('drop'); showError(e.message); }
@@ -4063,7 +4069,7 @@
       btn.disabled = false;
     });
 
-    $('another').addEventListener('click', () => { photos = []; activePhoto = -1; renderPhotoStrip(); fileInput.value = ''; show('drop'); });
+    $('another').addEventListener('click', () => { photos = []; activePhoto = -1; renderPhotoStrip(); fileInput.value = ''; show('drop'); clearDraft(); });
     $('pv-prev').addEventListener('click', () => flipPreview(-1));
     $('pv-next').addEventListener('click', () => flipPreview(1));
 
@@ -4338,16 +4344,11 @@
     });
 
     // ---------- cuentas + créditos (Supabase) ----------
-    const SB_URL = 'https://ntybvdfyxesxpoukyqpf.supabase.co';
-    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50eWJ2ZGZ5eGVzeHBvdWt5cXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3OTk5NzcsImV4cCI6MjA5NzM3NTk3N30.txWMTF34NaN_NDVtcbgx_69kDSX4Bm9mBfJYf7PIvAw';
+    // El cliente vive en js/supabaseClient.js (módulo compartido). Misma config que antes.
     // URL canónica (sin .html) para que el login NO pase por el redirect 308 que puede tirar la sesión
     const AUTH_REDIRECT = location.origin + location.pathname.replace(/\.html$/, '');
     let sb = null, authUser = null, authProfile = null;
-    try {
-      if (window.supabase) sb = window.supabase.createClient(SB_URL, SB_KEY, {
-        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: window.localStorage, storageKey: 'sb-ntybvdfyxesxpoukyqpf-auth-token' },
-      });
-    } catch (e) { console.error('Supabase init', e); }
+    try { sb = createSupabase(); } catch (e) { console.error('Supabase init', e); }
 
     function authModal(open){
       const m = $('auth-modal'); if (!m) return;
@@ -4391,6 +4392,7 @@
         const st = $('auth-status');
         if (!email || !email.includes('@')){ st.textContent = t('authErr')('email'); st.className = 'auth-status err'; return; }
         const btn = $('auth-send'); btn.disabled = true; const prev = btn.textContent; btn.textContent = t('authSending');
+        await stashDraft();   // guardar el borrador antes de que el magic link redirija
         try {
           const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: AUTH_REDIRECT } });
           if (error) throw error;
@@ -4399,6 +4401,7 @@
         finally { btn.disabled = false; btn.textContent = prev; }
       });
       $('auth-google').addEventListener('click', async () => {
+        await stashDraft();   // guardar el borrador antes de que Google redirija
         try { await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: AUTH_REDIRECT } }); }
         catch (e) { const st = $('auth-status'); st.textContent = t('authErr')(e.message || e); st.className = 'auth-status err'; }
       });
@@ -4470,8 +4473,35 @@
       else { showToast(t('pagoFail'), 'err'); }
     })();
 
+    // ---------- borrador local (value-first: sobrevive el login/redirect y la recarga) ----------
+    async function stashDraft(){
+      if (!photos.length) return;
+      if (activePhoto >= 0 && photos[activePhoto]) photos[activePhoto].state = snapshotState();
+      try {
+        const ph = await Promise.all(photos.map(async p => {
+          let origBlob = null; try { origBlob = await (await fetch(p.originalUrl)).blob(); } catch {}
+          return { cutoutBlob: p.cutoutBlob, origBlob, state: p.state };
+        }));
+        await saveDraft({ ts: Date.now(), activePhoto, photos: ph });
+      } catch (e) { console.warn('stashDraft', e); }
+    }
+    async function restoreDraft(){
+      let d; try { d = await loadDraft(); } catch { d = null; }
+      if (!d || !d.photos || !d.photos.length) return false;
+      photos = []; photoSeq = 0;
+      for (const pd of d.photos){
+        const origUrl = pd.origBlob ? URL.createObjectURL(pd.origBlob) : URL.createObjectURL(pd.cutoutBlob);
+        photos.push({ id: 'p' + (++photoSeq), originalUrl: origUrl, cutoutBlob: pd.cutoutBlob, thumbUrl: URL.createObjectURL(pd.cutoutBlob), state: pd.state });
+      }
+      activePhoto = Math.min(d.activePhoto || 0, photos.length - 1);
+      try { await loadPhotoInto(activePhoto); } catch (e) { console.warn('restoreDraft', e); return false; }
+      renderPhotoStrip(); updateDlVariants(); buildPreviewTabs(); show('result');
+      return true;
+    }
+
     // ---------- aplicar traducciones al cargar ----------
     applyI18n();
+    restoreDraft();   // value-first: si había trabajo en progreso, lo traemos (nunca pantalla en blanco)
   </script>
 </body>
 </html>
