@@ -439,11 +439,12 @@
   .ed-controls > .extras-head{order:4}
   .ed-controls > #dims-panel{order:5}
   .ed-controls > #banner-panel{order:6}
-  .ed-controls > #logo-panel{order:7}
-  .ed-controls > #enh-panel{order:8}
-  .ed-controls > #adv-toggle{order:9;margin-top:1.2rem}
-  .ed-controls > #adv-wrap{order:10}
-  .ed-controls > #checklist{order:11}
+  .ed-controls > #feats-panel{order:7}
+  .ed-controls > #logo-panel{order:8}
+  .ed-controls > #enh-panel{order:9}
+  .ed-controls > #adv-toggle{order:10;margin-top:1.2rem}
+  .ed-controls > #adv-wrap{order:11}
+  .ed-controls > #checklist{order:12}
   /* logo / marca de agua */
   .logo-up-row{display:flex;align-items:center;gap:.7rem;margin-top:.9rem}
   .logo-prevbox{flex:none;width:46px;height:46px;border-radius:9px;border:1px solid var(--line);background:repeating-conic-gradient(#ece6dd 0% 25%, #fff 0% 50%) 50% / 8px 8px;display:grid;place-items:center;overflow:hidden}
@@ -476,6 +477,10 @@
   .bn-tpl-mini.ft-bubbles::after{content:"";position:absolute;right:4px;top:5px;width:36%;height:6px;border-radius:4px;background:var(--pc);box-shadow:0 10px 0 #F4513C,0 20px 0 #FFB200}
   .bn-tpl-mini.ft-leader{background:#fff;position:relative;overflow:hidden}
   .bn-tpl-mini.ft-leader::after{content:"";position:absolute;left:8%;top:18%;width:46%;height:0;border-top:2px solid var(--pc)}
+  .bn-tpl-mini.ft-panel{background:linear-gradient(90deg,#fff 0 48%,var(--pc) 48% 100%);position:relative;overflow:hidden}
+  .bn-tpl-mini.ft-panel::after{content:"";position:absolute;right:7%;top:30%;width:36%;height:0;border-top:2px solid rgba(255,255,255,.65);box-shadow:0 8px 0 rgba(255,255,255,.65)}
+  .bn-tpl-mini.ft-list{background:#fff;position:relative;overflow:hidden}
+  .bn-tpl-mini.ft-list::after{content:"";position:absolute;left:16%;top:24%;width:5px;height:5px;border-radius:1px;background:var(--pc);box-shadow:0 9px 0 var(--pc),0 18px 0 var(--pc)}
   .feats-iconmenu button{width:34px;height:34px;border:1px solid transparent;background:transparent;border-radius:8px;display:grid;place-items:center;cursor:pointer;color:var(--ink-soft)}
   .feats-iconmenu button:hover{border-color:var(--accent);color:var(--accent);background:var(--cream)}
   .feats-iconmenu button svg{width:19px;height:19px}
@@ -2453,15 +2458,18 @@
           });
         });
       }
-      // handle de tamaño de la placa de características (solo en la previa)
+      // handle de tamaño de la placa de características (solo en la previa) — cápsula blanca sutil con grip coral
       if (featsVisible()){
         const ex = featInnerEdge() * pv.width, hy = pv.height / 2;
-        const hh = Math.min(pv.height * 0.16, 70 * dpr), hw = 8 * dpr;
+        const hh = Math.min(pv.height * 0.12, 52 * dpr), hw = 13 * dpr, rr2 = hw / 2;
         c.save();
-        c.shadowColor = 'rgba(40,24,16,.3)'; c.shadowBlur = 6 * dpr;
-        c.fillStyle = '#F4513C'; c.beginPath(); c.roundRect(ex - hw / 2, hy - hh / 2, hw, hh, hw / 2); c.fill();
-        c.shadowColor = 'transparent'; c.fillStyle = '#fff';
-        for (let i = -1; i <= 1; i++){ c.beginPath(); c.arc(ex, hy + i * 9 * dpr, 1.7 * dpr, 0, Math.PI * 2); c.fill(); }
+        c.shadowColor = 'rgba(40,24,16,.26)'; c.shadowBlur = 8 * dpr; c.shadowOffsetY = 2 * dpr;
+        c.fillStyle = '#ffffff'; c.beginPath(); c.roundRect(ex - hw / 2, hy - hh / 2, hw, hh, rr2); c.fill();
+        c.shadowColor = 'transparent';
+        c.lineWidth = 1 * dpr; c.strokeStyle = 'rgba(40,24,16,.10)'; c.beginPath(); c.roundRect(ex - hw / 2, hy - hh / 2, hw, hh, rr2); c.stroke();
+        c.strokeStyle = '#F4513C'; c.lineWidth = 1.7 * dpr; c.lineCap = 'round';
+        const gh = hh * 0.32;
+        [-2.3 * dpr, 2.3 * dpr].forEach(dx => { c.beginPath(); c.moveTo(ex + dx, hy - gh / 2); c.lineTo(ex + dx, hy + gh / 2); c.stroke(); });
         c.restore();
       }
     }
@@ -2693,7 +2701,7 @@
       editMode = m;
       painting = false; lastPt = null; ptrs.clear(); pinch = null;   // arrancar sin pincelada "trabada"
       clearMask();   // al cambiar de herramienta, borrar cualquier marca de inpaint pendiente
-      resetZoom();   // cada herramienta arranca a 1x, sin paneo
+      if (m === 'compare') resetZoom();   // mantener el zoom al pasar entre herramientas de edición; resetear solo al comparar
       tools.querySelectorAll('.tool[data-tool]').forEach(x => x.setAttribute('aria-pressed', x.dataset.tool === m ? 'true' : 'false'));
       const editing = m !== 'compare';
       compare.classList.toggle('editing', editing);
@@ -3164,9 +3172,17 @@
       if (lines.length > maxLines){ lines.length = maxLines; lines[maxLines - 1] += '…'; }
       return lines;
     }
+    // fuente uniforme que entra para TODOS los textos: achica hasta que entren en ≤2 líneas
+    // Y ninguna línea (ni una palabra larga suelta, ej. "SEMIAUTOMATICA") se pase del ancho.
+    function featFitFont(ctx, items, maxW, weight, startPx, getText){
+      let fs = Math.max(10, Math.round(startPx));
+      const tooBig = () => { ctx.font = ftFont(weight, fs); return items.some(it => { const ls = featWrap(ctx, getText(it), maxW, 99); return ls.length > 2 || ls.some(l => ctx.measureText(l).width > maxW); }); };
+      while (fs > 10 && tooBig()) fs -= 1;
+      ctx.font = ftFont(weight, fs); return fs;
+    }
     function rr(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
     // espacio reservado para que la placa no tape el producto (a un costado)
-    const FEAT_FRAC = { cards: 0.42, chips: 0.34, bubbles: 0.40, leader: 0.30 };
+    const FEAT_FRAC = { cards: 0.42, chips: 0.34, bubbles: 0.40, leader: 0.30, panel: 0.40, list: 0.40 };
     function featColFrac(){ return Math.max(0.22, Math.min(0.54, (FEAT_FRAC[feats.layout] || 0.40) * feats.scale)); }
     function featInnerEdge(){ const fr = featColFrac(); return feats.side === 'r' ? 1 - fr : fr; }   // fracción x del borde interno (hacia el producto)
     function featsReserve(tw, th){
@@ -3182,6 +3198,8 @@
       else if (layout === 'chips') drawFeatChips(ctx, tw, th, items);
       else if (layout === 'bubbles') drawFeatBubbles(ctx, tw, th, items);
       else if (layout === 'leader') drawFeatLeader(ctx, tw, th, pr, items);
+      else if (layout === 'panel') drawFeatPanel(ctx, tw, th, items);
+      else if (layout === 'list') drawFeatList(ctx, tw, th, items);
     }
     function drawFeatCards(ctx, tw, th, items){
       const rv = featsReserve(tw, th); const colW = rv.left || rv.right; if (!colW) return;
@@ -3190,9 +3208,8 @@
       const gap = Math.max(th * 0.02, 8);
       const ch = Math.min((th * 0.9 - gap * (n - 1)) / n, cw * 0.44);
       const tile = ch * 0.6, txX = cx0 + ch * 0.2 + tile + ch * 0.16, txW = cx0 + cw - txX - ch * 0.14;
-      // tamaño de fuente uniforme: el más chico que entra en 2 líneas para TODAS las tarjetas
-      let fs = Math.round(ch * 0.27); ctx.font = ftFont(700, fs);
-      while (fs > 10 && items.some(it => featWrap(ctx, it.text, txW, 99).length > 2)){ fs -= 1; ctx.font = ftFont(700, fs); }
+      // tamaño de fuente uniforme: el más chico que entra para TODAS las tarjetas
+      const fs = featFitFont(ctx, items, txW, 700, ch * 0.27, it => it.text);
       let cy = (th - (ch * n + gap * (n - 1))) / 2;
       items.forEach(it => {
         ctx.save(); ctx.shadowColor = 'rgba(40,24,16,.16)'; ctx.shadowBlur = ch * 0.16; ctx.shadowOffsetY = ch * 0.05;
@@ -3236,12 +3253,11 @@
       const fs0 = Math.round(base * 0.044 * Math.min(1.3, feats.scale));
       const ph = fs0 * 3.0, gap = ph * 0.32, w = colW * 0.96, icoR = ph * 0.32;
       const wrapW = Math.max(base * 0.1, w - icoR * 2 - ph * 0.62);
-      // fuente de texto uniforme: la más chica que entra en 2 líneas para TODAS
-      let fsT = fs0; ctx.font = ftFont(800, fsT);
-      while (fsT > 10 && items.some(it => featWrap(ctx, it.text.toUpperCase(), wrapW, 99).length > 2)){ fsT -= 1; ctx.font = ftFont(800, fsT); }
+      // fuente de texto uniforme para TODAS
+      const fsT = featFitFont(ctx, items, wrapW, 800, fs0, it => it.text.toUpperCase());
       let cy = (th - (ph * n + gap * (n - 1))) / 2;
       items.forEach((it, idx) => {
-        const col = idx === 0 ? feats.color : FEAT_BUBBLE_PALETTE[idx % FEAT_BUBBLE_PALETTE.length];
+        const col = feats.color;   // todas las burbujas siguen el color elegido
         const tc = bnTxt(col);
         const x = left ? base * 0.04 : tw - w - base * 0.04;
         ctx.save(); ctx.shadowColor = 'rgba(20,12,8,.22)'; ctx.shadowBlur = ph * 0.14; ctx.shadowOffsetY = ph * 0.05;
@@ -3268,8 +3284,7 @@
       const top = th * 0.13, bot = th * 0.87;
       const lineW = Math.max(2, base * 0.004), dot = base * 0.0072;
       // fuente uniforme
-      let fs = Math.round(base * 0.04 * Math.min(1.4, feats.scale)); ctx.font = ftFont(800, fs);
-      while (fs > 11 && items.some(it => featWrap(ctx, it.text.toUpperCase(), wrapW, 99).length > 2)){ fs -= 1; ctx.font = ftFont(800, fs); }
+      const fs = featFitFont(ctx, items, wrapW, 800, base * 0.04 * Math.min(1.4, feats.scale), it => it.text.toUpperCase());
       items.forEach((it, i) => {
         const ly = n === 1 ? th * 0.5 : top + (bot - top) * (i / (n - 1));
         const ax = left ? pr.x : pr.x + pr.w;
@@ -3282,6 +3297,45 @@
         const lines = featWrap(ctx, it.text.toUpperCase(), wrapW, 2);
         const lh = fs * 1.16, sy = ly - (lines.length - 1) * lh / 2;
         lines.forEach((l, k) => ctx.fillText(l, textX, sy + k * lh));
+      });
+    }
+    // panel sólido lateral (estilo Philco oscuro): columna de color + filas ícono/texto con divisores
+    function drawFeatPanel(ctx, tw, th, items){
+      const rv = featsReserve(tw, th); const colW = rv.left || rv.right; if (!colW) return;
+      const base = Math.min(tw, th), n = items.length, m = colW * 0.06;
+      const px = (feats.side === 'l' ? 0 : tw - colW) + m, pw = colW - m * 2;
+      const py = th * 0.06, ph = th * 0.88, r = base * 0.028;
+      ctx.save(); ctx.shadowColor = 'rgba(20,12,8,.26)'; ctx.shadowBlur = base * 0.03; ctx.shadowOffsetY = base * 0.012;
+      rr(ctx, px, py, pw, ph, r); ctx.fillStyle = feats.color; ctx.fill(); ctx.restore();
+      paintRect(ctx, px, py, pw, ph, r, feats.color, 'metal');
+      const tc = bnTxt(feats.color), padX = pw * 0.11, rowH = ph / n;
+      const iconR = Math.min(rowH * 0.24, pw * 0.12), txX = px + padX + iconR * 2 + pw * 0.06, txW = px + pw - padX - txX;
+      const fs = featFitFont(ctx, items, txW, 700, rowH * 0.2, it => it.text);
+      items.forEach((it, i) => {
+        const cy = py + rowH * i + rowH / 2;
+        if (i > 0){ ctx.save(); ctx.globalAlpha = 0.2; ctx.strokeStyle = tc; ctx.lineWidth = Math.max(1, base * 0.0016); ctx.beginPath(); ctx.moveTo(px + padX, py + rowH * i); ctx.lineTo(px + pw - padX, py + rowH * i); ctx.stroke(); ctx.restore(); }
+        drawFeatIcon(ctx, it.icon, px + padX + iconR, cy, iconR * 1.8, tc, 2.1);
+        ctx.fillStyle = tc; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.font = ftFont(700, fs);
+        const lines = featWrap(ctx, it.text, txW, 2), lh = fs * 1.2, sy = cy - (lines.length - 1) * lh / 2;
+        lines.forEach((l, k) => ctx.fillText(l, txX, sy + k * lh));
+      });
+    }
+    // lista numerada (editorial): número de acento + beneficio, con divisores finos
+    function drawFeatList(ctx, tw, th, items){
+      const rv = featsReserve(tw, th); const colW = rv.left || rv.right; if (!colW) return;
+      const base = Math.min(tw, th), n = items.length, m = colW * 0.09;
+      const x0 = (feats.side === 'l' ? 0 : tw - colW) + m, w = colW - m * 2;
+      const py = th * 0.08, ph = th * 0.84, rowH = ph / n;
+      const numF = Math.round(rowH * 0.34), txX = x0 + w * 0.3, txW = x0 + w - txX;
+      const fs = featFitFont(ctx, items, txW, 700, rowH * 0.21, it => it.text);
+      items.forEach((it, i) => {
+        const cy = py + rowH * i + rowH / 2;
+        if (i > 0){ ctx.strokeStyle = '#E2D9CE'; ctx.lineWidth = Math.max(1, base * 0.0018); ctx.beginPath(); ctx.moveTo(x0, py + rowH * i); ctx.lineTo(x0 + w, py + rowH * i); ctx.stroke(); }
+        ctx.fillStyle = feats.color; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.font = ftFont(800, numF);
+        ctx.fillText(String(i + 1).padStart(2, '0'), x0, cy);
+        ctx.fillStyle = '#1A1614'; ctx.font = ftFont(700, fs);
+        const lines = featWrap(ctx, it.text, txW, 2), lh = fs * 1.2, sy = cy - (lines.length - 1) * lh / 2;
+        lines.forEach((l, k) => ctx.fillText(l, txX, sy + k * lh));
       });
     }
 
@@ -3370,6 +3424,12 @@
       { name:{es:'Fresco',       en:'Fresh'},        font:'Montserrat',    effect:'metal', panel:{style:'card', pos:'bottom', color:'#13A05B'}, badge:{on:true,  corner:'tr', color:'#FF7A00'} },
       { name:{es:'Banda top',    en:'Top band'},     font:'Oswald',        effect:'metal', panel:{style:'band', pos:'top',    color:'#16130F'}, badge:{on:false, corner:'tr', color:'#D8381F'} },
       { name:{es:'Limpio',       en:'Clean'},        font:'Manrope',       effect:'flat',  panel:{style:'card', pos:'bottom', color:'#FFFFFF'}, badge:{on:false, corner:'tr', color:'#1A1614'} },
+      { name:{es:'Minimal',      en:'Minimal'},      font:'Inter',         effect:'flat',  panel:{style:'card', pos:'bottom', color:'#FFFFFF'}, badge:{on:true,  corner:'tr', color:'#1A1614'} },
+      { name:{es:'Noche',        en:'Night'},        font:'Poppins',       effect:'metal', panel:{style:'band', pos:'bottom', color:'#0E1B2E'}, badge:{on:true,  corner:'tr', color:'#2DA8FF'} },
+      { name:{es:'Coral',        en:'Coral'},        font:'Sora',          effect:'metal', panel:{style:'card', pos:'bottom', color:'#F4513C'}, badge:{on:true,  corner:'tr', color:'#16130F'} },
+      { name:{es:'Uva',          en:'Grape'},        font:'Montserrat',    effect:'metal', panel:{style:'card', pos:'bottom', color:'#6D28D9'}, badge:{on:true,  corner:'tr', color:'#FFB200'} },
+      { name:{es:'Arena',        en:'Sand'},         font:'Manrope',       effect:'flat',  panel:{style:'card', pos:'bottom', color:'#C9A24B'}, badge:{on:false, corner:'tr', color:'#16130F'} },
+      { name:{es:'Top oferta',   en:'Top sale'},     font:'Anton',         effect:'metal', panel:{style:'band', pos:'top',    color:'#D8381F'}, badge:{on:true,  corner:'tr', color:'#FFB200'} },
     ];
     let bnTplIdx = -1;
     function syncSeg(groupId, key, val){
@@ -3485,10 +3545,15 @@
     }
     // plantillas: cards (panel lateral) · chips (píldoras) · bubbles (burbujas color) · leader (líneas guía)
     const FEAT_TEMPLATES = [
-      { name:{es:'Tarjetas', en:'Cards'},    layout:'cards',   font:'Manrope',    color:'#16130F' },
-      { name:{es:'Chips',    en:'Chips'},    layout:'chips',   font:'Montserrat', color:'#1B49B8' },
-      { name:{es:'Burbujas', en:'Bubbles'},  layout:'bubbles', font:'Montserrat', color:'#13A05B' },
-      { name:{es:'Líneas',   en:'Callouts'}, layout:'leader',  font:'Manrope',    color:'#16130F' },
+      { name:{es:'Tarjetas',     en:'Cards'},       layout:'cards',   font:'Manrope',    color:'#16130F' },
+      { name:{es:'Tarjetas azul',en:'Cards blue'},  layout:'cards',   font:'Manrope',    color:'#1B49B8' },
+      { name:{es:'Panel',        en:'Panel'},       layout:'panel',   font:'Manrope',    color:'#16130F' },
+      { name:{es:'Panel verde',  en:'Panel green'}, layout:'panel',   font:'Montserrat', color:'#13A05B' },
+      { name:{es:'Chips',        en:'Chips'},       layout:'chips',   font:'Montserrat', color:'#1B49B8' },
+      { name:{es:'Chips coral',  en:'Chips coral'}, layout:'chips',   font:'Montserrat', color:'#F4513C' },
+      { name:{es:'Burbujas',     en:'Bubbles'},     layout:'bubbles', font:'Montserrat', color:'#13A05B' },
+      { name:{es:'Lista',        en:'List'},        layout:'list',    font:'Manrope',    color:'#F4513C' },
+      { name:{es:'Líneas',       en:'Callouts'},    layout:'leader',  font:'Manrope',    color:'#16130F' },
     ];
     let featsOn = false, featsFolded = false, featsTplIdx = 0;
     const feats = {
