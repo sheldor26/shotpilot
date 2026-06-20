@@ -108,6 +108,7 @@
   .zoombar{position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:8;display:flex;flex-direction:column;align-items:center;gap:.5rem;padding:.55rem .3rem;background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:999px;box-shadow:var(--shadow-md)}
   .zoombar .zbtn{width:28px;height:28px;border:0;border-radius:50%;background:var(--cream-2);color:var(--ink);font-size:17px;font-weight:700;line-height:1;cursor:pointer;display:grid;place-items:center;transition:background .15s,color .15s}
   .zoombar .zbtn:hover{background:var(--accent);color:#fff}
+  .zoombar .zbtn[aria-pressed="true"]{background:var(--accent);color:#fff}
   .zoombar .zrange{writing-mode:vertical-lr;direction:rtl;width:6px;height:120px;accent-color:var(--accent);cursor:pointer;margin:.15rem 0}
 
   .compare.editing{cursor:none}
@@ -576,6 +577,7 @@
               <button type="button" class="zbtn" id="zoom-in" data-i18n-aria="zoomIn" aria-label="Acercar">+</button>
               <input type="range" class="zrange" id="zoom-range" min="1" max="5" step="0.1" value="1" data-i18n-aria="zoom" aria-label="Zoom">
               <button type="button" class="zbtn" id="zoom-out" data-i18n-aria="zoomOut" aria-label="Alejar">−</button>
+              <button type="button" class="zbtn" id="pan-toggle" data-i18n-aria="pan" data-i18n-title="pan" aria-label="Mover" aria-pressed="false" title="Mover (o mantené Espacio)">✋</button>
             </div>
             <span class="cmp-hint" id="cmp-hint" data-i18n="cmpHint">Arrastrá para comparar</span>
           </div>
@@ -1015,6 +1017,7 @@
         cmpHint: 'Arrastrá para comparar',
         zoomIn: 'Acercar',
         zoomOut: 'Alejar',
+        pan: 'Mover (o mantené Espacio y arrastrá)',
         zoom: 'Zoom',
         toolCompare: 'Comparar',
         toolErase: 'Borrar',
@@ -1175,9 +1178,9 @@
         another: 'Producto nuevo',
         foot: 'Las primeras 5 fotos son gratis. Sin tarjeta.',
         // ---- strings generados en JS ----
-        hintErase: 'Pintá sobre lo que quieras borrar',
-        hintRestore: 'Pintá para traer de vuelta el producto',
-        hintInpaint: 'Pintá el logo o la marca y tocá Quitar',
+        hintErase: 'Pintá sobre lo que quieras borrar · con zoom, ✋ o Espacio para mover',
+        hintRestore: 'Pintá para traer de vuelta el producto · con zoom, ✋ o Espacio para mover',
+        hintInpaint: 'Pintá el logo o la marca y tocá Quitar · con zoom, ✋ o Espacio para mover',
         engineError: (s) => 'El motor devolvió un error (HTTP ' + s + ').',
         processCantPhoto: 'No pudimos procesar la foto.',
         uploadJpgPng: 'Subí una imagen JPG o PNG.',
@@ -1222,6 +1225,7 @@
         cmpHint: 'Drag to compare',
         zoomIn: 'Zoom in',
         zoomOut: 'Zoom out',
+        pan: 'Pan (or hold Space and drag)',
         zoom: 'Zoom',
         toolCompare: 'Compare',
         toolErase: 'Erase',
@@ -1382,9 +1386,9 @@
         another: 'New product',
         foot: 'Your first 5 photos are free. No card required.',
         // ---- strings generados en JS ----
-        hintErase: 'Paint over whatever you want to erase',
-        hintRestore: 'Paint to bring the product back',
-        hintInpaint: 'Paint over the logo or mark and tap Remove',
+        hintErase: 'Paint over whatever you want to erase · when zoomed, ✋ or Space to move',
+        hintRestore: 'Paint to bring the product back · when zoomed, ✋ or Space to move',
+        hintInpaint: 'Paint over the logo or mark and tap Remove · when zoomed, ✋ or Space to move',
         engineError: (s) => 'The engine returned an error (HTTP ' + s + ').',
         processCantPhoto: 'We could not process the photo.',
         uploadJpgPng: 'Upload a JPG or PNG image.',
@@ -1809,15 +1813,13 @@
       ctx.lineTo(x + a * Math.cos(ang + 0.42), y + a * Math.sin(ang + 0.42));
       ctx.stroke();
     }
-    function dimLabel(ctx, text, x, y, f){
-      // el halo acompaña el fondo (en vez de blanco fijo) y el texto contrasta
-      const bg = bgColor || '#ffffff';
-      const dark = bgColor && bnLum(bgColor) < 0.5;
+    function dimLabel(ctx, text, x, y, f, halo, dark){
+      // halo = color real del fondo bajo el número (muestreado), así no deja reborde
       ctx.font = '800 ' + f + 'px Manrope, system-ui, sans-serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.save();
-      ctx.lineJoin = 'round'; ctx.lineWidth = f * 0.42; ctx.strokeStyle = bg;
-      ctx.strokeText(text, x, y);            // halo = color del fondo, así no deja reborde blanco
+      ctx.lineJoin = 'round'; ctx.lineWidth = f * 0.42; ctx.strokeStyle = halo || '#ffffff';
+      ctx.strokeText(text, x, y);
       ctx.fillStyle = dark ? '#ffffff' : '#241E1A'; ctx.fillText(text, x, y);
       ctx.restore();
     }
@@ -1846,7 +1848,11 @@
         // las fijas (alto/ancho/prof) se entienden por su posición -> solo el valor;
         // las personalizadas llevan el nombre para que se sepa qué miden
         const txt = en.custom ? `${en.label} · ${fmtVal(val)}` : fmtVal(val);
-        ctx.save(); ctx.translate(mx + nx * o, my + ny * o); ctx.rotate(ta); dimLabel(ctx, txt, 0, 0, f); ctx.restore();
+        const lx = mx + nx * o, ly = my + ny * o;   // posición del número en el lienzo
+        let halo = '#ffffff', dark = false;          // muestrear el fondo real ahí (sólido/gradiente/transparente)
+        try { const px = ctx.getImageData(Math.max(0, Math.min(tw - 1, Math.round(lx))), Math.max(0, Math.min(th - 1, Math.round(ly))), 1, 1).data;
+          if (px[3] > 20){ halo = `rgb(${px[0]},${px[1]},${px[2]})`; dark = (0.299 * px[0] + 0.587 * px[1] + 0.114 * px[2]) < 130; } } catch {}
+        ctx.save(); ctx.translate(lx, ly); ctx.rotate(ta); dimLabel(ctx, txt, 0, 0, f, halo, dark); ctx.restore();
       });
       ctx.restore();
     }
@@ -2063,7 +2069,26 @@
       applyZoom();
       const zr = $('zoom-range'); if (zr) zr.value = zoom;
     }
-    function resetZoom(){ zoom = 1; panX = 0; panY = 0; applyZoom(); const zr = $('zoom-range'); if (zr) zr.value = 1; }
+    function resetZoom(){ zoom = 1; panX = 0; panY = 0; applyZoom(); const zr = $('zoom-range'); if (zr) zr.value = 1; setPanMode(false); }
+
+    // ---------- paneo (mover la imagen con zoom) ----------
+    let panMode = false, spacePan = false, panDrag = null;
+    function panActive(){ return panMode || spacePan; }
+    function syncPanCursor(){ paint.style.cursor = panActive() ? (panDrag ? 'grabbing' : 'grab') : ''; }
+    function setPanMode(on){
+      panMode = on;
+      const b = $('pan-toggle'); if (b) b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      if (on){ ring.style.display = 'none'; }
+      syncPanCursor();
+    }
+    window.addEventListener('keydown', e => {
+      if (e.code === 'Space' && editMode !== 'compare' && paint.style.pointerEvents === 'auto' && !e.repeat){
+        const tag = (e.target && e.target.tagName) || '';
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return;
+        e.preventDefault(); spacePan = true; ring.style.display = 'none'; syncPanCursor();
+      }
+    });
+    window.addEventListener('keyup', e => { if (e.code === 'Space'){ spacePan = false; syncPanCursor(); } });
 
     // ---------- retoque (borrar / restaurar) ----------
     function eventToCanvas(e){
@@ -2141,6 +2166,11 @@
       if (editMode === 'compare') return;
       ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
       try { paint.setPointerCapture(e.pointerId); } catch {}   // que el "soltar" siempre se registre, aunque sueltes fuera
+      if (panActive() && ptrs.size === 1){   // mano / Espacio: arrastrar mueve la imagen, no pinta
+        panDrag = { x: e.clientX, y: e.clientY, px: panX, py: panY };
+        ring.style.display = 'none'; syncPanCursor();
+        return;
+      }
       if (ptrs.size === 2){
         if (painting){ painting = false; lastPt = null; if (editMode !== 'inpaint') syncCutout(); }  // cortar pincelada
         const p = [...ptrs.values()];
@@ -2156,6 +2186,12 @@
     paint.addEventListener('pointermove', e => {
       if (editMode === 'compare') return;
       if (ptrs.has(e.pointerId)) ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (panDrag){
+        panX = panDrag.px + (e.clientX - panDrag.x);
+        panY = panDrag.py + (e.clientY - panDrag.y);
+        applyZoom();
+        return;
+      }
       if (ptrs.size === 2 && pinch){
         const p = [...ptrs.values()];
         const mx = (p[0].x + p[1].x) / 2, my = (p[0].y + p[1].y) / 2;
@@ -2172,6 +2208,7 @@
     function endPaintPtr(e){
       ptrs.delete(e.pointerId);
       try { paint.releasePointerCapture(e.pointerId); } catch {}
+      if (panDrag){ panDrag = null; syncPanCursor(); }
       if (ptrs.size < 2) pinch = null;
       if (painting && ptrs.size === 0){ painting = false; lastPt = null; if (editMode === 'inpaint') blit(); else syncCutout(); }
     }
@@ -2180,6 +2217,7 @@
     paint.addEventListener('pointerleave', () => { ring.style.display = 'none'; });
     // red de seguridad: soltar EN CUALQUIER LADO corta el pintado (que nunca quede "trabado")
     function stopPaintingGlobal(){
+      if (panDrag){ panDrag = null; syncPanCursor(); }
       if (!painting) return;
       painting = false; lastPt = null; ptrs.clear(); pinch = null;
       if (editMode === 'inpaint') blit(); else if (editMode !== 'compare') syncCutout();
@@ -2270,6 +2308,7 @@
     $('zoom-range').addEventListener('input', e => setZoom(parseFloat(e.target.value)));
     $('zoom-in').addEventListener('click', () => setZoom(zoom + 0.5));
     $('zoom-out').addEventListener('click', () => setZoom(zoom - 0.5));
+    $('pan-toggle').addEventListener('click', () => setPanMode(!panMode));
 
     // ---- placa de medidas ----
     let dimsFolded = false;
