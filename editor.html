@@ -172,12 +172,6 @@
   .dl-main{width:100%;margin-top:.6rem;padding:.9rem 1rem;border:none;border-radius:12px;background:var(--accent);color:#fff;font-family:"Manrope",sans-serif;font-weight:800;font-size:1rem;cursor:pointer;box-shadow:0 8px 18px -10px rgba(216,56,31,.6);transition:background .15s,transform .12s}
   .dl-main:hover{background:var(--accent-deep);transform:translateY(-1px)}
   .dl-note{font-size:.72rem;color:var(--ink-faint);line-height:1.35;margin:.5rem .1rem 0}
-  .sr-toggle{margin-top:.7rem;padding:.6rem .7rem;border:1px solid #E7D9C4;border-radius:12px;background:linear-gradient(135deg,#FFFDF8,#FBF1E2);width:100%;box-sizing:border-box}
-  .sr-txt{display:inline-flex;align-items:center;gap:.4rem;font-weight:700;color:var(--ink)}
-  .sr-spark{color:#C8962B}
-  .sr-tag{font-size:.68rem;font-weight:800;letter-spacing:.02em;color:#8a6d1f;background:#F3E3C0;border-radius:999px;padding:.05rem .4rem}
-  .sr-hint{margin-top:.35rem}
-  .sr-toggle.busy{opacity:.7;pointer-events:none}
 
   /* ---- banners ---- */
   #bn-fields{margin-top:1rem;display:grid;gap:1rem}
@@ -970,12 +964,6 @@
           <p class="eng-hint" id="bigprev-hint" data-i18n="bigprevHint" style="display:none;text-align:center">Arrastrá las puntas (círculos) para ajustar cada medida.</p>
 
           <span class="eng-label" style="margin-top:.2rem;display:block"><span data-i18n="downloadLabel">Descargar · formato</span> <b id="dl-label">MercadoLibre</b></span>
-          <label class="toggle sr-toggle" id="sr-toggle">
-            <input type="checkbox" id="sr">
-            <span class="sw" aria-hidden="true"></span>
-            <span class="sr-txt"><span class="sr-spark" aria-hidden="true">✦</span> <span data-i18n="srLabel">Súper resolución (IA)</span> <span class="sr-tag" data-i18n="srTag">x2</span></span>
-          </label>
-          <p class="eng-hint sr-hint" id="sr-hint" data-i18n="srHint">Duplica los píxeles y recupera nitidez al exportar. La primera vez baja el modelo (~5 MB), después es al toque.</p>
           <button type="button" class="dl-main" id="dl-main" data-i18n="dlMain">Descargar</button>
           <p class="dl-note" id="dl-note" data-i18n="dlNote" style="display:none">La imagen principal de ML va sin texto. Usá "cada versión por separado" para tener también la limpia.</p>
           <button type="button" class="btn btn-ghost" id="dl-all-photos" data-i18n="dlAllPhotos" style="display:none;min-width:100%;margin-top:.55rem">Bajar todas las fotos</button>
@@ -1168,11 +1156,6 @@
         pvPrev: 'Vista anterior',
         pvNext: 'Vista siguiente',
         bigprevHint: 'Arrastrá las puntas (círculos) para ajustar cada medida.',
-        srLabel: 'Súper resolución (IA)',
-        srTag: 'x2',
-        srHint: 'Duplica los píxeles y recupera nitidez al exportar. La primera vez baja el modelo (~5 MB), después es al toque.',
-        srBusy: 'Mejorando con IA…',
-        srPrep: 'Preparando IA…',
         downloadLabel: 'Descargar · formato',
         dlClean: 'Foto limpia',
         dlCleanSub: 'sin texto · imagen principal de ML',
@@ -1380,11 +1363,6 @@
         pvPrev: 'Previous view',
         pvNext: 'Next view',
         bigprevHint: 'Drag the endpoints (circles) to adjust each dimension.',
-        srLabel: 'Super resolution (AI)',
-        srTag: 'x2',
-        srHint: 'Doubles the pixels and restores sharpness on export. First time downloads the model (~5 MB), then it is instant.',
-        srBusy: 'Enhancing with AI…',
-        srPrep: 'Loading AI…',
         downloadLabel: 'Download · size',
         dlClean: 'Clean photo',
         dlCleanSub: 'no text · ML main image',
@@ -2877,46 +2855,6 @@
     // PNG sin pérdida: máxima nitidez, cero artefactos de compresión
     const toBlob = () => new Promise(r => canvas.toBlob(r, 'image/png'));
 
-    // ---- súper resolución (IA) opcional, 100% en el navegador (UpscalerJS + TF.js, ESRGAN x2) ----
-    let srOn = false, _up = null, _srLoading = null;
-    function loadScript(src){ return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('No se pudo cargar ' + src)); document.head.appendChild(s); }); }
-    async function ensureUpscaler(){
-      if (_up) return _up;
-      if (_srLoading) return _srLoading;
-      _srLoading = (async () => {
-        if (typeof tf === 'undefined') await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
-        if (typeof window.Upscaler === 'undefined') await loadScript('https://cdn.jsdelivr.net/npm/upscaler@1.0.0/dist/browser/umd/upscaler.min.js');
-        if (typeof window.DefaultUpscalerJSModel === 'undefined') await loadScript('https://cdn.jsdelivr.net/npm/@upscalerjs/default-model@1.0.0/dist/umd/index.min.js');
-        _up = new Upscaler({ model: window.DefaultUpscalerJSModel });
-        return _up;
-      })();
-      return _srLoading;
-    }
-    function srBusy(on, msg){
-      const c = $('sr-toggle'); if (c) c.classList.toggle('busy', on);
-      const b = $('dl-main'); if (!b) return;
-      if (on){ if (b.dataset.prev == null) b.dataset.prev = b.textContent; b.textContent = msg || t('srBusy'); b.disabled = true; }
-      else { if (b.dataset.prev != null){ b.textContent = b.dataset.prev; delete b.dataset.prev; } b.disabled = false; }
-    }
-    // blob a descargar: con IA si el toggle está activo (escala x2), si no PNG normal. Nunca deja sin descarga.
-    async function exportBlob(){
-      if (!srOn) return toBlob();
-      try {
-        srBusy(true, t('srPrep'));
-        const up = await ensureUpscaler();
-        srBusy(true, t('srBusy'));
-        const b64 = await up.upscale(canvas, { output: 'base64', patchSize: 256, padding: 8 });
-        const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = b64; });
-        const oc = document.createElement('canvas'); oc.width = img.width; oc.height = img.height;
-        oc.getContext('2d').drawImage(img, 0, 0);
-        return await new Promise(r => oc.toBlob(r, 'image/png'));
-      } catch (e) {
-        console.error('SR falló, descargo sin IA:', e);
-        return toBlob();
-      } finally { srBusy(false); }
-    }
-    $('sr').addEventListener('change', e => { srOn = e.target.checked; if (srOn) ensureUpscaler().catch(() => {}); });
-
     // ---- dropdown de destino ----
     function destGlyphHTML(w, h){
       const m = 18, s = Math.min(m / w, m / h), gw = Math.max(6, Math.round(w * s)), gh = Math.max(6, Math.round(h * s));
@@ -3013,7 +2951,7 @@
     async function downloadLayers(key){
       const p = P(), v = DL_VARIANTS[key];
       compose(p.w, p.h, shadowOn, p.fill, { dims: v.dims, banners: v.banners });
-      downloadBlob(await exportBlob(), `shotpilot-${presetKey}-${v.sfx}-${p.w}x${p.h}.png`);
+      downloadBlob(await toBlob(), `shotpilot-${presetKey}-${v.sfx}-${p.w}x${p.h}.png`);
       renderResult();   // restaurar la previa a la vista completa
     }
     function updateDlVariants(){
@@ -3026,7 +2964,7 @@
       const p = P();
       compose(p.w, p.h, shadowOn, p.fill, viewLayers());   // baja la vista que se está mirando
       const sfx = previewView === 'todo' ? 'completa' : previewView === 'medidas' ? 'medidas' : previewView === 'banner' ? 'banner' : 'limpia';
-      downloadBlob(await exportBlob(), `shotpilot-${presetKey}-${sfx}-${p.w}x${p.h}.png`);
+      downloadBlob(await toBlob(), `shotpilot-${presetKey}-${sfx}-${p.w}x${p.h}.png`);
       renderResult();
     });
     // descargar separadas: limpia + cada capa activa como archivos aparte
@@ -3045,7 +2983,7 @@
       for (const k of Object.keys(PRESETS)){
         const p = PRESETS[k];
         compose(p.w, p.h, shadowOn, p.fill);
-        downloadBlob(await exportBlob(), `shotpilot-${k}-${p.w}x${p.h}.png`);
+        downloadBlob(await toBlob(), `shotpilot-${k}-${p.w}x${p.h}.png`);
         await new Promise(r => setTimeout(r, 350));   // separar las descargas para que el navegador no las bloquee
       }
       btn.disabled = false;
@@ -3295,7 +3233,7 @@
         const pr = P(), L = viewLayers();
         compose(pr.w, pr.h, shadowOn, pr.fill, L);
         const sfx = previewView === 'medidas' ? 'medidas' : previewView === 'banner' ? 'banner' : 'limpia';
-        downloadBlob(await exportBlob(), `shotpilot-foto${i + 1}-${sfx}-${pr.w}x${pr.h}.png`);
+        downloadBlob(await toBlob(), `shotpilot-foto${i + 1}-${sfx}-${pr.w}x${pr.h}.png`);
         await new Promise(r => setTimeout(r, 350));
       }
       activePhoto = cur; await loadPhotoInto(cur);
