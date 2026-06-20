@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Lab · recorte de fondo en el navegador (isnet/u2net)</title>
+<style>
+  :root{--ink:#1A1614;--soft:#5C524B;--faint:#8A7F77;--line:#E9DFD3;--cream:#FBF7F2;--accent:#F4513C}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Manrope,system-ui,-apple-system,sans-serif;background:var(--cream);color:var(--ink);line-height:1.55;padding:clamp(16px,4vw,40px);max-width:1000px;margin-inline:auto}
+  h1{font-size:1.4rem;margin-bottom:.3rem}
+  p.sub{color:var(--soft);margin-bottom:1.4rem;font-size:.95rem}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:1.2rem;margin-bottom:1rem}
+  label.fld{display:block;font-size:.8rem;font-weight:700;color:var(--soft);margin-bottom:.35rem}
+  input[type=text]{width:100%;padding:.6rem .8rem;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.9rem;margin-bottom:.9rem}
+  input[type=text]:focus{outline:none;border-color:var(--accent)}
+  .row{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center}
+  button{font-family:inherit;font-weight:700;font-size:.95rem;padding:.7rem 1.3rem;border:0;border-radius:999px;background:var(--accent);color:#fff;cursor:pointer}
+  button:disabled{opacity:.5;cursor:default}
+  button.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+  .drop{border:2px dashed var(--line);border-radius:12px;padding:1.6rem;text-align:center;color:var(--faint);cursor:pointer;margin-bottom:.9rem}
+  .drop:hover{border-color:var(--accent);color:var(--accent)}
+  .out{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem}
+  @media(max-width:640px){.out{grid-template-columns:1fr}}
+  .canvas-wrap{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:repeating-conic-gradient(#e8e2d8 0% 25%, #fff 0% 50%) 50% / 18px 18px;min-height:120px;display:grid;place-items:center}
+  canvas{max-width:100%;display:block}
+  .cap{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:.4rem}
+  .metric{font-family:"Space Grotesk",monospace;font-size:.9rem;color:var(--soft);margin-top:1rem;border-top:1px dashed var(--line);padding-top:.8rem;white-space:pre-line}
+  .note{font-size:.82rem;color:var(--faint);margin-top:.5rem}
+  code{background:#f0e9df;padding:.1rem .35rem;border-radius:5px;font-size:.82rem}
+</style>
+</head>
+<body>
+  <h1>Recorte de fondo en el navegador — spike</h1>
+  <p class="sub">Corre un modelo ONNX (isnet o u2net, Apache-2.0) <b>100% en el navegador</b> con onnxruntime-web. Sirve para medir velocidad y calidad real antes de migrar (y matar Railway).</p>
+
+  <div class="card">
+    <label class="fld">URL del modelo .onnx (Apache-2.0)</label>
+    <input type="text" id="model-url" placeholder="https://tu-dominio/modelos/isnet-general-use.onnx" value="">
+    <p class="note">Hospedá el modelo en tu dominio/CDN con CORS abierto. Para probar rápido el pipeline usá <b>u2netp</b> (~4.7&nbsp;MB); para calidad final, <b>isnet-general-use</b> (~170&nbsp;MB) o una versión int8 quantizada (~45&nbsp;MB).</p>
+    <div class="row">
+      <label class="fld" style="margin:0"><input type="checkbox" id="webgpu"> Usar WebGPU (más rápido si el equipo lo soporta)</label>
+    </div>
+  </div>
+
+  <div class="card">
+    <label class="drop" id="drop">Soltá o tocá para elegir una foto de producto<input type="file" id="file" accept="image/*" hidden></label>
+    <div class="row">
+      <button id="run" disabled>Recortar en el navegador</button>
+      <button class="ghost" id="download" disabled>Descargar PNG transparente</button>
+    </div>
+    <div class="metric" id="metric">—</div>
+  </div>
+
+  <div class="out">
+    <div><div class="cap">Original</div><div class="canvas-wrap"><canvas id="orig"></canvas></div></div>
+    <div><div class="cap">Recorte (transparente)</div><div class="canvas-wrap"><canvas id="cut"></canvas></div></div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js"></script>
+<script>
+  const $ = id => document.getElementById(id);
+  ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/';
+  const SIZE = 1024;                       // isnet/dis_general_use: 1024×1024
+  const MEAN = [0.5, 0.5, 0.5], STD = [1.0, 1.0, 1.0];
+  let session = null, imgEl = null, lastBlobUrl = null;
+
+  function setMetric(t){ $('metric').textContent = t; }
+
+  // ---- carga de imagen ----
+  $('drop').addEventListener('click', () => $('file').click());
+  ;['dragover','drop'].forEach(ev => $('drop').addEventListener(ev, e => e.preventDefault()));
+  $('drop').addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) loadImg(f); });
+  $('file').addEventListener('change', e => { const f = e.target.files[0]; if (f) loadImg(f); });
+  function loadImg(file){
+    const url = URL.createObjectURL(file);
+    const im = new Image();
+    im.onload = () => {
+      imgEl = im;
+      const o = $('orig'); const s = Math.min(1, 480 / im.naturalWidth);
+      o.width = Math.round(im.naturalWidth * s); o.height = Math.round(im.naturalHeight * s);
+      o.getContext('2d').drawImage(im, 0, 0, o.width, o.height);
+      $('run').disabled = false;
+      setMetric('Foto cargada: ' + im.naturalWidth + '×' + im.naturalHeight + ' · listo para recortar');
+    };
+    im.src = url;
+  }
+
+  // ---- preprocesamiento (idéntico a rembg: resize 1024, /maxPixel, (v-mean)/std, CHW) ----
+  function preprocess(img){
+    const c = document.createElement('canvas'); c.width = SIZE; c.height = SIZE;
+    const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, SIZE, SIZE);
+    const data = ctx.getImageData(0, 0, SIZE, SIZE).data;
+    let maxv = 1;
+    for (let i = 0; i < data.length; i += 4){ if (data[i] > maxv) maxv = data[i]; if (data[i+1] > maxv) maxv = data[i+1]; if (data[i+2] > maxv) maxv = data[i+2]; }
+    const t = new Float32Array(3 * SIZE * SIZE), plane = SIZE * SIZE;
+    for (let p = 0, j = 0; p < plane; p++, j += 4){
+      t[p]             = (data[j]   / maxv - MEAN[0]) / STD[0];
+      t[plane + p]     = (data[j+1] / maxv - MEAN[1]) / STD[1];
+      t[2 * plane + p] = (data[j+2] / maxv - MEAN[2]) / STD[2];
+    }
+    return new ort.Tensor('float32', t, [1, 3, SIZE, SIZE]);
+  }
+
+  // ---- aplica la máscara (1024) sobre la imagen ORIGINAL en alta -> recorte nítido ----
+  function applyMask(img, mask){
+    let mi = 1e9, ma = -1e9;
+    for (let i = 0; i < mask.length; i++){ if (mask[i] < mi) mi = mask[i]; if (mask[i] > ma) ma = mask[i]; }
+    const range = (ma - mi) || 1;
+    const mC = document.createElement('canvas'); mC.width = SIZE; mC.height = SIZE;
+    const mImg = mC.getContext('2d').createImageData(SIZE, SIZE);
+    for (let i = 0; i < mask.length; i++){ const v = Math.round((mask[i] - mi) / range * 255); mImg.data[i*4] = mImg.data[i*4+1] = mImg.data[i*4+2] = v; mImg.data[i*4+3] = 255; }
+    mC.getContext('2d').putImageData(mImg, 0, 0);
+    // escalar la máscara al tamaño original
+    const W = img.naturalWidth, H = img.naturalHeight;
+    const sM = document.createElement('canvas'); sM.width = W; sM.height = H;
+    const sctx = sM.getContext('2d'); sctx.imageSmoothingQuality = 'high'; sctx.drawImage(mC, 0, 0, W, H);
+    const maskData = sctx.getImageData(0, 0, W, H).data;
+    // componer original + alfa
+    const out = document.createElement('canvas'); out.width = W; out.height = H;
+    const octx = out.getContext('2d'); octx.drawImage(img, 0, 0);
+    const od = octx.getImageData(0, 0, W, H);
+    for (let i = 0; i < W * H; i++){ od.data[i*4+3] = maskData[i*4]; }
+    octx.putImageData(od, 0, 0);
+    return out;
+  }
+
+  // ---- correr ----
+  $('run').addEventListener('click', async () => {
+    if (!imgEl) return;
+    $('run').disabled = true; $('download').disabled = true;
+    try {
+      const url = $('model-url').value.trim();
+      if (!url){ setMetric('⚠ Poné la URL del modelo .onnx arriba.'); $('run').disabled = false; return; }
+      if (!session){
+        setMetric('Descargando modelo… (la primera vez tarda; después queda en caché)');
+        const t0 = performance.now();
+        const opts = { executionProviders: [ $('webgpu').checked ? 'webgpu' : 'wasm' ] };
+        session = await ort.InferenceSession.create(url, opts);
+        setMetric('Modelo cargado en ' + Math.round(performance.now() - t0) + 'ms. Recortando…');
+      } else setMetric('Recortando…');
+      const inName = session.inputNames[0];
+      const t1 = performance.now();
+      const input = preprocess(imgEl);
+      const res = await session.run({ [inName]: input });
+      const out = res[session.outputNames[0]];      // [1,1,1024,1024]
+      const cut = applyMask(imgEl, out.data);
+      const ms = Math.round(performance.now() - t1);
+      // mostrar
+      const cv = $('cut'); const s = Math.min(1, 480 / cut.width);
+      cv.width = Math.round(cut.width * s); cv.height = Math.round(cut.height * s);
+      cv.getContext('2d').drawImage(cut, 0, 0, cv.width, cv.height);
+      cut.toBlob(b => { if (lastBlobUrl) URL.revokeObjectURL(lastBlobUrl); lastBlobUrl = URL.createObjectURL(b); $('download').disabled = false; }, 'image/png');
+      setMetric('✅ Recorte en ' + ms + 'ms (' + ($('webgpu').checked ? 'WebGPU' : 'WASM') + ') · resolución ' + cut.width + '×' + cut.height);
+    } catch (e){
+      setMetric('❌ Error: ' + (e.message || e) + '\n(¿el modelo carga con CORS? ¿es un .onnx válido?)');
+    } finally { $('run').disabled = false; }
+  });
+  $('download').addEventListener('click', () => { if (!lastBlobUrl) return; const a = document.createElement('a'); a.href = lastBlobUrl; a.download = 'recorte.png'; a.click(); });
+</script>
+</body>
+</html>
