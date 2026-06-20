@@ -342,6 +342,10 @@
   .quotes{display:grid;gap:var(--space-3);grid-template-columns:1fr}
   @media(min-width:780px){.quotes{grid-template-columns:repeat(3,1fr)}}
   .quote{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:var(--space-4);display:flex;flex-direction:column;transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
+  .step,.tier,.quote{box-shadow:var(--shadow-sm)}
+  .pay-trust{margin-top:1.6rem;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.35rem .85rem;font-size:.85rem;color:var(--ink-soft);text-align:center}
+  .pay-trust svg{width:17px;height:17px;color:var(--accent)}
+  .pay-trust strong{color:var(--ink)}
   .quote:hover{transform:translateY(-6px);box-shadow:var(--shadow-md)}
   .quote .stars{display:flex;gap:.15rem;color:var(--accent);margin-bottom:var(--space-2)}
   .quote .stars svg{width:18px;height:18px}
@@ -512,7 +516,7 @@
     {"@type":"Question","name":"¿Para qué plataformas sirve?","acceptedAnswer":{"@type":"Answer","text":"MercadoLibre, Tienda Nube e Instagram, cada una con su medida justa y el producto bien centrado."}},
     {"@type":"Question","name":"¿Cuánto tarda?","acceptedAnswer":{"@type":"Answer","text":"Unos 3 segundos por foto. Podés subir varias juntas y bajarlas todas en un ZIP."}},
     {"@type":"Question","name":"¿Necesito saber editar?","acceptedAnswer":{"@type":"Answer","text":"No. Nada de Photoshop ni tutoriales. Subís, elegís y descargás."}},
-    {"@type":"Question","name":"¿Cómo empiezo?","acceptedAnswer":{"@type":"Answer","text":"Tocá “Quiero mis 5 fotos gratis” acá arriba o dejanos tus datos en Contacto y te escribimos."}}
+    {"@type":"Question","name":"¿Cómo empiezo?","acceptedAnswer":{"@type":"Answer","text":"Tocá “Quiero mis 5 fotos gratis” arriba: entrás al editor y bajás tus 5 fotos gratis, sin tarjeta."}}
   ]
 }
 </script>
@@ -532,7 +536,7 @@
         <a href="index.html" aria-current="true">ES</a>
         <a href="en.html" hreflang="en">EN</a>
       </span>
-      <a href="#contacto" class="btn btn-primary">Quiero mis 5 fotos gratis</a>
+      <a href="/editor" class="btn btn-primary">Quiero mis 5 fotos gratis</a>
     </div>
   </div>
 </header>
@@ -554,7 +558,7 @@
         <p class="lede">Sacás la foto con el celular y te la devolvemos con fondo blanco prolijo, en la medida exacta de MercadoLibre, Tienda Nube e Instagram. Vos no tocás un editor.</p>
         <div class="hero-actions">
           <div class="btn-wrap">
-            <a href="#contacto" class="btn btn-primary btn-lg">Quiero mis 5 fotos gratis</a>
+            <a href="/editor" class="btn btn-primary btn-lg">Quiero mis 5 fotos gratis</a>
             <span class="ai-sticker" aria-hidden="true">
               <svg class="arr" viewBox="0 0 64 36"><path d="M58 8 C 46 26, 26 14, 6 22 M6 22 L 20 24 M6 22 L 15 11"/></svg>
               <span class="txt">ahora con IA</span>
@@ -682,13 +686,13 @@
       <div class="bynum-grid">
         <div class="stat reveal d1">
           <span class="stat-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="m21 15-4.5-4.5L5 21"/></svg></span>
-          <span class="n" data-count>+900</span>
-          <span class="l">fotos ya procesadas</span>
+          <span class="n" data-count>5</span>
+          <span class="l">fotos gratis al registrarte</span>
         </div>
         <div class="stat reveal d2">
           <span class="stat-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-          <span class="n" data-count>4.9★</span>
-          <span class="l">promedio de los vendedores</span>
+          <span class="n" data-count>7</span>
+          <span class="l">formatos de plataforma listos</span>
         </div>
         <div class="stat reveal d3">
           <span class="stat-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg></span>
@@ -697,8 +701,8 @@
         </div>
         <div class="stat reveal d4">
           <span class="stat-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/></svg></span>
-          <span class="n" data-count>7 días</span>
-          <span class="l">para ver si te sube las ventas</span>
+          <span class="n" data-count>$0</span>
+          <span class="l">para empezar, sin tarjeta</span>
         </div>
       </div>
     </div>
@@ -795,7 +799,7 @@
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> 1 escena con IA gratis</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Todos los formatos (ML, Tienda Nube, Instagram)</li>
           </ul>
-          <a href="#contacto" class="btn btn-ghost">Quiero mis 5 fotos gratis</a>
+          <a href="/editor" class="btn btn-ghost">Quiero mis 5 fotos gratis</a>
         </div>
 
         <div class="tier reveal d2">
@@ -838,6 +842,13 @@
           <a href="/editor" class="btn btn-ghost">Comprar créditos</a>
         </div>
       </div>
+      <p class="pay-trust reveal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>Pago seguro con <strong>MercadoPago</strong></span>
+        <span>· Los créditos no vencen</span>
+        <span>· Sin suscripción</span>
+        <span>· Empezás gratis, sin tarjeta</span>
+      </p>
     </div>
   </section>
 
@@ -935,7 +946,7 @@
         </details>
         <details class="faq-item">
           <summary>¿Cómo empiezo?<svg class="faq-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary>
-          <div class="faq-a">Tocá “Quiero mis 5 fotos gratis” acá arriba o dejanos tus datos en Contacto y te escribimos.</div>
+          <div class="faq-a">Tocá “Quiero mis 5 fotos gratis” arriba: entrás al editor y bajás tus 5 fotos gratis, sin tarjeta.</div>
         </details>
       </div>
     </div>
@@ -947,9 +958,10 @@
   <section id="contacto">
     <div class="wrap contact-grid">
       <div class="contact-copy reveal">
-        <span class="eyebrow">Reservá tu lugar</span>
-        <h2>Dejanos tus datos y arrancás gratis.</h2>
-        <p>Te escribimos para darte acceso y tus primeras 5 fotos. Sin compromiso y sin tarjeta.</p>
+        <span class="eyebrow">¿Dudas antes de arrancar?</span>
+        <h2>Arrancá gratis ahora. Si te traba algo, escribinos.</h2>
+        <p>Tus primeras 5 fotos no necesitan que hablemos: entrás al editor y las bajás, sin tarjeta. Esto es por si querés preguntar algo antes — facturas, packs grandes, lo que sea.</p>
+        <a href="/editor" class="btn btn-primary" style="margin-bottom:1.6rem">Entrar al editor →</a>
         <div class="contact-list">
           <div>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 6 12 13 2 6"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg>
@@ -993,8 +1005,8 @@
           <label for="website">No completar este campo</label>
           <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
         </div>
-        <button type="submit" class="btn btn-primary btn-lg">Quiero mis 5 fotos gratis</button>
-        <p class="form-note">Te contactamos en menos de 24 hs. No mandamos spam.</p>
+        <button type="submit" class="btn btn-primary btn-lg">Enviar mi consulta</button>
+        <p class="form-note">Te respondemos en menos de 24 hs. No mandamos spam.</p>
       </form>
       <div class="form-ok" id="form-ok" role="status" style="display:none">
         <span class="ok-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
@@ -1353,7 +1365,7 @@
       {q:"¿Para qué plataformas sirve?", a:"MercadoLibre, Tienda Nube e Instagram, cada una con su medida justa y el producto bien centrado."},
       {q:"¿Cuánto tarda?", a:"Unos 3 segundos por foto. Podés subir varias juntas y bajarlas todas en un ZIP."},
       {q:"¿Necesito saber editar?", a:"No. Nada de Photoshop ni tutoriales. Subís, elegís y descargás."},
-      {q:"¿Cómo empiezo?", a:"Tocá “Quiero mis 5 fotos gratis” arriba o dejanos tus datos en Contacto y te escribimos.", cta:{href:"#contacto", label:"Ir a Contacto"}}
+      {q:"¿Cómo empiezo?", a:"Tocá “Quiero mis 5 fotos gratis” arriba: entrás al editor y bajás tus 5 fotos gratis, sin tarjeta.", cta:{href:"/editor", label:"Ir al editor"}}
     ];
     var root = document.getElementById('chat');
     if(!root) return;
@@ -1410,7 +1422,7 @@
   </button>
 </div>
   <div class="mcta">
-    <a href="#contacto" class="btn btn-primary">Quiero mis 5 fotos gratis</a>
+    <a href="/editor" class="btn btn-primary">Quiero mis 5 fotos gratis</a>
   </div>
 
   <!-- Vercel Web Analytics (activar en el dashboard de Vercel → Analytics) -->
