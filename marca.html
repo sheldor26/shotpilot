@@ -87,6 +87,7 @@
         <div class="mk-field">
           <span class="mk-lbl">Color secundario</span>
           <div class="mk-row"><input type="color" class="mk-color" id="col-sec" value="#1A1614"><input class="mk-hex" id="hex-sec" maxlength="7" value="#1A1614"></div>
+          <p class="mk-color-hint" id="mk-color-hint" style="display:none;color:#1a7f4b;font-size:.82rem;margin:.5rem 0 0">✨</p>
         </div>
         <div class="mk-field">
           <span class="mk-lbl">Tipografía</span>
@@ -171,11 +172,26 @@
     $('logo-btn').addEventListener('click', () => $('logo-file').click());
     $('logo-file').addEventListener('change', async e => {
       const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-      $('logo-prev').innerHTML = `<img src="${URL.createObjectURL(f)}" alt="logo">`;
+      const url = URL.createObjectURL(f);
+      $('logo-prev').innerHTML = `<img src="${url}" alt="logo">`;
+      suggestColorsFromLogo(url);   // tomamos los colores del logo (node-vibrant)
       const ext = (f.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '');
       const path = `${session.user.id}/logo.${ext}`;
       try { const { error } = await sb.storage.from('logos').upload(path, f, { upsert: true, contentType: f.type }); if (!error) logoPath = path; } catch {}
     });
+    // sugiere primario/secundario desde el logo, solo si el usuario no eligió uno propio
+    async function suggestColorsFromLogo(url){
+      try {
+        const { Vibrant } = await import('https://esm.sh/node-vibrant@4.0.3/browser');
+        const pal = await Vibrant.from(url).getPalette();
+        const pri = (pal.Vibrant || pal.LightVibrant || pal.Muted || {}).hex;
+        const sec = (pal.DarkVibrant || pal.DarkMuted || pal.Muted || {}).hex;
+        let applied = false;
+        if (pri && $('hex-prim').value.toUpperCase() === '#F4513C'){ $('col-prim').value = pri; $('hex-prim').value = pri.toUpperCase(); applied = true; }
+        if (sec && $('hex-sec').value.toUpperCase() === '#1A1614'){ $('col-sec').value = sec; $('hex-sec').value = sec.toUpperCase(); applied = true; }
+        if (applied){ const h = document.getElementById('mk-color-hint'); if (h){ h.textContent = '✨ Tomamos estos colores de tu logo. Cambialos si querés.'; h.style.display = 'block'; } }
+      } catch {}   // si falla la lib, no pasa nada: los colores quedan como estaban
+    }
 
     $('mk-save').addEventListener('click', async () => {
       const btn = $('mk-save'); btn.disabled = true;
