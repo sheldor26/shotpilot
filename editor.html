@@ -246,6 +246,11 @@
   .dl-tile.dl-primary:hover{background:var(--accent-deep)}
   .dl-main{width:100%;margin-top:.6rem;padding:.9rem 1rem;border:none;border-radius:12px;background:var(--accent);color:#fff;font-family:"Manrope",sans-serif;font-weight:800;font-size:1rem;cursor:pointer;box-shadow:0 8px 18px -10px rgba(216,56,31,.6);transition:background .15s,transform .12s}
   .dl-main:hover{background:var(--accent-deep);transform:translateY(-1px)}
+  .dl-success{text-align:center;margin:.4rem 0 .2rem;padding:.9rem 1rem;border-radius:14px;background:linear-gradient(180deg,#FDF1ED,#FBF7F2);border:1px solid var(--accent-tint)}
+  .dl-success-ic{width:42px;height:42px;border-radius:50%;margin:0 auto .4rem;background:var(--accent);color:#fff;display:grid;place-items:center}
+  .dl-success-ic svg{width:22px;height:22px}
+  .dl-success-t{font-family:"Bricolage Grotesque","Manrope",sans-serif;font-weight:800;font-size:1.15rem;color:var(--ink);margin:0}
+  .dl-success-s{color:var(--ink-soft);font-size:.92rem;margin:.15rem 0 0}
   .dl-note{font-size:.72rem;color:var(--ink-faint);line-height:1.35;margin:.5rem .1rem 0}
   .dl-msg{font-size:.82rem;font-weight:700;color:var(--accent-deep);background:var(--accent-tint);border-radius:10px;padding:.55rem .7rem;margin:.55rem 0 0;text-align:center}
   .scene-card{margin-top:.9rem;border:1px solid #E7D9C4;border-radius:14px;background:linear-gradient(135deg,#FFFDF8,#FBF1E2);overflow:hidden}
@@ -1360,6 +1365,11 @@
           </div>
           <p class="eng-hint" id="bigprev-hint" data-i18n="bigprevHint" style="display:none;text-align:center">Arrastrá las puntas (círculos) para ajustar cada medida.</p>
 
+          <div class="dl-success" id="dl-success" hidden>
+            <div class="dl-success-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <p class="dl-success-t" data-i18n="dlSuccessT">¡Listo! Tu galería quedó pro.</p>
+            <p class="dl-success-s" data-i18n="dlSuccessS">Bajala y subila a tu publicación.</p>
+          </div>
           <span class="eng-label" style="margin-top:.2rem;display:block"><span data-i18n="downloadLabel">Descargar · formato</span> <b id="dl-label">MercadoLibre</b></span>
           <button type="button" class="dl-main" id="dl-main" data-i18n="dlMain">Descargar</button>
           <p class="dl-msg" id="dl-msg" role="status" style="display:none"></p>
@@ -1714,8 +1724,10 @@
         dlAll: 'Todo aplicado',
         dlAllSub: 'medidas + banner',
         dlMain: 'Descargar',
-        dlNote: 'La imagen principal de ML va sin texto. "Todas las placas" te baja producto, medidas y banner por separado, todas en este formato.',
-        dlSeparate: 'Descargar todas las placas',
+        dlNote: 'La imagen principal de ML va sin texto. El botón de abajo te baja toda la galería en un ZIP, con los nombres ordenados (01-portada, 02-medidas…).',
+        dlSeparate: 'Descargar galería (.zip)',
+        dlSuccessT: '¡Listo! Tu galería quedó pro.',
+        dlSuccessS: 'Bajala y subila a tu publicación.',
         dlPack: 'Pack (todos los formatos)',
         another: 'Producto nuevo',
         foot: 'Las primeras 5 fotos son gratis. Sin tarjeta.',
@@ -2026,8 +2038,10 @@
         dlAll: 'Everything applied',
         dlAllSub: 'dimensions + banner',
         dlMain: 'Download',
-        dlNote: 'The ML main image must have no text. "All versions" downloads product, measurements and banner separately, all in this format.',
-        dlSeparate: 'Download all versions',
+        dlNote: 'The ML main image must have no text. The button below downloads the whole gallery as a ZIP, with ordered names (01-cover, 02-measures…).',
+        dlSeparate: 'Download gallery (.zip)',
+        dlSuccessT: 'Done! Your gallery looks pro.',
+        dlSuccessS: 'Download it and upload it to your listing.',
         dlPack: 'Pack (all sizes)',
         another: 'New product',
         foot: 'Your first 5 photos are free. No card required.',
@@ -4552,6 +4566,52 @@
       downloadBlob(await exportBlob(), `shotpilot-${presetKey}-${v.sfx}-${p.w}x${p.h}.png`);
       renderResult();   // restaurar la previa a la vista completa
     }
+
+    // ---------- ZIP "store" (sin compresión ni dependencias) — los PNG ya vienen comprimidos ----------
+    const _crcTable = (() => { const tb = new Uint32Array(256); for (let n = 0; n < 256; n++){ let c = n; for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); tb[n] = c >>> 0; } return tb; })();
+    function crc32(bytes){ let c = 0xFFFFFFFF; for (let i = 0; i < bytes.length; i++) c = _crcTable[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+    function _cat(arrs){ let len = 0; for (const a of arrs) len += a.length; const o = new Uint8Array(len); let k = 0; for (const a of arrs){ o.set(a, k); k += a.length; } return o; }
+    const _u16 = n => new Uint8Array([n & 255, (n >>> 8) & 255]);
+    const _u32 = n => new Uint8Array([n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255]);
+    function makeZip(files){
+      const enc = new TextEncoder(); const parts = [], central = []; let offset = 0;
+      for (const f of files){
+        const name = enc.encode(f.name), data = f.data, crc = crc32(data);
+        const lfh = _cat([_u32(0x04034b50), _u16(20), _u16(0), _u16(0), _u16(0), _u16(0), _u32(crc), _u32(data.length), _u32(data.length), _u16(name.length), _u16(0), name]);
+        parts.push(lfh, data); central.push({ name, crc, size: data.length, offset }); offset += lfh.length + data.length;
+      }
+      const cdStart = offset, cd = [];
+      for (const c of central) cd.push(_cat([_u32(0x02014b50), _u16(20), _u16(20), _u16(0), _u16(0), _u16(0), _u16(0), _u32(c.crc), _u32(c.size), _u32(c.size), _u16(c.name.length), _u16(0), _u16(0), _u16(0), _u16(0), _u32(0), _u32(c.offset), c.name]));
+      const cdBytes = _cat(cd);
+      const eocd = _cat([_u32(0x06054b50), _u16(0), _u16(0), _u16(central.length), _u16(central.length), _u32(cdBytes.length), _u32(cdStart), _u16(0)]);
+      return new Blob([...parts, cdBytes, eocd], { type: 'application/zip' });
+    }
+    // orden fijo de la galería (solo las placas activas) → nombres 01-portada, 02-medidas…
+    function zipOrder(){
+      const out = [{ key: 'clean', label: 'portada' }];
+      if (dimsOn) out.push({ key: 'dims', label: 'medidas' });
+      if (bannerOn) out.push({ key: 'banner', label: 'banner' });
+      if (featsOn) out.push({ key: 'feats', label: 'caracteristicas' });
+      if (incluyeOn) out.push({ key: 'incluye', label: 'que-incluye' });
+      return out;
+    }
+    let zipBusy = false;
+    async function downloadZip(){
+      if (zipBusy) return; zipBusy = true;
+      const order = zipOrder();
+      try {
+        await ensureUnlocked();   // value-first: empuja a login/spend; igual baja (con marca si es anónimo)
+        const p = P(), files = [];
+        for (let i = 0; i < order.length; i++){
+          const v = DL_VARIANTS[order[i].key];
+          compose(p.w, p.h, shadowOn, p.fill, { dims: v.dims, banners: v.banners, feats: v.feats, incluye: v.incluye });
+          const buf = new Uint8Array(await (await exportBlob()).arrayBuffer());
+          files.push({ name: `${String(i + 1).padStart(2, '0')}-${order[i].label}.png`, data: buf });
+        }
+        downloadBlob(makeZip(files), `shotpilot-galeria-${presetKey}-${p.w}x${p.h}.zip`);
+        renderResult();
+      } finally { zipBusy = false; }
+    }
     function viewSfx(){ return previewView === 'todo' ? 'completa' : previewView === 'medidas' ? 'medidas' : previewView === 'banner' ? 'banner' : previewView === 'caracteristicas' ? 'caracteristicas' : previewView === 'incluye' ? 'incluye' : 'limpia'; }
     function updateDlVariants(){
       const hasLayers = dimsOn || bannerOn || featsOn || incluyeOn;
@@ -4566,20 +4626,22 @@
       downloadBlob(await exportBlob(), `shotpilot-${presetKey}-${viewSfx()}-${p.w}x${p.h}.png`);
       renderResult();
     });
-    // descargar separadas: limpia + cada capa activa como archivos aparte
+    // descargar la galería completa en un ZIP con nombres ordenados (01-portada, 02-medidas…)
     $('dl-separate').addEventListener('click', async () => {
       const btn = $('dl-separate'); btn.disabled = true;
-      await ensureUnlocked();
-      const keys = ['clean'];
-      if (dimsOn) keys.push('dims');
-      if (bannerOn) keys.push('banner');
-      if (featsOn) keys.push('feats');
-      if (incluyeOn) keys.push('incluye');
-      for (const k of keys){ await downloadLayers(k); await new Promise(r => setTimeout(r, 350)); }
-      btn.disabled = false;
+      try { await downloadZip(); } finally { btn.disabled = false; }
     });
 
     $('another').addEventListener('click', () => { photos = []; activePhoto = -1; renderPhotoStrip(); fileInput.value = ''; show('drop'); clearDraft(); currentGalleryId = null; });
+    // swipe horizontal entre placas (mobile) — no interfiere con el arrastre de medidas (umbral + dominante horizontal)
+    (function(){
+      const el = $('bigprev'); if (!el) return; let sx = null, sy = null;
+      el.addEventListener('touchstart', e => { if (e.touches.length !== 1 || el.classList.contains('draggable')){ sx = null; return; } sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+      el.addEventListener('touchend', e => {
+        if (sx == null) return; const tch = e.changedTouches[0]; const dx = tch.clientX - sx, dy = tch.clientY - sy; sx = null;
+        if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.6) flipPreview(dx < 0 ? 1 : -1);
+      }, { passive: true });
+    })();
     $('pv-prev').addEventListener('click', () => flipPreview(-1));
     $('pv-next').addEventListener('click', () => flipPreview(1));
 
@@ -5203,6 +5265,7 @@
     function updateWizFoot(){
       const f = $('wiz-foot'); if (!f) return;
       const inResult = resultEl && !resultEl.classList.contains('hidden');
+      const suc = $('dl-success'); if (suc) suc.hidden = !(inResult && wizStep >= 5);
       if (!inResult || wizStep === 4){ f.hidden = true; document.body.classList.remove('has-wiz-foot'); return; }
       f.hidden = false; document.body.classList.add('has-wiz-foot');
       const back = $('wiz-back-btn'), next = $('wiz-next-btn'), hint = $('wiz-hint');
@@ -5216,7 +5279,7 @@
       if (n === 5) setTimeout(() => { const d = $('dl-main'); if (d) d.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 60);
       syncGalleryDraft();   // persistir el borrador en Supabase al avanzar de paso
     }
-    $('wiz-next-btn').addEventListener('click', () => { if (wizStep >= 5) $('dl-main').click(); else wizGo(wizStep + 1); });
+    $('wiz-next-btn').addEventListener('click', () => { if (wizStep >= 5) downloadZip(); else wizGo(wizStep + 1); });
     $('wiz-back-btn').addEventListener('click', () => wizGo(3));
     $('marca-skip').addEventListener('click', () => wizGo(5));
     $('marca-apply').addEventListener('click', () => wizGo(5));
