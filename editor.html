@@ -282,6 +282,20 @@
   .dl-success-s{color:var(--ink-soft);font-size:.92rem;margin:.15rem 0 0}
   .dl-note{font-size:.72rem;color:var(--ink-faint);line-height:1.35;margin:.5rem .1rem 0}
   .dl-msg{font-size:.82rem;font-weight:700;color:var(--accent-deep);background:var(--accent-tint);border-radius:10px;padding:.55rem .7rem;margin:.55rem 0 0;text-align:center}
+  /* Modo experto: chat */
+  .chat-card{margin-top:.9rem;border:1px solid var(--line);border-radius:14px;background:var(--white);overflow:hidden}
+  .chat-head{width:100%;display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.7rem .8rem;background:none;border:0;cursor:pointer;font-family:inherit}
+  .chat-title{display:inline-flex;align-items:center;gap:.4rem;font-weight:800;color:var(--ink)}
+  .chat-body{padding:0 .8rem .85rem}
+  .chat-sugs{display:flex;flex-wrap:wrap;gap:.4rem;margin:.2rem 0 .7rem}
+  .chat-sug{border:1.5px solid var(--line);background:var(--cream);color:var(--ink-soft);font:inherit;font-weight:600;font-size:.8rem;padding:.4rem .7rem;border-radius:999px;cursor:pointer;text-align:left}
+  .chat-sug:hover{border-color:var(--accent);color:var(--accent)}
+  .chat-input-row{display:flex;gap:.45rem}
+  .chat-input-row input{flex:1;min-width:0;font-family:inherit;font-size:.92rem;padding:.65rem .8rem;border:1.5px solid var(--line);border-radius:11px;background:var(--white);color:var(--ink)}
+  .chat-input-row input:focus{outline:none;border-color:var(--accent)}
+  .chat-send{flex:0 0 auto;background:var(--accent);color:#fff;border:0;border-radius:11px;padding:.65rem 1.1rem;font-family:inherit;font-weight:700;cursor:pointer}
+  .chat-send:disabled{opacity:.6;cursor:default}
+  .chat-reply{margin:.6rem 0 0;font-size:.88rem;color:var(--ink-soft);background:var(--accent-tint);border-radius:10px;padding:.55rem .75rem}
   .scene-card{margin-top:.9rem;border:1px solid #E7D9C4;border-radius:14px;background:linear-gradient(135deg,#FFFDF8,#FBF1E2);overflow:hidden}
   .scene-head{width:100%;display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.7rem .8rem;background:none;border:0;cursor:pointer;font-family:inherit}
   .scene-title{display:inline-flex;align-items:center;gap:.4rem;font-weight:800;color:var(--ink)}
@@ -1449,6 +1463,23 @@
               <div class="scene-results" id="scene-results"></div>
             </div>
           </div>
+
+          <!-- Modo experto: edición por chat (capa avanzada, no la puerta de entrada) -->
+          <div class="chat-card" id="chat-card">
+            <button type="button" class="chat-head" id="chat-head">
+              <span class="chat-title"><span aria-hidden="true">✦</span> <span data-i18n="chatExpert">Modo experto</span> <span class="scene-tag" data-i18n="chatBeta">beta</span></span>
+              <label class="dims-switch" data-i18n-title="chatSwitchTitle" title="Editar pidiendo cambios en una frase" onclick="event.stopPropagation()"><input type="checkbox" id="chat-on"><span class="sw" aria-hidden="true"></span></label>
+            </button>
+            <div class="chat-body" id="chat-body" style="display:none">
+              <p class="eng-hint" data-i18n="chatHint">Pedile cambios a tu galería en una frase. Tocá una sugerencia o escribí la tuya.</p>
+              <div class="chat-sugs" id="chat-sugs"></div>
+              <div class="chat-input-row">
+                <input id="chat-input" type="text" data-i18n-ph="chatPh" placeholder="Ej: hacé la portada más grande" autocomplete="off">
+                <button type="button" class="chat-send" id="chat-send" data-i18n="chatSend">Aplicar</button>
+              </div>
+              <p class="chat-reply" id="chat-reply" style="display:none"></p>
+            </div>
+          </div>
           </div><!-- /ed-visual -->
           </div><!-- /ed-grid -->
         </div>
@@ -1752,6 +1783,11 @@
         pvNext: 'Vista siguiente',
         bigprevHint: 'Arrastrá las puntas (círculos) para ajustar cada medida.',
         featsDragHint: 'Arrastrá el borde para cambiar el tamaño · llevala al otro lado para moverla.',
+        chatExpert: 'Modo experto', chatBeta: 'beta',
+        chatSwitchTitle: 'Editar pidiendo cambios en una frase',
+        chatHint: 'Pedile cambios a tu galería en una frase. Tocá una sugerencia o escribí la tuya.',
+        chatPh: 'Ej: hacé la portada más grande',
+        chatSend: 'Aplicar',
         sceneTitle: 'Escena (IA)',
         sceneTag: 'nuevo',
         sceneHint: 'Poné tu producto en una escena real (perfume en el baño, heladera en la cocina). Genera 2 variantes para imágenes secundarias. La primera es gratis.',
@@ -2067,6 +2103,11 @@
         pvNext: 'Next view',
         bigprevHint: 'Drag the endpoints (circles) to adjust each dimension.',
         featsDragHint: 'Drag the edge to resize · drag it to the other side to move it.',
+        chatExpert: 'Expert mode', chatBeta: 'beta',
+        chatSwitchTitle: 'Edit by asking for changes in one phrase',
+        chatHint: 'Ask for changes to your gallery in one phrase. Tap a suggestion or write your own.',
+        chatPh: 'E.g.: make the cover bigger',
+        chatSend: 'Apply',
         sceneTitle: 'Scene (AI)',
         sceneTag: 'new',
         sceneHint: 'Place your product in a real scene (perfume in a bathroom, fridge in a kitchen). Generates 2 variants for secondary listing images. The first one is free.',
@@ -4807,6 +4848,67 @@
       bulkBusy = false; $('bulk-go').disabled = false;
     }
     $('bulk-go').addEventListener('click', runBulk);
+
+    // ================= MODO EXPERTO: edición por chat =================
+    // Capa avanzada (toggle). Interpreta el comando con el LLM (api/comando.js) y
+    // aplica la acción sobre la placa en vivo, o dispara una escena del motor.
+    const CHAT_SUGS = ['Hacé la portada más grande', 'Cambiá el fondo a gris', 'Agregá una placa de garantía'];
+    function renderChatSugs(){
+      const box = $('chat-sugs'); if (!box) return; box.innerHTML = '';
+      CHAT_SUGS.forEach(s => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chat-sug'; b.textContent = '✦ ' + s; b.addEventListener('click', () => { $('chat-input').value = s; sendChat(); }); box.appendChild(b); });
+    }
+    function chatReply(msg){ const r = $('chat-reply'); if (!r) return; r.textContent = msg; r.style.display = msg ? 'block' : 'none'; }
+    $('chat-head').addEventListener('click', () => { if (!$('chat-on').checked){ $('chat-on').checked = true; $('chat-on').dispatchEvent(new Event('change', { bubbles: true })); } });
+    $('chat-on').addEventListener('change', e => { $('chat-body').style.display = e.target.checked ? 'block' : 'none'; if (e.target.checked && !$('chat-sugs').children.length) renderChatSugs(); });
+    $('chat-send').addEventListener('click', sendChat);
+    $('chat-input').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); sendChat(); } });
+
+    async function sendChat(){
+      const cmd = $('chat-input').value.trim(); if (!cmd) return;
+      const btn = $('chat-send'); btn.disabled = true; const old = btn.textContent; btn.textContent = '…'; chatReply('');
+      try {
+        const ctx = { bg: bgColor || 'transparente', size: Math.round(productScale * 100) + '%', placas: [dimsOn && 'medidas', featsOn && 'caracteristicas', incluyeOn && 'qué incluye', bannerOn && 'banner'].filter(Boolean) };
+        const r = await fetch('/api/comando', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ command: cmd, context: ctx }) });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || !data.ok){ chatReply(navigator.onLine ? 'No pude procesar eso ahora. Probá de nuevo.' : 'Parece que te quedaste sin conexión.'); return; }
+        applyCommand(data);
+        chatReply(data.reply || 'Listo.');
+        $('chat-input').value = '';
+      } catch { chatReply('No pude procesar eso ahora. Probá de nuevo.'); }
+      finally { btn.disabled = false; btn.textContent = old; }
+    }
+
+    function applyCommand(a){
+      switch (a.action){
+        case 'bg_color': if (/^#[0-9a-fA-F]{6}$/.test(a.value || '')) setBg(a.value); break;
+        case 'product_size': {
+          const f = a.value === 'smaller' ? 0.83 : 1.2;
+          productScale = Math.max(0.5, Math.min(1.6, productScale * f));
+          const sl = $('prod-size'); if (sl){ sl.value = Math.round(productScale * 100); $('prod-size-v').textContent = Math.round(productScale * 100) + '%'; }
+          renderResult(); break;
+        }
+        case 'shadow': shadowOn = !!a.value; { const c = $('shadow'); if (c) c.checked = shadowOn; } renderResult(); break;
+        case 'reflect': reflectOn = !!a.value; { const c = $('reflect'); if (c) c.checked = reflectOn; } renderResult(); break;
+        case 'placa': {
+          const id = { medidas: 'dims-on', caracteristicas: 'feats-on', incluye: 'incluye-on', banner: 'bn-on' }[a.kind];
+          const c = id && $(id); if (c && c.checked !== !!a.on){ c.checked = !!a.on; c.dispatchEvent(new Event('change', { bubbles: true })); }
+          break;
+        }
+        case 'add_feature': {
+          const text = String(a.text || '').slice(0, 48); if (!text) break;
+          feats.items = (feats.items || []).filter(it => (it.text || '').trim());
+          if (feats.items.length < 6) feats.items.push({ icon: guessFeatIcon(text, feats.items.length), text });
+          renderFeatRows();
+          if (!featsOn){ const c = $('feats-on'); if (c){ c.checked = true; c.dispatchEvent(new Event('change', { bubbles: true })); } } else renderResult();
+          break;
+        }
+        case 'scene': {
+          const sp = $('scene-prompt'); if (sp && a.prompt){ sp.value = a.prompt; if ($('scene-body').style.display === 'none') $('scene-head').click(); $('scene-go').click(); }
+          break;
+        }
+        default: break;   // 'none' → solo muestra el reply
+      }
+    }
 
     function viewSfx(){ return previewView === 'todo' ? 'completa' : previewView === 'medidas' ? 'medidas' : previewView === 'banner' ? 'banner' : previewView === 'caracteristicas' ? 'caracteristicas' : previewView === 'incluye' ? 'incluye' : 'limpia'; }
     function updateDlVariants(){
