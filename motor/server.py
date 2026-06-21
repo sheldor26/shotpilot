@@ -273,7 +273,11 @@ SITE_URL = os.environ.get("SITE_URL", "https://shotpilot.app").rstrip("/")
 MOTOR_PUBLIC_URL = os.environ.get("MOTOR_PUBLIC_URL", "https://shotpilot-production.up.railway.app").rstrip("/")
 
 # Packs: créditos + precio en ARS. AJUSTAR los ARS al dólar del día (ver nota).
+# Packs de créditos (precios EN PESOS, fuente de verdad). El checkout y el webhook
+# son genéricos (leen credits del metadata), así que sumar un pack acá alcanza.
+# "inicial" = plan de entrada, entre el free y el pack más chico anterior (probe).
 PACKS = {
+    "inicial":  {"credits": 10,  "ars": 3990,  "title": "ShotPilot · 10 créditos"},
     "probe":    {"credits": 20,  "ars": 7990,  "title": "ShotPilot · 20 créditos"},
     "vendedor": {"credits": 60,  "ars": 17990, "title": "ShotPilot · 60 créditos"},
     "tienda":   {"credits": 200, "ars": 44990, "title": "ShotPilot · 200 créditos"},

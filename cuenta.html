@@ -8,33 +8,140 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/app.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  .ac-bal{ display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+  .ac-bal-n{ font-family:"Bricolage Grotesque",sans-serif; font-weight:800; font-size:2.1rem; line-height:1; }
+  .ac-bal-l{ color:var(--soft); font-size:.85rem; margin-top:.2rem; }
+  .ac-plan{ display:inline-block; font-size:.78rem; font-weight:700; color:var(--coral); background:#FAECE7; border-radius:999px; padding:.25rem .7rem; }
+  .ac-email{ font-weight:700; font-size:.92rem; }
+  .ac-sec-h{ font-size:1.05rem; font-weight:700; margin:1.7rem 0 .3rem; }
+  .ac-sec-s{ color:var(--soft); font-size:.86rem; margin:0 0 .9rem; }
+  .ac-packs{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:.6rem; }
+  .ac-pack{ position:relative; border:1.5px solid var(--line); border-radius:14px; padding:1rem .8rem; background:#fff; text-align:center; cursor:pointer; font:inherit; color:var(--ink); }
+  .ac-pack:hover{ border-color:var(--coral); }
+  .ac-pack.pop{ border-color:var(--coral); }
+  .ac-pack-tag{ position:absolute; top:-9px; left:50%; transform:translateX(-50%); font-size:.6rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:#fff; background:var(--coral); border-radius:999px; padding:.12rem .55rem; }
+  .ac-pack-nm{ display:block; font-weight:700; font-size:.92rem; }
+  .ac-pack-cr{ display:block; color:var(--soft); font-size:.82rem; margin:.15rem 0 .5rem; }
+  .ac-pack-pr{ display:block; font-family:"Bricolage Grotesque",sans-serif; font-weight:800; font-size:1.25rem; }
+  .ac-pack.busy{ opacity:.6; cursor:default; }
+  .ac-hist{ list-style:none; padding:0; margin:0; }
+  .ac-hist li{ display:flex; justify-content:space-between; gap:.8rem; padding:.6rem 0; border-bottom:1px solid var(--line); font-size:.9rem; }
+  .ac-hist li:last-child{ border-bottom:0; }
+  .ac-hist .d{ color:var(--soft); font-size:.82rem; }
+  .ac-hist .pos{ color:#1a7f4b; font-weight:700; }
+  .ac-hist .neg{ color:var(--ink-soft); font-weight:700; }
+  .ac-banner{ background:#e3f3ea; color:#1a7f4b; border-radius:12px; padding:.75rem 1rem; font-weight:600; font-size:.9rem; margin-bottom:1rem; }
+  .ac-out{ margin-top:1.6rem; }
+</style>
 </head>
 <body>
   <div class="sp-page">
     <p class="sp-eyebrow">Cuenta</p>
     <h1>Mi cuenta</h1>
-    <p class="sp-sub">Tu sesión, tus créditos y tu plan.</p>
-    <div class="sp-card" id="acc"><p class="sp-muted">Cargando…</p></div>
+    <p class="sp-sub">Tu saldo, tu plan y tus movimientos.</p>
+    <div id="ac-banner"></div>
+    <div id="acc"><div class="sp-card"><p class="sp-muted">Cargando…</p></div></div>
   </div>
   <script type="module">
     import { mountNav } from '/js/ui/nav.js';
     import { createSupabase } from '/js/supabaseClient.js';
+    import { getPacks, checkout } from '/js/api.js';
     mountNav({ active: 'cuenta' });
     const sb = createSupabase();
+    const $ = id => document.getElementById(id);
+    const MOTOR_URL = window.MOTOR_URL || 'https://shotpilot-production.up.railway.app';
+    const PACK_NAMES = { inicial: 'Inicial', probe: 'Probá', vendedor: 'Vendedor', tienda: 'Tienda' };
+    const PACK_POPULAR = 'vendedor';
+    const esc = s => String(s == null ? '' : s).replace(/[<>&]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;' }[c]));
+    let session = null;
+
+    // regreso de MercadoPago
+    const pago = new URLSearchParams(location.search).get('pago');
+    if (pago === 'ok') $('ac-banner').innerHTML = '<div class="ac-banner">✓ ¡Listo! Tu pago se acreditó. Ya tenés tus créditos.</div>';
+    else if (pago === 'pending') $('ac-banner').innerHTML = '<div class="ac-banner" style="background:#FDF1ED;color:var(--coral)">Tu pago quedó pendiente. Apenas se confirme, sumamos los créditos.</div>';
+
     (async () => {
-      const box = document.getElementById('acc');
-      if (!sb){ box.innerHTML = '<p class="sp-muted">No se pudo conectar.</p>'; return; }
-      let session = null;
+      if (!sb){ $('acc').innerHTML = '<div class="sp-card"><p class="sp-muted">No se pudo conectar.</p></div>'; return; }
       try { ({ data: { session } } = await sb.auth.getSession()); } catch {}
       if (!session){
-        box.innerHTML = '<p class="sp-sub" style="margin:.2rem 0 1rem">Todavía no iniciaste sesión. Entrá para guardar tus galerías y tus créditos.</p><a class="sp-btn" href="/editor">Entrar</a>';
+        $('acc').innerHTML = '<div class="sp-card"><p class="sp-sub" style="margin:.2rem 0 1rem">Todavía no iniciaste sesión. Entrá para ver tu saldo y tu plan.</p><a class="sp-btn" href="/editor">Entrar</a></div>';
         return;
       }
       let credits = 0;
-      try { const { data } = await sb.from('profiles').select('credits').eq('id', session.user.id).single(); credits = data ? data.credits : 0; } catch {}
-      box.innerHTML = `<div class="sp-row"><div><b>${session.user.email}</b><div class="sp-muted">${credits} crédito${credits === 1 ? '' : 's'} · plan Free</div></div><button class="sp-btn sp-btn-ghost" id="out">Salir</button></div>`;
-      document.getElementById('out').onclick = async () => { try { await sb.auth.signOut(); } catch {} location.reload(); };
+      try { const { data } = await sb.from('profiles').select('credits').eq('id', session.user.id).single(); credits = data ? (data.credits || 0) : 0; } catch {}
+      const plan = credits > 0 ? 'Con créditos' : 'Free';
+
+      $('acc').innerHTML = `
+        <div class="sp-card">
+          <div class="ac-bal">
+            <div>
+              <div class="ac-bal-n">${credits}</div>
+              <div class="ac-bal-l">crédito${credits === 1 ? '' : 's'} disponible${credits === 1 ? '' : 's'} · 1 crédito = 1 foto sin marca</div>
+            </div>
+            <span class="ac-plan">Plan ${esc(plan)}</span>
+          </div>
+          <div class="ac-email" style="margin-top:.9rem">${esc(session.user.email)}</div>
+        </div>
+
+        <h2 class="ac-sec-h">Cargar créditos</h2>
+        <p class="ac-sec-s">Pagás una vez en pesos y los usás cuando quieras. Sin suscripción.</p>
+        <div class="ac-packs" id="ac-packs"><p class="sp-muted">Cargando packs…</p></div>
+
+        <h2 class="ac-sec-h">Movimientos</h2>
+        <div id="ac-hist"><p class="sp-muted">Cargando…</p></div>
+
+        <button class="sp-btn sp-btn-ghost ac-out" id="out" style="width:100%">Cerrar sesión</button>
+      `;
+      $('out').onclick = async () => { try { await sb.auth.signOut(); } catch {} location.href = '/editor'; };
+      loadPacks();
+      loadHistory();
     })();
+
+    async function loadPacks(){
+      const host = $('ac-packs');
+      try {
+        const r = await getPacks(MOTOR_URL); const data = await r.json();
+        host.innerHTML = '';
+        (data.packs || []).forEach(p => {
+          const pop = p.id === PACK_POPULAR;
+          const b = document.createElement('button'); b.type = 'button'; b.className = 'ac-pack' + (pop ? ' pop' : '');
+          b.innerHTML = (pop ? '<span class="ac-pack-tag">El más elegido</span>' : '')
+            + `<span class="ac-pack-nm">${esc(PACK_NAMES[p.id] || p.id)}</span>`
+            + `<span class="ac-pack-cr">${p.credits} créditos</span>`
+            + `<span class="ac-pack-pr">$${Number(p.ars).toLocaleString('es-AR')}</span>`;
+          b.addEventListener('click', () => buy(p.id, b));
+          host.appendChild(b);
+        });
+      } catch { host.innerHTML = '<p class="sp-muted">No pudimos cargar los packs. Probá de nuevo en un momento.</p>'; }
+    }
+
+    async function buy(id, btn){
+      let token = null;
+      try { const { data } = await sb.auth.getSession(); token = data.session ? data.session.access_token : null; } catch {}
+      if (!token){ location.href = '/editor'; return; }
+      btn.disabled = true; btn.classList.add('busy');
+      try {
+        const fd = new FormData(); fd.append('pack', id);
+        const r = await checkout(MOTOR_URL, token, fd);
+        const data = await r.json().catch(() => ({}));
+        if (r.ok && data.init_point){ location.href = data.init_point; return; }
+        throw new Error('checkout');
+      } catch { btn.disabled = false; btn.classList.remove('busy'); $('ac-packs').insertAdjacentHTML('afterend', '<p class="sp-muted" id="ac-buyerr">No pudimos abrir el pago. Probá de nuevo.</p>'); }
+    }
+
+    async function loadHistory(){
+      const host = $('ac-hist');
+      let rows = [];
+      try { const { data } = await sb.from('credit_ledger').select('delta,reason,created_at').eq('user_id', session.user.id).order('created_at', { ascending: false }).limit(20); rows = data || []; } catch {}
+      if (!rows.length){ host.innerHTML = '<p class="sp-muted">Todavía no tenés movimientos. Cuando cargues créditos, aparecen acá.</p>'; return; }
+      const fmt = s => { try { return new Date(s).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' }); } catch { return ''; } };
+      const label = r => /pago_mp/.test(r || '') ? 'Compra de créditos' : (r === 'photo' ? 'Foto sin marca' : (r || 'Movimiento'));
+      host.innerHTML = '<ul class="ac-hist">' + rows.map(x => {
+        const pos = (x.delta || 0) >= 0;
+        return `<li><div><div>${esc(label(x.reason))}</div><div class="d">${fmt(x.created_at)}</div></div><div class="${pos ? 'pos' : 'neg'}">${pos ? '+' : ''}${x.delta}</div></li>`;
+      }).join('') + '</ul>';
+    }
   </script>
 </body>
 </html>
