@@ -107,6 +107,35 @@
   .import-example{text-align:center;margin:.85rem 0 0}
   .import-example a{color:var(--ink-soft);font-size:.9rem;text-decoration:none;border-bottom:1px dashed var(--line)}
   .import-example a:hover{color:var(--accent)}
+  /* generación masiva (catálogo) */
+  .bulk-entry{display:flex;align-items:center;gap:.7rem;width:100%;margin-top:.9rem;padding:.8rem .9rem;border:1.5px solid var(--line);border-radius:14px;background:var(--white);cursor:pointer;text-align:left;font:inherit}
+  .bulk-entry:hover{border-color:var(--accent)}
+  .bulk-entry-ic{width:38px;height:38px;border-radius:10px;background:var(--cream-2);color:var(--ink-soft);display:grid;place-items:center;flex:none}
+  .bulk-entry-tx{flex:1;display:flex;flex-direction:column;line-height:1.25}
+  .bulk-entry-tx b{font-size:.95rem}
+  .bulk-entry-tx small{color:var(--ink-faint);font-size:.8rem}
+  .plan-badge{flex:none;font-size:.66rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--accent-deep);background:var(--accent-tint);border-radius:999px;padding:.22rem .55rem}
+  .bulk-panel{padding:.2rem}
+  .bulk-back{display:inline-flex;align-items:center;gap:.3rem;background:none;border:0;color:var(--ink-soft);font:inherit;font-weight:700;font-size:.86rem;cursor:pointer;padding:.2rem 0;margin-bottom:.5rem}
+  .bulk-back:hover{color:var(--accent)}
+  .bulk-h{font-size:1.3rem;margin:0 0 .25rem}
+  .bulk-sub{color:var(--ink-faint);font-size:.9rem;margin:0 0 1.1rem;line-height:1.45}
+  .bulk-drop{display:flex;flex-direction:column;align-items:center;gap:.4rem;border:2px dashed var(--line);border-radius:14px;padding:1.6rem 1rem;text-align:center;cursor:pointer;color:var(--ink-soft);font-weight:700}
+  .bulk-drop:hover{border-color:var(--accent);background:var(--accent-tint)}
+  .bulk-drop-ic{color:var(--accent)}
+  .bulk-tmpl{font-size:.82rem;color:var(--ink-faint);margin:.6rem 0 0;line-height:1.5}
+  .bulk-tmpl a{color:var(--accent);font-weight:700;text-decoration:none}
+  .bulk-map{margin-top:1.1rem;display:flex;flex-direction:column;gap:.6rem}
+  .bulk-map-row{display:flex;align-items:center;gap:.6rem}
+  .bulk-map-row label{flex:0 0 38%;font-weight:700;font-size:.86rem}
+  .bulk-map-row select{flex:1;min-width:0;font-family:inherit;font-size:.9rem;padding:.55rem .6rem;border:1.5px solid var(--line);border-radius:10px;background:var(--white);color:var(--ink)}
+  .bulk-go{width:100%;margin-top:1.1rem}
+  .bulk-prog{margin-top:1.1rem}
+  .bulk-prog-bar{height:10px;border-radius:999px;background:var(--cream-2);overflow:hidden}
+  .bulk-prog-fill{height:100%;background:var(--accent);width:0;transition:width .3s}
+  .bulk-prog-tx{text-align:center;color:var(--ink-soft);font-size:.88rem;margin-top:.5rem;font-weight:600}
+  .bulk-result{margin-top:1.1rem;text-align:center;background:var(--accent-tint);border-radius:14px;padding:1rem}
+  .bulk-result b{font-family:"Bricolage Grotesque",sans-serif;font-size:1.1rem}
   @media(max-width:520px){.import-row{flex-wrap:wrap}.import-row .btn{width:100%}}
   /* preview de lo importado */
   .import-preview{border:1.5px solid var(--line);border-radius:16px;padding:1rem;background:var(--white)}
@@ -762,6 +791,30 @@
           <input type="file" id="file" accept="image/png,image/jpeg,image/webp">
         </label>
         <p class="import-example" id="import-example"><a href="#" id="ml-example" data-i18n="importExample">o probá con un producto de ejemplo</a></p>
+
+        <!-- entrada a generación masiva (variante de Crear) -->
+        <button type="button" class="bulk-entry" id="bulk-entry">
+          <span class="bulk-entry-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+          <span class="bulk-entry-tx"><b>Crear varias a la vez</b><small>Subí un CSV con tu catálogo</small></span>
+          <span class="plan-badge">plan Negocio</span>
+        </button>
+
+        <!-- panel de generación masiva -->
+        <div class="bulk-panel hidden" id="bulk-panel">
+          <button type="button" class="bulk-back" id="bulk-back"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg> Volver</button>
+          <h2 class="bulk-h">Crear varias a la vez</h2>
+          <p class="bulk-sub">Subí un CSV con tus productos (una fila por producto) y armamos una galería para cada uno.</p>
+          <label class="bulk-drop" id="bulk-drop" for="bulk-file">
+            <input type="file" id="bulk-file" accept=".csv,text/csv" hidden>
+            <span class="bulk-drop-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m6 10 6-6 6 6"/><path d="M4 20h16"/></svg></span>
+            <span id="bulk-drop-tx">Subí tu CSV</span>
+          </label>
+          <p class="bulk-tmpl"><a href="#" id="bulk-tmpl">Descargar plantilla CSV</a> · columnas: nombre, link_ml, imagen, alto, ancho, prof, caracteristicas, incluye</p>
+          <div class="bulk-map hidden" id="bulk-map"></div>
+          <button type="button" class="sp-btn bulk-go hidden" id="bulk-go">Armá mis galerías</button>
+          <div class="bulk-prog hidden" id="bulk-prog"></div>
+          <div class="bulk-result hidden" id="bulk-result"></div>
+        </div>
 
         <!-- procesando -->
         <div class="proc hidden" id="proc">
@@ -4615,6 +4668,146 @@
         renderResult();
       } finally { zipBusy = false; }
     }
+
+    // ================= GENERACIÓN MASIVA (catálogo por CSV) =================
+    // Variante de "Crear": una fila = un producto = una galería. Reusa el motor
+    // (removeBg + loadCutout + compose + makeZip), procesa en serie y baja un ZIP.
+    const BULK_FIELDS = [
+      { key: 'nombre',         label: 'Nombre',          kw: ['nombre', 'titulo', 'title', 'producto', 'name'] },
+      { key: 'link_ml',        label: 'Link de ML',      kw: ['link', 'url_ml', 'link_ml', 'publicacion', 'mercadolibre', 'meli'] },
+      { key: 'imagen',         label: 'URL de imagen',   kw: ['imagen', 'image', 'foto', 'img', 'url_imagen', 'picture'] },
+      { key: 'alto',           label: 'Alto',            kw: ['alto', 'altura', 'height'] },
+      { key: 'ancho',          label: 'Ancho',           kw: ['ancho', 'width'] },
+      { key: 'prof',           label: 'Profundidad',     kw: ['prof', 'profundidad', 'largo', 'depth', 'length'] },
+      { key: 'caracteristicas',label: 'Características',  kw: ['caracteristicas', 'features', 'beneficios'] },
+      { key: 'incluye',        label: 'Qué incluye',     kw: ['incluye', 'incluido', 'caja', 'includes'] },
+    ];
+    let bulkHeaders = [], bulkRows = [], bulkMap = {}, bulkBusy = false;
+
+    function parseCSV(text){
+      const out = []; let row = [], cur = '', q = false;
+      for (let i = 0; i < text.length; i++){
+        const c = text[i];
+        if (q){ if (c === '"'){ if (text[i + 1] === '"'){ cur += '"'; i++; } else q = false; } else cur += c; }
+        else if (c === '"') q = true;
+        else if (c === ','){ row.push(cur); cur = ''; }
+        else if (c === '\n'){ row.push(cur); out.push(row); row = []; cur = ''; }
+        else if (c !== '\r') cur += c;
+      }
+      if (cur !== '' || row.length){ row.push(cur); out.push(row); }
+      return out.map(r => r.map(x => x.trim())).filter(r => r.some(x => x));
+    }
+    const bulkSlug = s => String(s || 'producto').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30) || 'producto';
+    const bulkList = s => String(s || '').split(/[,\n;|]+/).map(x => x.trim()).filter(x => x.length >= 2);
+
+    function showBulk(on){
+      ['drop', 'import-box', 'import-example', 'bulk-entry'].forEach(id => { const el = $(id); if (el) el.classList.toggle('hidden', on); });
+      $('bulk-panel').classList.toggle('hidden', !on);
+      if (!on){ $('bulk-map').classList.add('hidden'); $('bulk-go').classList.add('hidden'); $('bulk-prog').classList.add('hidden'); $('bulk-result').classList.add('hidden'); bulkRows = []; }
+    }
+    $('bulk-entry').addEventListener('click', () => showBulk(true));
+    $('bulk-back').addEventListener('click', () => showBulk(false));
+    $('bulk-tmpl').addEventListener('click', e => {
+      e.preventDefault();
+      const csv = 'nombre,link_ml,imagen,alto,ancho,prof,caracteristicas,incluye\n'
+        + 'Robot aspiradora,,https://tu-foto.jpg,7,28,28,"Con wifi, Apto mascotas, Control por voz","1 robot, base de carga, manual"\n';
+      downloadBlob(new Blob([csv], { type: 'text/csv' }), 'shotpilot-plantilla.csv');
+    });
+    $('bulk-file').addEventListener('change', async e => {
+      const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+      const text = await f.text();
+      const rows = parseCSV(text);
+      if (rows.length < 2){ $('bulk-drop-tx').textContent = 'El CSV no tiene filas. Revisá el archivo.'; return; }
+      bulkHeaders = rows[0];
+      bulkRows = rows.slice(1).map(r => { const o = {}; bulkHeaders.forEach((h, i) => o[h] = r[i] || ''); return o; });
+      $('bulk-drop-tx').textContent = `${f.name} · ${bulkRows.length} producto${bulkRows.length === 1 ? '' : 's'}`;
+      renderBulkMap();
+    });
+    function renderBulkMap(){
+      const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+      bulkMap = {};
+      const map = $('bulk-map'); map.innerHTML = '';
+      BULK_FIELDS.forEach(f => {
+        const auto = bulkHeaders.find(h => f.kw.some(k => norm(h).includes(k)));
+        if (auto) bulkMap[f.key] = auto;
+        const row = document.createElement('div'); row.className = 'bulk-map-row';
+        const opts = ['<option value="">—</option>'].concat(bulkHeaders.map(h => `<option${h === auto ? ' selected' : ''}>${esc(h)}</option>`)).join('');
+        row.innerHTML = `<label>${f.label}</label><select data-field="${f.key}">${opts}</select>`;
+        row.querySelector('select').addEventListener('change', e => { bulkMap[f.key] = e.target.value; });
+        map.appendChild(row);
+      });
+      map.classList.remove('hidden'); $('bulk-go').classList.remove('hidden'); $('bulk-result').classList.add('hidden');
+    }
+    function setBulkProg(done, total, label){
+      $('bulk-prog').classList.remove('hidden');
+      $('bulk-prog').innerHTML = $('bulk-prog').innerHTML || '<div class="bulk-prog-bar"><div class="bulk-prog-fill" id="bulk-prog-fill"></div></div><div class="bulk-prog-tx" id="bulk-prog-tx"></div>';
+      const pct = total ? Math.round(done / total * 100) : 0;
+      const fill = $('bulk-prog-fill'); if (fill) fill.style.width = pct + '%';
+      const tx = $('bulk-prog-tx'); if (tx) tx.textContent = label;
+    }
+    async function bulkCutout(imgBlob){
+      const srcB = await resizeForUpload(new File([imgBlob], 'p.jpg', { type: imgBlob.type || 'image/jpeg' }));
+      origImageEl = await loadImg(URL.createObjectURL(srcB));
+      const fd = new FormData();
+      fd.append('image', srcB, 'foto.jpg'); fd.append('model', model); fd.append('white_bg', 'false');
+      fd.append('enhance', enhance ? 'true' : 'false'); fd.append('wb', wb ? 'true' : 'false'); fd.append('main_only', mainOnly ? 'true' : 'false');
+      const resp = await removeBg(MOTOR_URL, fd);
+      if (!resp.ok) throw new Error('motor ' + resp.status);
+      await loadCutout(await resp.blob());
+    }
+    async function bulkOneGallery(rowObj){
+      const m = bulkMap, get = k => (m[k] && rowObj[m[k]]) ? rowObj[m[k]].trim() : '';
+      // 1) imagen: link de ML (import) o URL directa
+      let imgBlob = null, imp = null;
+      if (get('link_ml')){
+        try { const r = await fetch('/api/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: get('link_ml') }) }); const d = await r.json().catch(() => ({})); if (d.ok){ imp = d; if (d.images && d.images[0]) imgBlob = await (await fetch(d.images[0])).blob(); } } catch {}
+      }
+      if (!imgBlob && get('imagen')){ try { imgBlob = await (await fetch(get('imagen'), { mode: 'cors' })).blob(); } catch {} }
+      if (!imgBlob) throw new Error('sin imagen');
+      await bulkCutout(imgBlob);
+      // 2) datos de la fila (CSV manda; si falta, completa lo importado)
+      const sp = (imp && imp.specs) || {};
+      const name = get('nombre') || (imp && imp.title) || 'Producto';
+      const alto = get('alto') || sp.alto || '', ancho = get('ancho') || sp.ancho || '', prof = get('prof') || sp.prof || '';
+      ['alto', 'ancho', 'prof'].forEach(d => { const el = document.querySelector(`#dims-fields .dim-v[data-dim="${d}"]`); if (el) el.value = ({ alto, ancho, prof })[d]; });
+      dimsUnit = 'cm'; dimsStyle = 'lines';
+      let featsArr = bulkList(get('caracteristicas')); if (!featsArr.length && imp && imp.features) featsArr = imp.features.slice();
+      feats.items = featsArr.slice(0, 6).map((tx, i) => ({ icon: guessFeatIcon(tx, i), text: String(tx).slice(0, 48) }));
+      const incArr = bulkList(get('incluye'));
+      incluye.items = incArr.slice(0, 8).map(tx => ({ text: String(tx).slice(0, 40) }));
+      // 3) componer las placas de esta galería
+      const p = P(), files = []; let k = 0;
+      const add = async (layers, label) => { compose(p.w, p.h, shadowOn, p.fill, { dims: !!layers.dims, banners: false, feats: !!layers.feats, incluye: !!layers.incluye }); const buf = new Uint8Array(await (await exportBlob()).arrayBuffer()); files.push({ name: `${String(++k).padStart(2, '0')}-${label}.png`, data: buf }); };
+      await add({}, 'portada');
+      if (alto || ancho || prof) await add({ dims: true }, 'medidas');
+      if (feats.items.length) await add({ feats: true }, 'caracteristicas');
+      if (incluye.items.length) await add({ incluye: true }, 'que-incluye');
+      return { name, files };
+    }
+    async function runBulk(){
+      if (bulkBusy || !bulkRows.length) return;
+      if (!bulkMap.link_ml && !bulkMap.imagen){ $('bulk-result').classList.remove('hidden'); $('bulk-result').innerHTML = 'Mapeá una columna con el <b>link de ML</b> o la <b>URL de imagen</b> para poder armar las galerías.'; return; }
+      bulkBusy = true; $('bulk-go').disabled = true; $('bulk-result').classList.add('hidden');
+      const zipFiles = []; let ok = 0; const fails = [];
+      for (let i = 0; i < bulkRows.length; i++){
+        const nm = (bulkMap.nombre && bulkRows[i][bulkMap.nombre]) || ('producto ' + (i + 1));
+        setBulkProg(i, bulkRows.length, `Armando ${i + 1} de ${bulkRows.length}: ${nm}…`);
+        try {
+          const g = await bulkOneGallery(bulkRows[i]);
+          const folder = `${String(i + 1).padStart(2, '0')}-${bulkSlug(g.name)}`;
+          g.files.forEach(f => zipFiles.push({ name: `${folder}/${f.name}`, data: f.data }));
+          ok++;
+        } catch (e){ fails.push(nm); }
+      }
+      setBulkProg(bulkRows.length, bulkRows.length, 'Listo · armando el ZIP…');
+      if (zipFiles.length) downloadBlob(makeZip(zipFiles), `shotpilot-catalogo-${ok}-galerias.zip`);
+      $('bulk-prog').classList.add('hidden');
+      $('bulk-result').classList.remove('hidden');
+      $('bulk-result').innerHTML = `<b>¡Listo! ${ok} galería${ok === 1 ? '' : 's'} en el ZIP.</b>` + (fails.length ? `<br><span style="font-size:.85rem;color:var(--ink-soft)">${fails.length} no se pudieron (sin foto o link inválido): ${esc(fails.slice(0, 5).join(', '))}${fails.length > 5 ? '…' : ''}</span>` : '');
+      bulkBusy = false; $('bulk-go').disabled = false;
+    }
+    $('bulk-go').addEventListener('click', runBulk);
+
     function viewSfx(){ return previewView === 'todo' ? 'completa' : previewView === 'medidas' ? 'medidas' : previewView === 'banner' ? 'banner' : previewView === 'caracteristicas' ? 'caracteristicas' : previewView === 'incluye' ? 'incluye' : 'limpia'; }
     function updateDlVariants(){
       const hasLayers = dimsOn || bannerOn || featsOn || incluyeOn;
