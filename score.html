@@ -8,20 +8,165 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/app.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  .sc-form{ display:flex; gap:.5rem; margin-bottom:.5rem; }
+  .sc-form input{ flex:1; min-width:0; font-family:inherit; font-size:1rem; padding:.8rem .95rem; border:1.5px solid var(--line); border-radius:12px; background:#fff; color:var(--ink); }
+  .sc-form input:focus{ outline:none; border-color:var(--coral); }
+  .sc-form .btn,.sc-form .sp-btn{ flex:0 0 auto; white-space:nowrap; padding:.8rem 1.2rem; }
+  .sc-err{ color:var(--coral); font-size:.88rem; margin:.5rem .1rem 0; line-height:1.45; }
+  @media(max-width:520px){ .sc-form{ flex-wrap:wrap } .sc-form .sp-btn{ width:100% } }
+  /* resultado */
+  .sc-result{ margin-top:1.4rem; }
+  .sc-gauge{ display:flex; align-items:center; gap:1.1rem; padding:1.2rem; border-radius:18px; background:#fff; border:1px solid var(--line); margin-bottom:1.1rem; }
+  .sc-ring{ position:relative; width:96px; height:96px; flex:none; }
+  .sc-ring-num{ position:absolute; inset:0; display:grid; place-items:center; font-family:"Bricolage Grotesque",sans-serif; font-weight:800; font-size:1.5rem; color:var(--ink); }
+  .sc-ring-num small{ font-size:.85rem; color:var(--soft); font-weight:700; }
+  .sc-verdict-t{ font-family:"Bricolage Grotesque",sans-serif; font-weight:800; font-size:1.2rem; margin:0 0 .2rem; }
+  .sc-verdict-s{ color:var(--soft); font-size:.9rem; margin:0; line-height:1.45; }
+  .sc-thumbs{ display:flex; gap:.35rem; margin-bottom:1.1rem; overflow-x:auto; padding-bottom:.2rem; }
+  .sc-thumbs img{ width:60px; height:60px; object-fit:cover; border-radius:8px; border:1px solid var(--line); flex:none; background:var(--cream2); }
+  .sc-crit{ list-style:none; padding:0; margin:0 0 1.3rem; }
+  .sc-crit li{ display:flex; gap:.7rem; align-items:flex-start; padding:.7rem 0; border-bottom:1px solid var(--line); }
+  .sc-crit li:last-child{ border-bottom:0; }
+  .sc-ic{ width:26px; height:26px; border-radius:50%; flex:none; display:grid; place-items:center; margin-top:.05rem; }
+  .sc-ic.ok{ background:#e3f3ea; color:#1a7f4b; }
+  .sc-ic.no{ background:#FDE7E2; color:var(--coral); }
+  .sc-ic svg{ width:15px; height:15px; }
+  .sc-ct{ font-weight:700; font-size:.94rem; }
+  .sc-cs{ color:var(--soft); font-size:.85rem; margin-top:.1rem; line-height:1.4; }
+  .sc-cta{ width:100%; font-size:1.05rem; padding:1rem; }
+  .sc-cta-note{ text-align:center; color:var(--soft); font-size:.84rem; margin:.6rem 0 0; }
+</style>
 </head>
 <body>
   <div class="sp-page">
     <p class="sp-eyebrow">Score</p>
     <h1>ShotPilot Score</h1>
-    <p class="sp-sub">Te decimos cuánto vende tu publicación hoy y cuánto puede vender con una galería completa. Pegás el link y listo.</p>
-    <div class="sp-card sp-empty">
-      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13l3.5-2.6"/><path d="M4.7 16a8 8 0 1 1 14.6 0z"/></svg></div>
-      Pronto vas a poder medir tu publicación acá.
+    <p class="sp-sub">Qué tan lista está tu galería para vender (y qué le falta).</p>
+
+    <div class="sc-form">
+      <input type="url" id="sc-url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="Pegá el link de tu publicación de Mercado Libre">
+      <button type="button" class="sp-btn" id="sc-go">Analizar</button>
     </div>
+    <p class="sc-err" id="sc-err" style="display:none"></p>
+
+    <div class="sc-result" id="sc-result" style="display:none"></div>
   </div>
+
   <script type="module">
     import { mountNav } from '/js/ui/nav.js';
     mountNav({ active: 'score' });
+    const $ = id => document.getElementById(id);
+    const REC_IMAGES = 6;   // recomendado de fotos para una buena publicación
+
+    // si llega ?url= (desde "Ver Score" de una galería), autocompletar y analizar
+    const q = new URLSearchParams(location.search);
+    if (q.get('url')){ $('sc-url').value = q.get('url'); }
+
+    $('sc-go').addEventListener('click', analyze);
+    $('sc-url').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); analyze(); } });
+    if (q.get('url')) analyze();
+
+    function showErr(msg){ const e = $('sc-err'); e.textContent = msg; e.style.display = 'block'; }
+
+    async function analyze(){
+      const url = $('sc-url').value.trim();
+      $('sc-err').style.display = 'none'; $('sc-result').style.display = 'none';
+      if (!url){ showErr('Pegá el link de tu publicación primero.'); return; }
+      const btn = $('sc-go'); btn.disabled = true; const old = btn.textContent; btn.textContent = 'Analizando…';
+      try {
+        const r = await fetch('/api/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || !data.ok || !Array.isArray(data.images) || !data.images.length){
+          showErr('No pudimos leer ese link. Fijate que sea de una publicación de Mercado Libre.');
+          return;
+        }
+        const cover = await analyzeCover(data.images[0]);
+        renderScore(url, data, cover);
+      } catch { showErr('No pudimos analizar ahora. Probá de nuevo en un momento.'); }
+      finally { btn.disabled = false; btn.textContent = old; }
+    }
+
+    // carga la portada y mide: ¿cuadrada 1:1? ¿fondo blanco en las esquinas?
+    function analyzeCover(src){
+      return new Promise(resolve => {
+        const img = new Image(); img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          const w = img.naturalWidth, h = img.naturalHeight;
+          const square = w && h ? Math.abs(w - h) / Math.max(w, h) < 0.06 : false;
+          let white = false;
+          try {
+            const c = document.createElement('canvas'); const s = 60; c.width = s; c.height = s;
+            const x = c.getContext('2d'); x.drawImage(img, 0, 0, s, s);
+            const pts = [[3, 3], [s - 4, 3], [3, s - 4], [s - 4, s - 4], [s / 2 | 0, 3]];
+            let whites = 0;
+            for (const [px, py] of pts){ const d = x.getImageData(px, py, 1, 1).data; if (d[0] > 238 && d[1] > 238 && d[2] > 238) whites++; }
+            white = whites >= 4;
+          } catch { white = null; }   // null = no se pudo medir (CORS)
+          resolve({ square, white });
+        };
+        img.onerror = () => resolve({ square: null, white: null });
+        img.src = src;
+      });
+    }
+
+    function renderScore(url, data, cover){
+      const n = data.images.length;
+      const s = data.specs || {};
+      const hasDims = !!(s.alto || s.ancho || s.prof);
+      const hasFeats = Array.isArray(data.features) && data.features.length >= 3;
+      const crit = [
+        { ok: n >= REC_IMAGES, pts: n >= REC_IMAGES ? 2 : (n >= 3 ? 1 : 0), max: 2,
+          t: `${n} foto${n === 1 ? '' : 's'} · recomendado ${REC_IMAGES}+`,
+          good: 'Buena cantidad de fotos.', bad: `Sumá fotos: con ${REC_IMAGES} o más vendés mejor (ángulos, detalle, en uso).` },
+        { ok: cover.white === true, pts: cover.white === true ? 2 : 0, max: 2, skip: cover.white === null,
+          t: 'Portada con fondo blanco',
+          good: 'La portada tiene fondo blanco, como pide ML.', bad: 'La portada debería ir con fondo blanco puro (ML lo exige en la principal).' },
+        { ok: cover.square === true, pts: cover.square === true ? 2 : 0, max: 2, skip: cover.square === null,
+          t: 'Medida correcta (cuadrada 1:1)',
+          good: 'La portada es cuadrada (1:1).', bad: 'Las imágenes rinden más en 1:1 (ML recomienda 1200×1200).' },
+        { ok: hasDims, pts: hasDims ? 2 : 0, max: 2,
+          t: 'Placa de medidas',
+          good: 'Tiene datos de medidas para mostrar.', bad: 'Sumá una placa de medidas: la gente pregunta el tamaño antes de comprar.' },
+        { ok: hasFeats, pts: hasFeats ? 2 : 0, max: 2,
+          t: 'Placa de características',
+          good: 'Tiene características para destacar.', bad: 'Sumá una placa de características: 3-4 beneficios claros sobre la foto.' },
+      ];
+      let got = 0, total = 0;
+      crit.forEach(c => { if (c.skip) return; got += c.pts; total += c.max; });
+      const score10 = total ? Math.round(got / total * 10) : 0;
+      const color = score10 >= 8 ? '#1a7f4b' : score10 >= 5 ? '#E0A100' : '#F4513C';
+      const verdict = score10 >= 8 ? 'Tu galería ya está muy bien.' : score10 >= 5 ? 'Vas por buen camino, le falta un poco.' : 'Tu galería puede vender mucho más.';
+      const C = 2 * Math.PI * 42, off = C * (1 - score10 / 10);
+
+      const esc = x => String(x == null ? '' : x).replace(/[<>&"]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;' }[c]));
+      const thumbs = data.images.slice(0, 6).map(u => `<img src="${esc(u)}" alt="" loading="lazy">`).join('');
+      const items = crit.map(c => {
+        if (c.skip) return '';
+        const ic = c.ok ? `<span class="sc-ic ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg></span>`
+                        : `<span class="sc-ic no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span>`;
+        return `<li>${ic}<div><div class="sc-ct">${esc(c.t)}</div><div class="sc-cs">${esc(c.ok ? c.good : c.bad)}</div></div></li>`;
+      }).join('');
+
+      $('sc-result').innerHTML = `
+        <div class="sc-gauge">
+          <div class="sc-ring">
+            <svg width="96" height="96" viewBox="0 0 96 96" style="transform:rotate(-90deg)">
+              <circle cx="48" cy="48" r="42" fill="none" stroke="var(--line)" stroke-width="8"/>
+              <circle cx="48" cy="48" r="42" fill="none" stroke="${color}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${off}"/>
+            </svg>
+            <div class="sc-ring-num">${score10}<small>/10</small></div>
+          </div>
+          <div><p class="sc-verdict-t">${esc(verdict)}</p><p class="sc-verdict-s">Puntaje según fotos, fondo, medidas y características de tu publicación.</p></div>
+        </div>
+        <div class="sc-thumbs">${thumbs}</div>
+        <ul class="sc-crit">${items}</ul>
+        <a class="sp-btn sc-cta" id="sc-cta" href="/editor?import=ml&url=${encodeURIComponent(url)}">Crear galería mejorada</a>
+        <p class="sc-cta-note">Entrás al editor con los datos de esta publicación ya cargados.</p>
+      `;
+      $('sc-result').style.display = 'block';
+      $('sc-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   </script>
 </body>
 </html>

@@ -8,21 +8,60 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/app.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  .gl-card{ display:flex; align-items:center; gap:.8rem; background:#fff; border:1px solid var(--line); border-radius:14px; padding:.75rem .85rem; margin-bottom:.6rem; }
+  .gl-thumb{ width:46px; height:46px; border-radius:10px; background:var(--cream2); flex:none; display:grid; place-items:center; color:var(--faint); }
+  .gl-info{ flex:1; min-width:0; }
+  .gl-name{ font-weight:700; font-size:.94rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .gl-status{ font-size:.78rem; color:var(--soft); }
+  .gl-actions{ display:flex; gap:.4rem; flex:none; }
+  .gl-btn{ font-weight:700; font-size:.82rem; border-radius:9px; padding:.45rem .7rem; text-decoration:none; border:1.5px solid var(--line); color:var(--ink); background:#fff; white-space:nowrap; }
+  .gl-btn.score{ background:#FAECE7; color:var(--coral); border-color:transparent; }
+  @media(max-width:480px){ .gl-name{ max-width:42vw } }
+</style>
 </head>
 <body>
   <div class="sp-page">
     <p class="sp-eyebrow">Galerías</p>
     <h1>Mis galerías</h1>
-    <p class="sp-sub">Acá guardás cada publicación que armás. Volvés cuando quieras a editarla o descargarla.</p>
-    <div class="sp-card sp-empty">
-      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
-      Todavía no tenés galerías.<br>Armá la primera y aparece acá.
-      <div style="margin-top:1rem"><a class="sp-btn" href="/editor">Armá mi galería</a></div>
-    </div>
+    <p class="sp-sub">Acá guardás cada publicación que armás. Volvés cuando quieras a editarla, descargarla o ver su Score.</p>
+    <div id="gl-list"></div>
   </div>
   <script type="module">
     import { mountNav } from '/js/ui/nav.js';
+    import { createSupabase } from '/js/supabaseClient.js';
     mountNav({ active: 'galerias' });
+    const sb = createSupabase();
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s || '').replace(/[<>&"]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;' }[c]));
+
+    const empty = (msg, cta) => `<div class="sp-card sp-empty"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>${msg}${cta}</div>`;
+
+    (async () => {
+      let session = null;
+      try { ({ data: { session } } = await sb.auth.getSession()); } catch {}
+      if (!session){ $('gl-list').innerHTML = empty('Entrá a tu cuenta para ver tus galerías guardadas.', '<div style="margin-top:1rem"><a class="sp-btn" href="/editor">Entrar</a></div>'); return; }
+
+      let gs = [];
+      try {
+        const { data } = await sb.from('galleries').select('id,product_name,status,source_url,updated_at').eq('user_id', session.user.id).order('updated_at', { ascending: false });
+        gs = data || [];
+      } catch {}
+      if (!gs.length){ $('gl-list').innerHTML = empty('Todavía no tenés galerías.<br>Armá la primera y aparece acá.', '<div style="margin-top:1rem"><a class="sp-btn" href="/editor">Armá mi galería</a></div>'); return; }
+
+      $('gl-list').innerHTML = gs.map(g => `
+        <div class="gl-card">
+          <div class="gl-thumb"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></div>
+          <div class="gl-info">
+            <div class="gl-name">${esc(g.product_name) || 'Sin nombre'}</div>
+            <div class="gl-status">${g.status === 'done' ? 'Lista para descargar' : 'Borrador'}</div>
+          </div>
+          <div class="gl-actions">
+            ${g.source_url ? `<a class="gl-btn score" href="/score?url=${encodeURIComponent(g.source_url)}">Ver Score</a>` : ''}
+            <a class="gl-btn" href="/editor?gallery=${encodeURIComponent(g.id)}">Abrir</a>
+          </div>
+        </div>`).join('');
+    })();
   </script>
 </body>
 </html>

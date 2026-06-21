@@ -2208,7 +2208,7 @@
     fileInput.addEventListener('change', e => { const f = e.target.files[0]; if (f) handleFile(f); });
 
     // ---------- importar publicación de Mercado Libre ----------
-    let lastImport = null;
+    let lastImport = null, importSourceUrl = null;
     const escHtml = s => String(s == null ? '' : s).replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
     function cleanTitle(s){ s = (s || '').split(',')[0].split(' - ')[0].split(' | ')[0].trim(); return s.length > 52 ? s.slice(0, 52).trim() + '…' : s; }
     function importError(msg){ const e = $('import-err'); e.textContent = msg; e.classList.remove('hidden'); }
@@ -2219,6 +2219,7 @@
       const url = $('ml-url').value.trim();
       clearImportError();
       if (!url){ importError(t('importEmpty')); return; }
+      importSourceUrl = url;   // se guarda en la galería para poder reanalizarla con el Score
       const btn = $('ml-go'); btn.disabled = true; const old = btn.textContent; btn.textContent = t('importLoading');
       try {
         const r = await fetch('/api/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
@@ -5277,6 +5278,7 @@
       if (activePhoto >= 0 && photos[activePhoto]) photos[activePhoto].state = snapshotState();
       const product = ($('bn-title') && $('bn-title').value || '').trim() || t('draftUnnamed');
       const row = { user_id: authUser.id, product_name: product, platform: presetKey, status: 'draft', state: snapshotState(), updated_at: new Date().toISOString() };
+      if (importSourceUrl) row.source_url = importSourceUrl;   // link de origen → habilita "Ver Score" desde la galería
       try {
         if (currentGalleryId){
           await sb.from('galleries').update(row).eq('id', currentGalleryId);
@@ -5362,7 +5364,20 @@
     const _q = new URLSearchParams(location.search);
     if (_q.get('demo')) loadDemoProduct();   // → Galería (paso 3)
     else restoreDraft();   // value-first: si había trabajo en progreso, lo traemos (nunca pantalla en blanco)
-    if (_q.get('import') === 'ml'){ const u = $('ml-url'); if (u){ u.scrollIntoView({ block: 'center', behavior: 'smooth' }); setTimeout(() => u.focus(), 120); } }
+    if (_q.get('import') === 'ml'){
+      const u = $('ml-url'); const link = _q.get('url');
+      if (u && link){ u.value = link; autoImportFromScore(link); }            // bucle Score → "Crear galería mejorada": importa solo y entra al wizard
+      else if (u){ u.scrollIntoView({ block: 'center', behavior: 'smooth' }); setTimeout(() => u.focus(), 120); }
+    }
+    // auto-importa el link que vino del Score y confirma para caer en el wizard con los datos cargados
+    async function autoImportFromScore(link){
+      try {
+        await doImport();                       // pinta el preview de lo importado
+        if (lastImport && !lastImport.demo && Array.isArray(lastImport.images) && lastImport.images.length){
+          await useImport();                    // confirma → recorta → abre el cuestionario (paso 2) con todo prellenado
+        }
+      } catch {}
+    }
   </script>
 </body>
 </html>
