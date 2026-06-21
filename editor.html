@@ -412,12 +412,14 @@
   @media(min-width:640px){ .wiz-steps{display:flex} .wiz-mini{display:none} }
   /* footer del wizard (pasos Galería y Listo) */
   .wiz-foot{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(255,255,255,.95);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;gap:.6rem;align-items:center;justify-content:flex-end;padding:.7rem 1rem;padding-bottom:calc(.7rem + env(safe-area-inset-bottom))}
+  .wiz-foot[hidden]{display:none}   /* el atributo hidden debe ganarle al display:flex */
   .wiz-foot .wiz-back{margin-right:auto;background:none;border:0;color:var(--ink-soft);font-weight:600;font-size:.9rem;cursor:pointer}
   .wiz-foot .wiz-next{background:var(--accent);color:#fff;border:0;border-radius:11px;padding:.72rem 1.5rem;font-weight:700;font-size:.95rem;cursor:pointer}
   .wiz-foot .wiz-hint{margin-right:auto;color:var(--ink-faint);font-size:.84rem}
   body.has-wiz-foot{padding-bottom:74px}
   /* paso Marca (overlay salteable) */
-  .marca-step{position:fixed;inset:0;z-index:70;background:rgba(26,18,12,.62);display:flex;align-items:center;justify-content:center;padding:1.2rem}
+  .marca-step{position:fixed;inset:0;z-index:70;background:rgba(26,18,12,.62);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:1.2rem}
+  .marca-step[hidden]{display:none}   /* el atributo hidden debe ganarle al display:flex */
   .marca-step .marca-card,.marca-step button{pointer-events:auto}
   .marca-card{background:#fff;border-radius:18px;max-width:380px;width:100%;padding:1.6rem 1.3rem 1.3rem;position:relative;text-align:center;box-shadow:0 24px 60px rgba(40,24,16,.3)}
   .marca-x{position:absolute;top:.6rem;right:.85rem;background:none;border:0;font-size:1.6rem;line-height:1;color:var(--ink-faint);cursor:pointer}
