@@ -123,6 +123,7 @@
   .ip-specs{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.6rem}
   .ip-chip{font-size:.8rem;font-weight:600;color:var(--ink-soft);background:var(--cream-2);border-radius:999px;padding:.25rem .6rem}
   .ip-chip-muted{color:var(--ink-faint);font-weight:500}
+  .ip-chip-feat{background:var(--accent-tint);color:var(--accent-deep)}
   .ip-actions{display:flex;gap:.5rem;margin-top:1rem}
   .ip-actions .btn{padding:.72rem 1rem}
   .drop{display:block;border:2px dashed var(--line);border-radius:var(--radius);padding:clamp(2rem,9vw,3.4rem) 1.5rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
@@ -1428,6 +1429,7 @@
         importLoading: 'Buscando…',
         importFail: 'No pudimos leer ese link. Fijate que sea de una publicación de Mercado Libre, o cargá el producto a mano.',
         importNoSpecs: 'Sin medidas en la publicación · las cargás vos',
+        importFeats: (n) => `${n} característica${n === 1 ? '' : 's'}`,
         dropTitle: 'Arrastrá tu foto o tocá para elegir',
         dropHint: 'JPG o PNG · una foto del celular sirve · la primera puede tardar (baja el modelo)',
         procText: 'Sacando el fondo…',
@@ -1716,6 +1718,7 @@
         importLoading: 'Looking…',
         importFail: 'We couldn\'t read that link. Make sure it\'s a Mercado Libre listing, or upload the product yourself.',
         importNoSpecs: 'No measurements in the listing · you add them',
+        importFeats: (n) => `${n} feature${n === 1 ? '' : 's'}`,
         dropTitle: 'Drag your photo or tap to choose',
         dropHint: 'JPG or PNG · a phone photo works fine · the first one may take a moment (loading the model)',
         procText: 'Removing the background…',
@@ -2120,7 +2123,10 @@
       if (s.alto || s.ancho || s.prof){ const u = s.unit || 'cm'; const parts = [s.alto && `${t('dimAlto')} ${s.alto}`, s.ancho && `${t('dimAncho')} ${s.ancho}`, s.prof && `${t('dimProf')} ${s.prof}`].filter(Boolean); chips.push(`${parts.join(' · ')} ${u}`); }
       if (s.weight) chips.push(`${s.weight.value} ${s.weight.unit}`);
       if (s.brand) chips.push(s.brand);
-      $('ip-specs').innerHTML = chips.length ? chips.map(c => `<span class="ip-chip">${escHtml(c)}</span>`).join('') : `<span class="ip-chip ip-chip-muted">${escHtml(t('importNoSpecs'))}</span>`;
+      const nFeats = Array.isArray(data.features) ? data.features.length : 0;
+      let html = chips.length ? chips.map(c => `<span class="ip-chip">${escHtml(c)}</span>`).join('') : `<span class="ip-chip ip-chip-muted">${escHtml(t('importNoSpecs'))}</span>`;
+      if (nFeats) html += `<span class="ip-chip ip-chip-feat">${escHtml(t('importFeats')(nFeats))}</span>`;
+      $('ip-specs').innerHTML = html;
       $('import-form').classList.add('hidden'); $('import-preview').classList.remove('hidden');
     }
 
@@ -2151,6 +2157,25 @@
       const setDim = (d, v) => { if (v == null || v === '') return; const el = document.querySelector(`.wz-dim[data-dim="${d}"]`); if (el) el.value = v; };
       setDim('alto', s.alto); setDim('ancho', s.ancho); setDim('prof', s.prof);
       if (s.weight){ const v = $('wz-hl-val'), l = $('wz-hl-lbl'); if (v && !v.value) v.value = s.weight.value; if (l && !l.value) l.value = String(s.weight.unit || 'kg').toUpperCase(); }
+      // características importadas → arma la ficha (placa de características) automáticamente
+      if (Array.isArray(data.features) && data.features.length){
+        feats.items = data.features.slice(0, 6).map((txt, i) => ({ icon: guessFeatIcon(txt, i), text: String(txt).slice(0, 48) }));
+        renderFeatRows();
+        if (!featsOn){ const fon = $('feats-on'); if (fon){ fon.checked = true; fon.dispatchEvent(new Event('change', { bubbles: true })); } }
+      }
+    }
+
+    // elige un icono según la palabra del beneficio (con fallback rotativo)
+    function guessFeatIcon(text, i){
+      const s = (text || '').toLowerCase();
+      const map = [[/wi[\s-]?fi|conect|bluetooth|app|m[oó]vil/, 'wifi'], [/watt|potenc|\bw\b/, 'power'], [/bater|pila|mah|carga/, 'battery'],
+        [/litro|capac|dep[oó]sito|\bml\b|\bcc\b|volumen/, 'volume'], [/peso|liviano|\bkg\b|gramo/, 'weight'], [/r[aá]pid|veloc|turbo|succi[oó]n|presi[oó]n/, 'bolt'],
+        [/garant|segur|protec|antica|sensor/, 'shield'], [/temperat|fr[ií]o|calor|grados|°/, 'temp'], [/env[ií]o|entrega|despach/, 'truck'],
+        [/silenci|\bdb\b|ruido/, 'volume'], [/acero|material|resist|durab/, 'box'], [/agua|impermeab|waterproof|lavable/, 'droplet'],
+        [/led|luz|ilumin|pantalla/, 'sparkles'], [/motor|cpu|proces|chip|intelig/, 'cpu'], [/eco|natural|ahorr|eficien|energ/, 'leaf'],
+        [/premium|calidad|estrella/, 'star'], [/tiempo|hora|\bmin\b|durac/, 'clock'], [/mascota|pelo|alfombra|apto/, 'check'], [/voz|control|modo|auto/, 'gauge']];
+      for (const [re, ic] of map){ if (re.test(s)) return ic; }
+      return ['check', 'bolt', 'shield', 'star', 'award', 'gauge'][i % 6];
     }
 
     $('ml-go').addEventListener('click', doImport);
@@ -2162,7 +2187,7 @@
       e.preventDefault();
       try {
         const blob = await makeDemoBlob();
-        renderImportPreview({ ok: true, demo: true, title: 'AUREO PARFUM 100 ml', images: [URL.createObjectURL(blob)], specs: { brand: 'AUREO', alto: '14', ancho: '6', prof: '4', unit: 'cm', weight: { value: '0.3', unit: 'kg' } } });
+        renderImportPreview({ ok: true, demo: true, title: 'AUREO PARFUM 100 ml', images: [URL.createObjectURL(blob)], specs: { brand: 'AUREO', alto: '14', ancho: '6', prof: '4', unit: 'cm', weight: { value: '0.3', unit: 'kg' } }, features: ['Eau de Parfum 100 ml', 'Fragancia amaderada', 'Larga duración', 'Frasco de vidrio'] });
       } catch {}
     });
 

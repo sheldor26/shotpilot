@@ -92,10 +92,16 @@ async function getToken() {
 
 // ---------- publicación individual (/items/{id}) ----------
 async function fromItem(id, h) {
-  const res = await fetch(`${ML}/items/${id}`, { headers: h });
+  const [res, dres] = await Promise.all([
+    fetch(`${ML}/items/${id}`, { headers: h }),
+    fetch(`${ML}/items/${id}/description`, { headers: h }).catch(() => null),
+  ]);
   if (!res.ok) return null;
   const it = await res.json();
   const images = (it.pictures || []).map(p => bigImg(p.secure_url || p.url)).filter(Boolean);
+  let description = '';
+  if (dres && dres.ok) { const d = await dres.json().catch(() => ({})); description = (d.plain_text || d.text || '').trim(); }
+  const attrs = it.attributes || [];
   return {
     source: 'item',
     id,
@@ -103,7 +109,9 @@ async function fromItem(id, h) {
     category: it.category_id || '',
     permalink: it.permalink || '',
     images,
-    specs: mapSpecs(it.attributes || []),
+    specs: mapSpecs(attrs),
+    description: description.slice(0, 1500),
+    features: pickFeatures(attrs, description),
   };
 }
 
@@ -113,6 +121,8 @@ async function fromProduct(id, h) {
   if (!res.ok) return null;
   const p = await res.json();
   const images = (p.pictures || []).map(x => bigImg(x.secure_url || x.url)).filter(Boolean);
+  const description = ((p.short_description && p.short_description.content) || '').trim();
+  const attrs = p.attributes || [];
   return {
     source: 'product',
     id,
@@ -120,7 +130,9 @@ async function fromProduct(id, h) {
     category: p.domain_id || '',
     permalink: p.permalink || `https://www.mercadolibre.com.ar/p/${id}`,
     images,
-    specs: mapSpecs(p.attributes || []),
+    specs: mapSpecs(attrs),
+    description: description.slice(0, 1500),
+    features: pickFeatures(attrs, description),
   };
 }
 
@@ -128,6 +140,57 @@ async function fromProduct(id, h) {
 function bigImg(u) {
   if (!u) return '';
   return u.replace(/-[OVIJSWNFD]\.(jpg|jpeg|png|webp)/i, '-F.$1');
+}
+
+// ---------- atributos ML → características para la ficha ----------
+// Atributos que NO sirven como "beneficio" (medidas ya usadas, identificadores, ruido).
+const FEAT_SKIP = new Set([
+  'HEIGHT', 'WIDTH', 'DEPTH', 'LENGTH', 'DIAMETER', 'WEIGHT',
+  'PACKAGE_HEIGHT', 'PACKAGE_WIDTH', 'PACKAGE_LENGTH', 'PACKAGE_WEIGHT', 'PACKAGE_DIMENSIONS',
+  'BRAND', 'MODEL', 'DETAILED_MODEL', 'LINE', 'FAMILY_NAME', 'MANUFACTURER',
+  'SELLER_SKU', 'GTIN', 'EAN', 'UPC', 'MPN', 'EMPTY_GTIN_REASON', 'PART_NUMBER',
+  'ITEM_CONDITION', 'MAIN_COLOR', 'COLOR', 'PRODUCT_FEATURES', 'SHIPMENT_PACKING',
+  'UNITS_PER_PACK', 'IS_KIT', 'KIT_COMPONENTS',
+]);
+
+function pickFeatures(attrs, description) {
+  const benefits = [];   // booleanos "Sí" → leen como beneficio ("Apto para mascotas")
+  const specs = [];      // "Nombre: valor" → datos sueltos
+  for (const a of (attrs || [])) {
+    if (!a || FEAT_SKIP.has(a.id)) continue;
+    const name = (a.name || '').trim();
+    const val = (a.value_name || '').trim();
+    if (!name || !val) continue;
+    if (/^(no|0|n\/a|ninguno)$/i.test(val)) continue;        // "No" / vacío no aporta
+    if (/^(s[ií]|yes|true)$/i.test(val)) {
+      benefits.push(cleanFeat(name.replace(/^es\s+/i, '')));  // "Es apto para X" → "Apto para X"
+    } else {
+      specs.push(cleanFeat(`${name}: ${val}`));
+    }
+  }
+  // primero los beneficios (más vendedores), después los specs, después viñetas de la descripción
+  const out = [];
+  const add = (s) => { if (s && s.length >= 3 && !out.some(x => x.toLowerCase() === s.toLowerCase()) && out.length < 6) out.push(s); };
+  benefits.forEach(add);
+  specs.forEach(add);
+  if (out.length < 3 && description) bulletsFromDesc(description).forEach(add);
+  return out;
+}
+
+function cleanFeat(s) {
+  let line = String(s).replace(/\s+/g, ' ').trim();
+  line = line.charAt(0).toUpperCase() + line.slice(1);
+  if (line.length > 48) line = line.slice(0, 47).trimEnd() + '…';
+  return line;
+}
+
+function bulletsFromDesc(text) {
+  return String(text || '').split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(l => /^[-•*✓●·▪◦‣–]/.test(l))
+    .map(l => l.replace(/^[-•*✓●·▪◦‣–\s]+/, '').replace(/\s+/g, ' ').trim())
+    .filter(l => l.length >= 4 && l.length <= 48)
+    .slice(0, 6);
 }
 
 // ---------- atributos ML → campos internos ----------
