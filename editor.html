@@ -2418,12 +2418,31 @@
       } catch {}
     });
 
-    function resizeForUpload(file){
+    // browser-image-compression (carga perezosa, una vez): redimensiona en un web
+    // worker → no congela la UI del celu con fotos grandes. Si no carga, usamos el canvas.
+    let _imgCompress = null;
+    async function getImgCompress(){
+      if (_imgCompress !== null) return _imgCompress;
+      try { _imgCompress = (await import('https://esm.sh/browser-image-compression@2.0.2')).default || false; }
+      catch { _imgCompress = false; }
+      return _imgCompress;
+    }
+    function imgDims(file){ return new Promise(res => { const img = new Image(); img.onload = () => res({ w: img.naturalWidth, h: img.naturalHeight }); img.onerror = () => res(null); img.src = URL.createObjectURL(file); }); }
+    async function resizeForUpload(file){
+      const dim = await imgDims(file);
+      if (!dim) return resizeForUploadCanvas(file);                 // no se pudo leer → método de siempre (tira el error)
+      if (Math.max(dim.w, dim.h) <= MAX_UPLOAD_PX) return file;     // chica → original sin recomprimir (máxima calidad, igual que antes)
+      const ic = await getImgCompress();
+      if (ic){
+        try { const out = await ic(file, { maxWidthOrHeight: MAX_UPLOAD_PX, useWebWorker: true, initialQuality: 0.92, fileType: 'image/jpeg' }); if (out && out.size) return out; } catch {}
+      }
+      return resizeForUploadCanvas(file);                          // fallback: redimensionado en canvas (el de siempre)
+    }
+    function resizeForUploadCanvas(file){
       return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
           let { width:w, height:h } = img;
-          // si entra en el tope, mandamos el original SIN recomprimir (máxima calidad)
           if (Math.max(w, h) <= MAX_UPLOAD_PX){ resolve(file); return; }
           const scale = MAX_UPLOAD_PX / Math.max(w, h);
           w = Math.round(w * scale); h = Math.round(h * scale);
