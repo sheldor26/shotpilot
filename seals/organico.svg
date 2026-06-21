@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" stroke="currentColor">
+  <circle cx="60" cy="50" r="40" fill="currentColor" fill-opacity=".08" stroke-width="5"/>
+  <path d="M60 70c0-18 8-34 26-34 0 18-8 34-26 34z" fill="currentColor" stroke="none"/>
+  <path d="M60 70c0-14-6-26-20-26 0 14 6 26 20 26z" fill="currentColor" fill-opacity=".55" stroke="none"/>
+  <path d="M60 72V46" stroke-width="3" stroke-linecap="round"/>
+  <text x="60" y="106" text-anchor="middle" font-family="Manrope,Arial,sans-serif" font-size="13" font-weight="800" fill="currentColor" stroke="none">ORGÁNICO</text>
+</svg>

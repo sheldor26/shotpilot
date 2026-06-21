@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" stroke="currentColor">
+  <circle cx="60" cy="48" r="16" fill="currentColor" fill-opacity=".15" stroke-width="4"/>
+  <g stroke-width="4" stroke-linecap="round">
+    <path d="M60 20v8M60 68v8M32 48h8M80 48h8M40 28l6 6M80 62l-6-6M80 34l-6 6M40 68l6-6"/>
+  </g>
+  <text x="60" y="100" text-anchor="middle" font-family="Manrope,Arial,sans-serif" font-size="11" font-weight="800" fill="currentColor" stroke="none">INDUSTRIA</text>
+  <text x="60" y="113" text-anchor="middle" font-family="Manrope,Arial,sans-serif" font-size="11" font-weight="800" fill="currentColor" stroke="none">ARGENTINA</text>
+</svg>

@@ -8,20 +8,259 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/app.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  .mk-tabs{ display:flex; gap:.4rem; background:var(--cream2); border-radius:12px; padding:.3rem; margin:.4rem 0 1.3rem; }
+  .mk-tab{ flex:1; border:0; background:none; font:inherit; font-weight:700; font-size:.92rem; color:var(--soft); padding:.6rem; border-radius:9px; cursor:pointer; }
+  .mk-tab.on{ background:#fff; color:var(--ink); box-shadow:0 1px 4px rgba(40,24,16,.08); }
+  .mk-field{ margin-bottom:1.15rem; }
+  .mk-lbl{ display:block; font-weight:700; font-size:.9rem; margin-bottom:.45rem; }
+  .mk-row{ display:flex; align-items:center; gap:.7rem; }
+  .mk-color{ width:46px; height:46px; border:1px solid var(--line); border-radius:11px; padding:0; background:none; cursor:pointer; flex:none; }
+  .mk-hex{ flex:1; min-width:0; font-family:inherit; font-size:.95rem; padding:.7rem .85rem; border:1.5px solid var(--line); border-radius:11px; background:#fff; color:var(--ink); text-transform:uppercase; }
+  .mk-hex:focus,.mk-sel:focus{ outline:none; border-color:var(--coral); }
+  .mk-sel{ width:100%; font-family:inherit; font-size:.95rem; padding:.7rem .85rem; border:1.5px solid var(--line); border-radius:11px; background:#fff; color:var(--ink); }
+  .mk-logo-box{ display:flex; align-items:center; gap:.9rem; }
+  .mk-logo-prev{ width:74px; height:74px; border-radius:13px; border:1px solid var(--line); background:var(--cream2); display:grid; place-items:center; overflow:hidden; flex:none; color:var(--faint); }
+  .mk-logo-prev img{ width:100%; height:100%; object-fit:contain; }
+  .mk-hint{ font-size:.82rem; color:var(--soft); margin:.4rem 0 0; }
+  .mk-save{ width:100%; margin-top:.4rem; }
+  .mk-saved{ text-align:center; color:#1a7f4b; font-weight:700; font-size:.9rem; margin-top:.7rem; display:none; }
+  /* sellos */
+  .mk-filters{ display:flex; flex-wrap:wrap; gap:.4rem; margin-bottom:1rem; }
+  .mk-fchip{ border:1.5px solid var(--line); background:#fff; color:var(--soft); font:inherit; font-weight:600; font-size:.84rem; padding:.4rem .8rem; border-radius:999px; cursor:pointer; }
+  .mk-fchip.on{ background:var(--coral); border-color:var(--coral); color:#fff; }
+  .mk-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); gap:.7rem; }
+  .mk-seal{ position:relative; border:1.5px solid var(--line); border-radius:14px; padding:.8rem .5rem .6rem; background:#fff; text-align:center; cursor:pointer; color:var(--ink); }
+  .mk-seal:hover{ border-color:var(--coral); }
+  .mk-seal.declared{ border-color:#1a7f4b; }
+  .mk-seal svg{ width:54px; height:54px; }
+  .mk-seal-nm{ display:block; font-size:.74rem; font-weight:700; margin-top:.35rem; line-height:1.2; }
+  .mk-seal-lock{ position:absolute; top:.4rem; right:.45rem; font-size:.72rem; color:var(--faint); }
+  .mk-seal.declared .mk-seal-lock{ color:#1a7f4b; }
+  .mk-upload{ border:1.5px dashed var(--line); border-radius:14px; display:grid; place-items:center; gap:.2rem; cursor:pointer; color:var(--soft); font-weight:700; font-size:.78rem; min-height:104px; text-align:center; padding:.5rem; }
+  .mk-upload:hover{ border-color:var(--coral); color:var(--coral); }
+  .mk-decl{ position:fixed; inset:0; z-index:60; background:rgba(26,18,12,.55); display:flex; align-items:center; justify-content:center; padding:1.2rem; }
+  .mk-decl[hidden]{ display:none; }
+  .mk-decl-card{ background:#fff; border-radius:18px; max-width:400px; width:100%; padding:1.5rem 1.3rem; }
+  .mk-decl-card h3{ font-size:1.2rem; margin:0 0 .5rem; }
+  .mk-decl-card p{ color:var(--soft); font-size:.9rem; line-height:1.5; margin:0 0 1rem; }
+  .mk-check{ display:flex; gap:.6rem; align-items:flex-start; font-size:.9rem; line-height:1.45; cursor:pointer; background:var(--cream); border:1px solid var(--line); border-radius:11px; padding:.8rem; }
+  .mk-check input{ margin-top:.15rem; flex:none; width:18px; height:18px; accent-color:var(--coral); }
+  .mk-decl-actions{ display:flex; gap:.5rem; margin-top:1rem; }
+</style>
 </head>
 <body>
   <div class="sp-page">
     <p class="sp-eyebrow">Mi marca</p>
-    <h1>Tu marca en todas las placas</h1>
-    <p class="sp-sub">Cargá tu logo y tus colores una vez. Los aplicamos solos a cada galería que armes, para que todo se vea tuyo y prolijo.</p>
-    <div class="sp-card sp-empty">
+    <h1>Tus cosas de marca</h1>
+    <p class="sp-sub">Cargá tu logo, tus colores y tus sellos una vez. Los aplicamos solos a cada galería que armes.</p>
+
+    <div id="mk-need-login" class="sp-card sp-empty" style="display:none">
       <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2 4.5 6.5v5c0 4.7 3.2 7.2 7.5 8.6 4.3-1.4 7.5-3.9 7.5-8.6v-5z"/><path d="m9 11.8 2 2 4-4"/></svg></div>
-      Pronto vas a poder cargar tu logo y colores acá.
+      Entrá a tu cuenta para configurar tu marca y que se aplique sola a tus galerías.
+      <div style="margin-top:1rem"><a class="sp-btn" href="/editor">Entrar</a></div>
+    </div>
+
+    <div id="mk-app" style="display:none">
+      <div class="mk-tabs" role="tablist">
+        <button type="button" class="mk-tab on" id="tab-logo" role="tab">Logo y colores</button>
+        <button type="button" class="mk-tab" id="tab-sellos" role="tab">Sellos e íconos</button>
+      </div>
+
+      <!-- Tab: logo y colores -->
+      <section class="sp-card" id="pane-logo">
+        <div class="mk-field">
+          <span class="mk-lbl">Tu logo</span>
+          <div class="mk-logo-box">
+            <div class="mk-logo-prev" id="logo-prev"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></div>
+            <div>
+              <button type="button" class="sp-btn sp-btn-ghost" id="logo-btn" style="min-width:0">Subir logo</button>
+              <p class="mk-hint">PNG con fondo transparente rinde mejor.</p>
+            </div>
+            <input type="file" id="logo-file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>
+          </div>
+        </div>
+        <div class="mk-field">
+          <span class="mk-lbl">Color primario</span>
+          <div class="mk-row"><input type="color" class="mk-color" id="col-prim" value="#F4513C"><input class="mk-hex" id="hex-prim" maxlength="7" value="#F4513C"></div>
+        </div>
+        <div class="mk-field">
+          <span class="mk-lbl">Color secundario</span>
+          <div class="mk-row"><input type="color" class="mk-color" id="col-sec" value="#1A1614"><input class="mk-hex" id="hex-sec" maxlength="7" value="#1A1614"></div>
+        </div>
+        <div class="mk-field">
+          <span class="mk-lbl">Tipografía</span>
+          <select class="mk-sel" id="mk-font">
+            <option>Manrope</option><option>Montserrat</option><option>Poppins</option><option>Inter</option><option>Sora</option><option>Oswald</option><option>Bebas Neue</option><option>Anton</option><option>Archivo Black</option>
+          </select>
+        </div>
+        <button type="button" class="sp-btn mk-save" id="mk-save">Guardar mi marca</button>
+        <p class="mk-saved" id="mk-saved">✓ Guardado. Se aplica solo a tus placas.</p>
+      </section>
+
+      <!-- Tab: sellos e íconos -->
+      <section id="pane-sellos" style="display:none">
+        <div class="mk-filters" id="mk-filters"></div>
+        <div class="mk-grid" id="mk-grid"><p class="sp-muted" style="grid-column:1/-1">Cargando sellos…</p></div>
+        <input type="file" id="seal-file" accept="image/png,image/svg+xml,image/webp" hidden>
+      </section>
     </div>
   </div>
+
+  <!-- modal de declaración legal -->
+  <div class="mk-decl" id="mk-decl" hidden>
+    <div class="mk-decl-card">
+      <h3 id="decl-title">Declaración</h3>
+      <p>Este sello implica una certificación. Solo podés usarlo si tu producto realmente la tiene. ShotPilot no verifica certificaciones.</p>
+      <label class="mk-check"><input type="checkbox" id="decl-check"><span>Declaro que cuento con esta certificación y me responsabilizo por su uso.</span></label>
+      <div class="mk-decl-actions">
+        <button type="button" class="sp-btn sp-btn-ghost" id="decl-cancel">Cancelar</button>
+        <button type="button" class="sp-btn" id="decl-ok" disabled>Activar sello</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { mountNav } from '/js/ui/nav.js';
+    import { createSupabase } from '/js/supabaseClient.js';
     mountNav({ active: 'marca' });
+    const sb = createSupabase();
+    const $ = id => document.getElementById(id);
+    const RUBROS = [['','Todos'],['electro','Electro'],['indumentaria','Indumentaria'],['belleza','Belleza'],['hogar','Hogar'],['alimentos','Alimentos']];
+
+    let session = null, kitId = null, declared = new Set(), pendingSeal = null, activeRubro = '';
+
+    (async () => {
+      try { ({ data: { session } } = await sb.auth.getSession()); } catch {}
+      if (!session){ $('mk-need-login').style.display = 'block'; return; }
+      $('mk-app').style.display = 'block';
+      await loadKit();
+      buildFilters();
+      await loadDeclared();
+      await loadSeals('');
+    })();
+
+    // ---- tabs ----
+    $('tab-logo').addEventListener('click', () => switchTab('logo'));
+    $('tab-sellos').addEventListener('click', () => switchTab('sellos'));
+    function switchTab(which){
+      $('tab-logo').classList.toggle('on', which === 'logo');
+      $('tab-sellos').classList.toggle('on', which === 'sellos');
+      $('pane-logo').style.display = which === 'logo' ? 'block' : 'none';
+      $('pane-sellos').style.display = which === 'sellos' ? 'block' : 'none';
+    }
+
+    // ---- logo y colores ----
+    const sync = (col, hex) => { $(col).addEventListener('input', e => $(hex).value = e.target.value.toUpperCase()); $(hex).addEventListener('input', e => { if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) $(col).value = e.target.value; }); };
+    sync('col-prim', 'hex-prim'); sync('col-sec', 'hex-sec');
+
+    async function loadKit(){
+      try {
+        const { data } = await sb.from('brand_kits').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }).limit(1);
+        const k = data && data[0]; if (!k) return;
+        kitId = k.id;
+        if (k.color_primary){ $('col-prim').value = k.color_primary; $('hex-prim').value = k.color_primary.toUpperCase(); }
+        if (k.color_secondary){ $('col-sec').value = k.color_secondary; $('hex-sec').value = k.color_secondary.toUpperCase(); }
+        if (k.font) $('mk-font').value = k.font;
+        if (k.logo_url){ const url = await signedLogo(k.logo_url); if (url) $('logo-prev').innerHTML = `<img src="${url}" alt="logo">`; }
+      } catch {}
+    }
+    async function signedLogo(path){ try { const { data } = await sb.storage.from('logos').createSignedUrl(path, 3600); return data ? data.signedUrl : null; } catch { return null; } }
+
+    let logoPath = null;
+    $('logo-btn').addEventListener('click', () => $('logo-file').click());
+    $('logo-file').addEventListener('change', async e => {
+      const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+      $('logo-prev').innerHTML = `<img src="${URL.createObjectURL(f)}" alt="logo">`;
+      const ext = (f.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const path = `${session.user.id}/logo.${ext}`;
+      try { const { error } = await sb.storage.from('logos').upload(path, f, { upsert: true, contentType: f.type }); if (!error) logoPath = path; } catch {}
+    });
+
+    $('mk-save').addEventListener('click', async () => {
+      const btn = $('mk-save'); btn.disabled = true;
+      const row = { user_id: session.user.id, color_primary: $('hex-prim').value, color_secondary: $('hex-sec').value, font: $('mk-font').value };
+      if (logoPath) row.logo_url = logoPath;
+      try {
+        if (kitId){ await sb.from('brand_kits').update(row).eq('id', kitId); }
+        else { const { data } = await sb.from('brand_kits').insert(row).select('id').single(); if (data) kitId = data.id; }
+        $('mk-saved').style.display = 'block'; setTimeout(() => { $('mk-saved').style.display = 'none'; }, 4000);
+      } catch {}
+      btn.disabled = false;
+    });
+
+    // ---- sellos e íconos ----
+    function buildFilters(){
+      const wrap = $('mk-filters'); wrap.innerHTML = '';
+      RUBROS.forEach(([k, lbl]) => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'mk-fchip' + (k === activeRubro ? ' on' : ''); b.textContent = lbl;
+        b.addEventListener('click', () => { activeRubro = k; buildFilters(); loadSeals(k); });
+        wrap.appendChild(b);
+      });
+    }
+    async function loadDeclared(){
+      try { const { data } = await sb.from('seal_declarations').select('asset_id').eq('user_id', session.user.id); declared = new Set((data || []).map(d => d.asset_id)); } catch {}
+    }
+    async function loadSeals(rubro){
+      const grid = $('mk-grid');
+      let rows = [];
+      try { const { data } = await sb.from('assets').select('*').eq('kind', 'sello'); rows = data || []; } catch {}
+      if (rubro) rows = rows.filter(r => r.scope === 'user' || (r.rubros || []).includes(rubro));
+      rows.sort((a, b) => (a.scope === b.scope ? 0 : a.scope === 'oficial' ? -1 : 1));
+      grid.innerHTML = '';
+      for (const r of rows) grid.appendChild(await sealCard(r));
+      const up = document.createElement('label'); up.className = 'mk-upload'; up.htmlFor = 'seal-file';
+      up.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span>Subir mi sello</span>';
+      grid.appendChild(up);
+    }
+    async function sealCard(r){
+      const el = document.createElement('div'); el.className = 'mk-seal' + (declared.has(r.id) ? ' declared' : '');
+      let inner = '';
+      if (r.file_url && r.file_url.endsWith('.svg') && r.scope === 'oficial'){
+        try { inner = recolor(await (await fetch(r.file_url)).text(), '#1A1614'); } catch {}
+      }
+      if (!inner) inner = `<img src="${r.file_url}" alt="" style="width:54px;height:54px;object-fit:contain">`;
+      const lock = r.requires_declaration ? `<span class="mk-seal-lock">${declared.has(r.id) ? '✓' : '🔒'}</span>` : '';
+      el.innerHTML = inner + `<span class="mk-seal-nm">${esc(r.name || 'Sello')}</span>` + lock;
+      el.addEventListener('click', () => onSealClick(r));
+      return el;
+    }
+    function onSealClick(r){
+      if (r.requires_declaration && !declared.has(r.id)){ pendingSeal = r; openDecl(r); return; }
+      toast(`"${r.name}" listo para usar en tus placas.`);
+    }
+
+    // declaración legal
+    function openDecl(r){ $('decl-title').textContent = r.name || 'Declaración'; $('decl-check').checked = false; $('decl-ok').disabled = true; $('mk-decl').hidden = false; }
+    $('decl-check').addEventListener('change', e => { $('decl-ok').disabled = !e.target.checked; });
+    $('decl-cancel').addEventListener('click', () => { $('mk-decl').hidden = true; pendingSeal = null; });
+    $('mk-decl').addEventListener('click', e => { if (e.target === $('mk-decl')){ $('mk-decl').hidden = true; pendingSeal = null; } });
+    $('decl-ok').addEventListener('click', async () => {
+      if (!pendingSeal || !$('decl-check').checked) return;
+      try { await sb.from('seal_declarations').upsert({ user_id: session.user.id, asset_id: pendingSeal.id }); declared.add(pendingSeal.id); } catch {}
+      $('mk-decl').hidden = true; const r = pendingSeal; pendingSeal = null;
+      loadSeals(activeRubro); toast(`"${r.name}" activado. Ya podés usarlo.`);
+    });
+
+    // subir sello propio
+    $('seal-file').addEventListener('change', async e => {
+      const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+      const ext = (f.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const path = `${session.user.id}/sello-${(performance.now() | 0)}.${ext}`;
+      try {
+        const { error } = await sb.storage.from('assets').upload(path, f, { upsert: false, contentType: f.type });
+        if (error) throw error;
+        const { data: pub } = sb.storage.from('assets').getPublicUrl(path);
+        await sb.from('assets').insert({ scope: 'user', user_id: session.user.id, kind: 'sello', name: f.name.replace(/\.[^.]+$/, '').slice(0, 40), file_url: pub.publicUrl, requires_declaration: false });
+        loadSeals(activeRubro); toast('Sello subido.');
+      } catch { toast('No pudimos subir el sello.'); }
+    });
+
+    // helpers
+    function recolor(svg, color){ return svg.replace(/currentColor/g, color).replace(/<\?xml[^>]*\?>/, ''); }
+    function esc(s){ return String(s || '').replace(/[<>&]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;' }[c])); }
+    let toastT = null;
+    function toast(msg){ let el = document.getElementById('mk-toast'); if (!el){ el = document.createElement('div'); el.id = 'mk-toast'; el.style.cssText = 'position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:#241E1A;color:#fff;font-weight:600;font-size:.88rem;padding:.65rem 1.1rem;border-radius:999px;z-index:90;max-width:90vw;text-align:center;box-shadow:0 8px 22px -8px rgba(0,0,0,.5);transition:opacity .3s'; document.body.appendChild(el); } el.textContent = msg; el.style.opacity = '1'; clearTimeout(toastT); toastT = setTimeout(() => { el.style.opacity = '0'; }, 2800); }
   </script>
 </body>
 </html>

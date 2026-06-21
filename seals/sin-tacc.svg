@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" stroke="currentColor">
+  <circle cx="60" cy="50" r="40" fill="currentColor" fill-opacity=".08" stroke-width="5"/>
+  <path d="M60 30v42M60 40c-7-4-13-3-13-3M60 40c7-4 13-3 13-3M60 52c-7-4-13-3-13-3M60 52c7-4 13-3 13-3M60 64c-6-4-12-3-12-3M60 64c6-4 12-3 12-3" stroke-width="4" stroke-linecap="round"/>
+  <path d="M38 28 82 72" stroke-width="6" stroke-linecap="round"/>
+  <text x="60" y="106" text-anchor="middle" font-family="Manrope,Arial,sans-serif" font-size="13" font-weight="800" fill="currentColor" stroke="none" letter-spacing="1">SIN TACC</text>
+</svg>

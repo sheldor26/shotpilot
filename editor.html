@@ -5093,6 +5093,44 @@
         authProfile = data || null;
       } catch { authProfile = null; }
     }
+    // ---- brand kit: aplica la marca del vendedor a las placas automáticamente ----
+    let brandKit = null, brandApplied = false;
+    async function loadBrandKit(){
+      if (!sb || !authUser || brandApplied) return;
+      try {
+        const { data } = await sb.from('brand_kits').select('*').eq('user_id', authUser.id).order('created_at', { ascending: false }).limit(1);
+        brandKit = (data && data[0]) || null;
+        if (brandKit){ applyBrandKit(); brandApplied = true; }
+      } catch {}
+    }
+    function applyBrandKit(){
+      if (!brandKit) return;
+      const pri = brandKit.color_primary;
+      if (pri && /^#[0-9a-fA-F]{6}$/.test(pri)){
+        feats.color = pri; incluye.color = pri; banner.panel.color = pri;
+        if ($('feats-pick')) $('feats-pick').value = pri;
+        if ($('incluye-pick')) $('incluye-pick').value = pri;
+        if ($('bn-panel-pick')) $('bn-panel-pick').value = pri;
+      }
+      const sec = brandKit.color_secondary;
+      if (sec && /^#[0-9a-fA-F]{6}$/.test(sec) && banner.badge){ banner.badge.color = sec; if ($('bn-badge-pick')) $('bn-badge-pick').value = sec; }
+      if (brandKit.font){ feats.font = brandKit.font; banner.font = brandKit.font; if (typeof syncSeg === 'function'){ syncSeg('feats-font', 'font', feats.font); syncSeg('bn-font', 'font', banner.font); } }
+      if (brandKit.logo_url) loadBrandLogo(brandKit.logo_url);
+      if (typeof renderResult === 'function') renderResult();
+    }
+    async function loadBrandLogo(path){
+      try {
+        const { data } = await sb.storage.from('logos').createSignedUrl(path, 3600);
+        if (!data || !data.signedUrl) return;
+        const img = await loadImg(data.signedUrl);
+        logoImg = img;   // queda cargado en el panel Logo, listo para activar (no se estampa solo)
+        if ($('logo-prev-img')){ $('logo-prev-img').src = data.signedUrl; }
+        if ($('logo-prevbox')) $('logo-prevbox').style.display = 'grid';
+        if ($('logo-controls')) $('logo-controls').style.display = 'grid';
+        if ($('logo-upload')) $('logo-upload').textContent = t('logoChange');
+        if (typeof renderResult === 'function') renderResult();
+      } catch {}
+    }
     function esc(s){ return String(s || '').replace(/[<>&]/g, c => ({ '<':'&lt;', '>':'&gt;', '&':'&amp;' }[c])); }
     function renderAuthSlot(){
       const slot = $('auth-slot'); if (!slot) return;
@@ -5110,7 +5148,7 @@
       authUser = session ? session.user : null;
       renderAuthSlot();          // render inmediato con el estado de sesión (no bloquear esperando el perfil)
       updateQuota();
-      if (authUser){ authModal(false); loadProfile().then(() => { renderAuthSlot(); updateQuota(); }); if (photos.length) queueGalleryDraft(); }   // al loguearse, asociar el borrador anónimo a la cuenta
+      if (authUser){ authModal(false); loadProfile().then(() => { renderAuthSlot(); updateQuota(); }); loadBrandKit(); if (photos.length) queueGalleryDraft(); }   // al loguearse: perfil + marca + asociar borrador anónimo
       else { authProfile = null; currentGalleryId = null; }
     }
     if (sb){
