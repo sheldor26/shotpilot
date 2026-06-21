@@ -470,6 +470,26 @@
   .wz-h{font-size:1.35rem;margin-bottom:.25rem}
   .wz-sub{color:var(--ink-faint);font-size:.88rem;margin-bottom:1rem;line-height:1.4}
   .wz-step .dim-rows{margin-top:.3rem}
+  /* cuestionario por rubro (paso 2) */
+  .wz-rubro{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1.1rem}
+  .wz-rubro-chip{border:1.5px solid var(--line);background:var(--white);color:var(--ink-soft);font:inherit;font-weight:600;font-size:.85rem;padding:.4rem .8rem;border-radius:999px;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
+  .wz-rubro-chip:hover{border-color:var(--accent);color:var(--accent)}
+  .wz-rubro-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .wz-fields{display:flex;flex-direction:column;gap:.85rem}
+  .wz-field-lbl{display:block;font-weight:700;font-size:.88rem;margin-bottom:.35rem}
+  .wz-field-in{position:relative;display:flex}
+  .wz-fin{flex:1;min-width:0;font-family:inherit;font-size:.95rem;padding:.7rem .85rem;border:1.5px solid var(--line);border-radius:11px;background:var(--white);color:var(--ink);resize:vertical}
+  .wz-fin:focus{outline:none;border-color:var(--accent)}
+  .wz-field-in.has-ai .wz-fin{padding-right:.85rem}
+  .wz-ai{flex:0 0 auto;align-self:flex-start;margin-left:.45rem;display:inline-flex;align-items:center;gap:.25rem;white-space:nowrap;border:1.5px solid var(--accent-tint);background:var(--accent-tint);color:var(--accent-deep);font:inherit;font-weight:700;font-size:.8rem;padding:.6rem .7rem;border-radius:10px;cursor:pointer;transition:background .15s}
+  .wz-ai:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .wz-ai.busy{opacity:.7;cursor:default}
+  .wz-more-toggle{display:inline-flex;align-items:center;gap:.35rem;margin-top:.9rem;background:none;border:0;color:var(--ink-soft);font:inherit;font-weight:700;font-size:.86rem;cursor:pointer;padding:.2rem 0}
+  .wz-more-toggle:hover{color:var(--accent)}
+  .wz-more-toggle svg{transition:transform .2s}
+  .wz-more-toggle.open svg{transform:rotate(180deg)}
+  #wz-more{margin-top:.85rem}
+  @media(max-width:520px){.wz-ai span{display:none}.wz-ai{padding:.6rem .65rem}}
   .wz-step .dim-fixed{flex:0 0 110px}
   .wz-step #wz-custom-rows{margin-top:.45rem}
   .wz-tpl-strip{margin-top:.4rem}
@@ -779,16 +799,18 @@
 
           <!-- paso 2: datos del producto -->
           <div class="wz-step hidden" id="wz-2">
-            <h3 class="wz-h" data-i18n="wzStep2">Datos del producto</h3>
-            <div class="dim-rows">
-              <label class="dim-row"><span class="dim-fixed" data-i18n="wzName">Nombre</span><span class="dim-input"><input id="wz-name" data-i18n-ph="wzNamePh" placeholder="Heladera Drean" maxlength="40"></span></label>
-              <label class="dim-row"><span class="dim-fixed" data-i18n="wzKind">Qué es</span><span class="dim-input"><input id="wz-kind" data-i18n-ph="wzKindPh" placeholder="No frost (opcional)" maxlength="40"></span></label>
-            </div>
-            <p class="wz-sub" data-i18n="wzHlSub">Dato destacado (opcional): litros, gramos, un beneficio…</p>
-            <div class="dim-rows">
-              <label class="dim-row"><span class="dim-fixed" data-i18n="wzHlVal">Valor</span><span class="dim-input"><input id="wz-hl-val" data-i18n-ph="wzHlValPh" placeholder="300" maxlength="12"></span></label>
-              <label class="dim-row"><span class="dim-fixed" data-i18n="wzHlLbl">Etiqueta</span><span class="dim-input"><input id="wz-hl-lbl" data-i18n-ph="wzHlLblPh" placeholder="LTS" maxlength="14"></span></label>
-            </div>
+            <h3 class="wz-h" data-i18n="wzStep2">Contanos del producto</h3>
+            <p class="wz-sub" data-i18n="wzStep2Sub">Te pedimos solo lo que importa en tu rubro. Lo que no sepas, salteálo.</p>
+            <div class="wz-rubro" id="wz-rubro" role="group" data-i18n-aria="wzRubroAria" aria-label="Rubro"></div>
+            <div id="wz-fields" class="wz-fields"></div>
+            <button type="button" class="wz-more-toggle" id="wz-more-toggle" aria-expanded="false" hidden>
+              <span data-i18n="wzMore">¿Querés agregar más detalles?</span>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div id="wz-more" class="wz-fields" hidden></div>
+            <!-- sinks ocultos: generateFromWizard y el prefill del import siguen leyendo estos -->
+            <input type="hidden" id="wz-name"><input type="hidden" id="wz-kind">
+            <input type="hidden" id="wz-hl-val"><input type="hidden" id="wz-hl-lbl">
           </div>
 
           <!-- paso 3: estilo (plantillas) -->
@@ -1501,7 +1523,20 @@
         marcaLogo: '+ Logo', marcaSoon: 'Lo completás en "Mi marca" (pronto).', draftUnnamed: 'Sin nombre',
         wzStep1: '¿Qué medidas tiene?',
         wzStep1Sub: 'Dejá vacío lo que no aplique.',
-        wzStep2: 'Datos del producto',
+        wzStep2: 'Contanos del producto',
+        wzStep2Sub: 'Te pedimos solo lo que importa en tu rubro. Lo que no sepas, salteálo.',
+        wzRubroAria: 'Rubro del producto',
+        wzMore: '¿Querés agregar más detalles?',
+        wzAi: 'Redactalo por mí',
+        wzAiTitle: 'Redactar este campo con IA a partir de tus datos',
+        wzAiBusy: 'Redactando…',
+        wzAiFail: 'No pudimos redactar ahora. Probá de nuevo o escribilo vos.',
+        rubro_general: 'General',
+        rubro_electro: 'Electro',
+        rubro_indumentaria: 'Indumentaria',
+        rubro_belleza: 'Belleza',
+        rubro_hogar: 'Hogar',
+        rubro_alimentos: 'Alimentos',
         wzStep3: 'Elegí un estilo',
         wzStep3Sub: 'Lo aplicamos a tu ficha. Después lo cambiás si querés.',
         wzName: 'Nombre',
@@ -1790,7 +1825,20 @@
         marcaLogo: '+ Logo', marcaSoon: 'You complete it in "My brand" (soon).', draftUnnamed: 'Untitled',
         wzStep1: 'What are its dimensions?',
         wzStep1Sub: 'Leave blank what doesn’t apply.',
-        wzStep2: 'Product details',
+        wzStep2: 'Tell us about it',
+        wzStep2Sub: 'We only ask what matters for your category. Skip whatever you don\'t know.',
+        wzRubroAria: 'Product category',
+        wzMore: 'Want to add more details?',
+        wzAi: 'Write it for me',
+        wzAiTitle: 'Draft this field with AI from your data',
+        wzAiBusy: 'Writing…',
+        wzAiFail: 'Couldn\'t write it now. Try again or type it yourself.',
+        rubro_general: 'General',
+        rubro_electro: 'Electronics',
+        rubro_indumentaria: 'Apparel',
+        rubro_belleza: 'Beauty',
+        rubro_hogar: 'Home',
+        rubro_alimentos: 'Food',
         wzStep3: 'Pick a style',
         wzStep3Sub: 'We’ll apply it to your shot. Change it later if you want.',
         wzName: 'Name',
@@ -2147,19 +2195,30 @@
       } catch { show('drop'); showError(t('importFail')); }
     }
 
-    // vuelca los datos importados en los campos del wizard de medidas
+    // vuelca los datos importados en el wizard: medidas, nombre, rubro y respuestas
     function applyImportPrefill(data){
       const s = data.specs || {};
       const name = ($('ip-title') && $('ip-title').value) ? $('ip-title').value : cleanTitle(data.title);
-      const nameEl = $('wz-name'); if (nameEl) nameEl.value = name.slice(0, 40);
+      $('wz-name').value = name.slice(0, 40); wzAnswers.nombre = name.slice(0, 40);
       const kindEl = $('wz-kind'); if (kindEl && !kindEl.value && (s.model || s.brand)) kindEl.value = String(s.model || s.brand).slice(0, 40);
       if (s.unit){ const chip = $('wz-unit') && $('wz-unit').querySelector(`.chip[data-unit="${s.unit}"]`); if (chip) chip.click(); }
       const setDim = (d, v) => { if (v == null || v === '') return; const el = document.querySelector(`.wz-dim[data-dim="${d}"]`); if (el) el.value = v; };
       setDim('alto', s.alto); setDim('ancho', s.ancho); setDim('prof', s.prof);
       if (s.weight){ const v = $('wz-hl-val'), l = $('wz-hl-lbl'); if (v && !v.value) v.value = s.weight.value; if (l && !l.value) l.value = String(s.weight.unit || 'kg').toUpperCase(); }
-      // características importadas → arma la ficha (placa de características) automáticamente
-      if (Array.isArray(data.features) && data.features.length){
-        feats.items = data.features.slice(0, 6).map((txt, i) => ({ icon: guessFeatIcon(txt, i), text: String(txt).slice(0, 48) }));
+      // rubro según la categoría de ML → muestra solo los campos de ese rubro
+      wzRubro = detectRubro(data.category);
+      // prellena respuestas del cuestionario desde las características importadas ("Potencia: 9 W" → campo potencia)
+      const imp = Array.isArray(data.features) ? data.features : [];
+      (RUBROS[wzRubro] || RUBROS.general).fields.forEach(k => {
+        if (k === 'nombre' || wzAnswers[k]) return;
+        const lab = (FIELD_DEFS[k] && FIELD_DEFS[k].es[0] || '').toLowerCase();
+        const hit = imp.find(fz => { const x = String(fz).toLowerCase(); return x.startsWith(lab + ':'); });
+        if (hit){ const val = String(hit).replace(/^[^:]+:\s*/, '').trim(); if (val) wzAnswers[k] = val.slice(0, 80); }
+      });
+      if ($('wz-rubro')){ renderRubroChips(); renderWzFields(); }
+      // características importadas → arma la placa de características automáticamente
+      if (imp.length){
+        feats.items = imp.slice(0, 6).map((txt, i) => ({ icon: guessFeatIcon(txt, i), text: String(txt).slice(0, 48) }));
         renderFeatRows();
         if (!featsOn){ const fon = $('feats-on'); if (fon){ fon.checked = true; fon.dispatchEvent(new Event('change', { bubbles: true })); } }
       }
@@ -4360,8 +4419,130 @@
     // ================= WIZARD GUIADO =================
     let wzStep = 1, wzTemplate = 3, wzCustoms = [], wzCustomSeq = 0, wzUnit = 'cm';   // default: "Del producto"
     let wizardSkipped = false;   // si el usuario elige "Editar manual", no reabrir el wizard en esta sesión
+
+    // ============ Paso 2: cuestionario por rubro (data-driven) ============
+    // Esquema ampliable: cada rubro pide solo SUS campos. Las medidas viven en el
+    // paso 1 (widget de dimensiones), acá van los datos de texto del rubro.
+    const RUBROS = {
+      general:      { fields: ['nombre', 'incluye', 'garantia'] },
+      electro:      { fields: ['nombre', 'potencia', 'incluye', 'garantia', 'voltaje', 'capacidad', 'sello'] },
+      indumentaria: { fields: ['nombre', 'talles', 'material', 'colores', 'cuidados', 'tabla'] },
+      belleza:      { fields: ['nombre', 'contenido', 'tipo_piel', 'modo', 'ingredientes', 'anmat'] },
+      hogar:        { fields: ['nombre', 'material', 'color', 'armado', 'peso_sop'] },
+      alimentos:    { fields: ['nombre', 'contenido_neto', 'sin_tacc', 'nutricional', 'vencimiento'] },
+    };
+    // ess: visible directo (esencial) · resto va al acordeón · ai: tiene "✨ Redactalo por mí" · area: textarea
+    const FIELD_DEFS = {
+      nombre:        { es: ['Nombre', 'Ej: Heladera Drean No Frost 300L'],        en: ['Name', 'E.g.: Drean No Frost fridge 300L'],        ess: true },
+      incluye:       { es: ['Qué incluye', 'Ej: 1 parlante, cable USB, manual'],   en: ['What\'s included', 'E.g.: 1 speaker, USB cable, manual'], ess: true, ai: true, area: true },
+      garantia:      { es: ['Garantía', 'Ej: 12 meses garantía oficial'],          en: ['Warranty', 'E.g.: 12-month official warranty'],     ess: true, ai: true },
+      potencia:      { es: ['Potencia', 'Ej: 1200 W'],                             en: ['Power', 'E.g.: 1200 W'],                            ess: true },
+      voltaje:       { es: ['Voltaje', 'Ej: 220 V'],                               en: ['Voltage', 'E.g.: 220 V'] },
+      capacidad:     { es: ['Capacidad', 'Ej: 5 litros'],                          en: ['Capacity', 'E.g.: 5 liters'] },
+      sello:         { es: ['Sello de seguridad eléctrica', 'Ej: Certificado IRAM'], en: ['Electrical safety seal', 'E.g.: IRAM certified'], ai: true },
+      talles:        { es: ['Talles', 'Ej: S, M, L, XL'],                          en: ['Sizes', 'E.g.: S, M, L, XL'],                       ess: true },
+      material:      { es: ['Material', 'Ej: Algodón 100%'],                       en: ['Material', 'E.g.: 100% cotton'],                    ess: true, ai: true },
+      colores:       { es: ['Colores', 'Ej: Negro, blanco, rojo'],                 en: ['Colors', 'E.g.: Black, white, red'],                ess: true },
+      cuidados:      { es: ['Cuidados', 'Ej: Lavar a mano, no usar lavandina'],    en: ['Care', 'E.g.: Hand wash, no bleach'],               ai: true, area: true },
+      tabla:         { es: ['Tabla de medidas', 'Ej: S 90cm · M 96cm · L 102cm'],  en: ['Size chart', 'E.g.: S 90cm · M 96cm · L 102cm'],    ai: true, area: true },
+      contenido:     { es: ['Contenido', 'Ej: 100 ml'],                            en: ['Volume', 'E.g.: 100 ml'],                           ess: true },
+      tipo_piel:     { es: ['Tipo de piel / cabello', 'Ej: Piel seca'],            en: ['Skin / hair type', 'E.g.: Dry skin'],               ess: true },
+      ingredientes:  { es: ['Ingredientes', 'Ej: Ácido hialurónico, vitamina C'],  en: ['Ingredients', 'E.g.: Hyaluronic acid, vitamin C'],  ai: true, area: true },
+      modo:          { es: ['Modo de uso', 'Ej: Aplicar sobre piel limpia'],       en: ['How to use', 'E.g.: Apply on clean skin'],          ess: true, ai: true, area: true },
+      anmat:         { es: ['Registro ANMAT', 'Ej: Legajo 12345'],                 en: ['ANMAT registry', 'E.g.: File 12345'] },
+      color:         { es: ['Color', 'Ej: Roble natural'],                         en: ['Color', 'E.g.: Natural oak'],                       ess: true },
+      armado:        { es: ['Armado', 'Ej: Incluye instructivo y tornillería'],    en: ['Assembly', 'E.g.: Includes manual and hardware'],   ai: true },
+      peso_sop:      { es: ['Peso que soporta', 'Ej: Hasta 120 kg'],               en: ['Weight capacity', 'E.g.: Up to 120 kg'] },
+      contenido_neto:{ es: ['Contenido neto', 'Ej: 500 g'],                        en: ['Net weight', 'E.g.: 500 g'],                        ess: true },
+      sin_tacc:      { es: ['Sin TACC', 'Ej: Sí, libre de gluten'],                en: ['Gluten-free', 'E.g.: Yes, gluten-free'],            ess: true },
+      nutricional:   { es: ['Info nutricional', 'Ej: 120 kcal por porción'],       en: ['Nutrition facts', 'E.g.: 120 kcal per serving'],    ai: true, area: true },
+      vencimiento:   { es: ['Vencimiento', 'Ej: 6 meses desde la compra'],         en: ['Best before', 'E.g.: 6 months from purchase'] },
+    };
+    const RUBRO_KEYS = ['general', 'electro', 'indumentaria', 'belleza', 'hogar', 'alimentos'];
+    let wzRubro = 'general';
+    const wzAnswers = {};   // key -> valor cargado
+
+    const fLabel = (k) => (FIELD_DEFS[k] ? FIELD_DEFS[k][LANG] || FIELD_DEFS[k].es : [k, ''])[0];
+    const fPh = (k) => (FIELD_DEFS[k] ? FIELD_DEFS[k][LANG] || FIELD_DEFS[k].es : ['', ''])[1];
+
+    function detectRubro(cat){
+      const s = String(cat || '').toUpperCase();
+      const M = [
+        ['electro', /VACUUM|ELECTRO|\bTV\b|TELEVIS|CELL|PHONE|CELULAR|NOTEBOOK|COMPUT|LAPTOP|HELADERA|REFRIG|FREEZER|MICROW|MICROOND|LAVARROP|WASH|ACOND|AIR_COND|AURICUL|HEADPHON|PARLANTE|SPEAKER|AUDIO|CAMERA|CAMAR|CONSOL|VENTILAD|\bFAN\b|CAFETER|LICUAD|BATIDOR|FREIDOR|AIRFRY|PLANCHA|SECARROP|MONITOR|TABLET|SMARTWATCH|ROUTER|MIXER|HORNO|ANAFE/],
+        ['indumentaria', /APPAREL|CLOTH|INDUMENT|REMERA|\bSHIRT|TSHIRT|T_SHIRT|PANTAL|PANTS|CAMISA|VESTIDO|DRESS|CALZADO|SHOE|SNEAKER|FOOTWEAR|ZAPAT|\bROPA\b|JEAN|CAMPERA|JACKET|BUZO|HOODIE|SHORT|MEDIAS|BIKINI|MALLA|SWIMWEAR|ABRIGO|VESTIMENTA/],
+        ['belleza', /BEAUTY|BELLEZA|PERFUM|FRAGRANC|MAKEUP|MAQUILL|COSMET|SKINCARE|CABELLO|\bHAIR\b|CREMA|SHAMPOO|SERUM|LABIAL|LIPSTICK|ESMALTE|NAIL|SOLAR|SUNSCREEN/],
+        ['hogar', /\bHOME\b|HOGAR|MUEBLE|FURNITUR|\bDECO|COCINA|KITCHEN|BAÑO|\bBATH|COLCHON|MATTRESS|SILLA|CHAIR|MESA|TABLE|DESK|ORGANIZ|SOMMIER|PLACARD|ESTANTE|SHELF|CORTINA|ALFOMBRA|\bRUG\b|RACK|SOFA|BED\b/],
+        ['alimentos', /FOOD|ALIMENT|COMIDA|SNACK|BEBIDA|DRINK|BEVERAGE|SUPLEMENT|SUPPLEMENT|PROTEIN|\bCAFE\b|COFFEE|\bTEA\b|YERBA|ACEITE|\bOIL\b|GALLETIT|COOKIE|CANDY|CHOCOLAT|HARINA|FLOUR|CONSERVA|GROCER|\bVINO\b|\bWINE\b|CERVEZA|BEER|NUTRICION/],
+      ];
+      for (const [r, re] of M){ if (re.test(s)) return r; }
+      return 'general';
+    }
+
+    function renderRubroChips(){
+      const wrap = $('wz-rubro'); if (!wrap) return; wrap.innerHTML = '';
+      RUBRO_KEYS.forEach(k => {
+        const b = document.createElement('button'); b.type = 'button';
+        b.className = 'wz-rubro-chip' + (k === wzRubro ? ' on' : '');
+        b.textContent = t('rubro_' + k);
+        b.addEventListener('click', () => { if (wzRubro === k) return; wzRubro = k; renderRubroChips(); renderWzFields(); });
+        wrap.appendChild(b);
+      });
+    }
+
+    function fieldNode(key){
+      const f = FIELD_DEFS[key]; if (!f) return null;
+      const div = document.createElement('div'); div.className = 'wz-field'; div.dataset.key = key;
+      const lab = document.createElement('label'); lab.className = 'wz-field-lbl'; lab.textContent = fLabel(key);
+      const wrap = document.createElement('div'); wrap.className = 'wz-field-in' + (f.ai ? ' has-ai' : '');
+      const inp = f.area ? document.createElement('textarea') : document.createElement('input');
+      inp.className = 'wz-fin'; inp.placeholder = fPh(key); inp.value = wzAnswers[key] || '';
+      if (f.area){ inp.rows = 2; inp.maxLength = 220; } else { inp.maxLength = 80; }
+      inp.addEventListener('input', () => { wzAnswers[key] = inp.value; });
+      wrap.appendChild(inp);
+      if (f.ai){
+        const ai = document.createElement('button'); ai.type = 'button'; ai.className = 'wz-ai'; ai.title = t('wzAiTitle');
+        ai.innerHTML = `<span aria-hidden="true">✨</span> ${t('wzAi')}`;
+        ai.addEventListener('click', () => redactarField(key, inp, ai));
+        wrap.appendChild(ai);
+      }
+      div.append(lab, wrap);
+      return div;
+    }
+
+    function renderWzFields(){
+      const fields = (RUBROS[wzRubro] || RUBROS.general).fields;
+      const ess = fields.filter(k => FIELD_DEFS[k] && FIELD_DEFS[k].ess);
+      const extra = fields.filter(k => FIELD_DEFS[k] && !FIELD_DEFS[k].ess);
+      const fill = (host, keys) => { host.innerHTML = ''; keys.forEach(k => { const n = fieldNode(k); if (n) host.appendChild(n); }); };
+      fill($('wz-fields'), ess);
+      fill($('wz-more'), extra);
+      $('wz-more-toggle').hidden = extra.length === 0;
+    }
+
+    $('wz-more-toggle').addEventListener('click', () => {
+      const open = $('wz-more').hidden;
+      $('wz-more').hidden = !open;
+      $('wz-more-toggle').setAttribute('aria-expanded', open ? 'true' : 'false');
+      $('wz-more-toggle').classList.toggle('open', open);
+    });
+
+    // "✨ Redactalo por mí" → api/redactar.js (Claude Haiku)
+    async function redactarField(key, inp, btn){
+      const old = btn.innerHTML; btn.disabled = true; btn.classList.add('busy');
+      btn.innerHTML = `<span aria-hidden="true">✨</span> ${t('wzAiBusy')}`;
+      try {
+        const ctx = { name: ($('wz-name').value || wzAnswers.nombre || '').trim(), answers: { ...wzAnswers }, features: (feats.items || []).map(i => i.text).filter(Boolean) };
+        const r = await fetch('/api/redactar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ field: key, fieldLabel: fLabel(key), rubro: wzRubro, context: ctx }) });
+        const data = await r.json().catch(() => ({}));
+        if (r.ok && data.ok && data.text){ inp.value = data.text; wzAnswers[key] = data.text; inp.focus(); }
+        else { showError(t('wzAiFail')); }
+      } catch { showError(t('wzAiFail')); }
+      finally { btn.disabled = false; btn.classList.remove('busy'); btn.innerHTML = old; }
+    }
+
     function openWizard(){
       wzStep = 1;
+      renderRubroChips(); renderWzFields();
       updateWzNav();
       buildWzTemplates();
       show('wizard');
@@ -4440,7 +4621,8 @@
       wzCustoms.filter(c => (c.label || '').trim() && (c.value || '').trim()).forEach(c => addCustomDim(c.label.trim(), c.value.trim()));
       const anyDim = ['alto', 'ancho', 'prof'].some(d => editDim(d) && editDim(d).value) || customDims.length > 0;
       if (anyDim && !dimsOn){ $('dims-on').checked = true; $('dims-on').dispatchEvent(new Event('change', { bubbles: true })); }
-      // 3) datos del producto -> banner + chapa con la plantilla elegida
+      // 3) nombre del cuestionario -> banner + chapa con la plantilla elegida
+      $('wz-name').value = (wzAnswers.nombre || $('wz-name').value || '').trim();
       const name = $('wz-name').value.trim(), kind = $('wz-kind').value.trim();
       const hlVal = $('wz-hl-val').value.trim(), hlLbl = $('wz-hl-lbl').value.trim();
       if (name || hlVal){
@@ -4452,6 +4634,23 @@
           banner.badge.on = true; $('bn-badge-on').checked = true; $('bn-badge-fields').style.display = 'block';
           $('bn-big').value = hlVal; $('bn-small').value = hlLbl;
         }
+      }
+      // 4) respuestas del rubro -> placa de características (se suman a las importadas)
+      const featLines = [];
+      (RUBROS[wzRubro] || RUBROS.general).fields.forEach(k => {
+        if (k === 'nombre') return;
+        const v = (wzAnswers[k] || '').replace(/\s+/g, ' ').trim(); if (!v) return;
+        const lab = fLabel(k);
+        let line = (lab.length + v.length + 2 <= 48) ? `${lab}: ${v}` : (v.length <= 48 ? v : v.slice(0, 47).trim() + '…');
+        if (line.length >= 3) featLines.push(line.slice(0, 48));
+      });
+      if (featLines.length){
+        const merged = (feats.items || []).filter(i => (i.text || '').trim());
+        const have = new Set(merged.map(i => i.text.toLowerCase().trim()));
+        featLines.forEach(line => { if (merged.length < 6 && !have.has(line.toLowerCase())){ merged.push({ icon: guessFeatIcon(line, merged.length), text: line }); have.add(line.toLowerCase()); } });
+        feats.items = merged.length ? merged : feats.items;
+        renderFeatRows();
+        if (!featsOn){ const fon = $('feats-on'); if (fon){ fon.checked = true; fon.dispatchEvent(new Event('change', { bubbles: true })); } }
       }
       buildPreviewTabs(true);   // mostrar la ficha más completa armada
       show('result');
