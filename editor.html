@@ -94,6 +94,37 @@
 
   .card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);padding:clamp(1.1rem,4vw,1.6rem)}
 
+  /* importar de Mercado Libre */
+  .import-box{margin-bottom:1.1rem}
+  .import-lbl{display:block;font-weight:700;font-size:.96rem;margin-bottom:.5rem}
+  .import-row{display:flex;gap:.5rem}
+  .import-row input{flex:1;min-width:0;font-family:inherit;font-size:1rem;padding:.8rem .95rem;border:1.5px solid var(--line);border-radius:12px;background:var(--white);color:var(--ink)}
+  .import-row input:focus{outline:none;border-color:var(--accent)}
+  .import-row .btn{flex:0 0 auto;min-width:0;white-space:nowrap;padding:.8rem 1.2rem}
+  .import-err{color:var(--accent-deep);font-size:.88rem;margin:.55rem .1rem 0;line-height:1.45}
+  .import-sep{display:flex;align-items:center;gap:.8rem;margin:1.05rem 0 .15rem;color:var(--ink-faint);font-size:.84rem}
+  .import-sep::before,.import-sep::after{content:"";flex:1;height:1px;background:var(--line)}
+  .import-example{text-align:center;margin:.85rem 0 0}
+  .import-example a{color:var(--ink-soft);font-size:.9rem;text-decoration:none;border-bottom:1px dashed var(--line)}
+  .import-example a:hover{color:var(--accent)}
+  @media(max-width:520px){.import-row{flex-wrap:wrap}.import-row .btn{width:100%}}
+  /* preview de lo importado */
+  .import-preview{border:1.5px solid var(--line);border-radius:16px;padding:1rem;background:var(--white)}
+  .ip-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem}
+  .ip-eyebrow{font-weight:700;font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+  .ip-x{background:none;border:0;font-size:1.5rem;line-height:1;color:var(--ink-faint);cursor:pointer;padding:0 .2rem}
+  .ip-body{display:flex;gap:.9rem;align-items:flex-start}
+  .ip-thumbs{display:grid;grid-template-columns:repeat(2,1fr);gap:.4rem;flex:0 0 116px}
+  .ip-thumb{width:100%;aspect-ratio:1;object-fit:cover;border-radius:9px;border:2px solid var(--line);background:var(--cream-2);cursor:pointer}
+  .ip-thumb.on{border-color:var(--accent)}
+  .ip-info{flex:1;min-width:0}
+  .ip-title{width:100%;font-family:inherit;font-weight:700;font-size:1rem;padding:.5rem .6rem;border:1.5px solid var(--line);border-radius:10px;background:var(--cream);color:var(--ink)}
+  .ip-title:focus{outline:none;border-color:var(--accent)}
+  .ip-specs{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.6rem}
+  .ip-chip{font-size:.8rem;font-weight:600;color:var(--ink-soft);background:var(--cream-2);border-radius:999px;padding:.25rem .6rem}
+  .ip-chip-muted{color:var(--ink-faint);font-weight:500}
+  .ip-actions{display:flex;gap:.5rem;margin-top:1rem}
+  .ip-actions .btn{padding:.72rem 1rem}
   .drop{display:block;border:2px dashed var(--line);border-radius:var(--radius);padding:clamp(2rem,9vw,3.4rem) 1.5rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
   .drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-tint)}
   .drop .ic{width:54px;height:54px;border-radius:14px;background:var(--accent-tint);color:var(--accent);display:grid;place-items:center;margin:0 auto .9rem}
@@ -665,6 +696,37 @@
       </div>
 
       <div class="card">
+        <!-- importar de Mercado Libre (autocompleta el Paso 1) -->
+        <div class="import-box" id="import-box">
+          <div id="import-form">
+            <label class="import-lbl" for="ml-url" data-i18n="importLbl">Pegá el link de tu publicación de Mercado Libre</label>
+            <div class="import-row">
+              <input type="url" id="ml-url" inputmode="url" autocomplete="off" spellcheck="false" data-i18n-ph="importPh" placeholder="mercadolibre.com.ar/...">
+              <button type="button" class="btn btn-primary" id="ml-go" data-i18n="importGo">Traé mi producto</button>
+            </div>
+            <p class="import-err hidden" id="import-err"></p>
+            <div class="import-sep"><span data-i18n="importOr">o cargá la foto a mano</span></div>
+          </div>
+          <!-- preview de lo importado: confirmar / editar antes de seguir -->
+          <div class="import-preview hidden" id="import-preview">
+            <div class="ip-head">
+              <span class="ip-eyebrow" data-i18n="importFound">Encontramos tu producto</span>
+              <button type="button" class="ip-x" id="ip-x" aria-label="Cerrar">×</button>
+            </div>
+            <div class="ip-body">
+              <div class="ip-thumbs" id="ip-thumbs"></div>
+              <div class="ip-info">
+                <input class="ip-title" id="ip-title" maxlength="60" data-i18n-ph="importTitlePh" placeholder="Nombre del producto">
+                <div class="ip-specs" id="ip-specs"></div>
+              </div>
+            </div>
+            <div class="ip-actions">
+              <button type="button" class="btn btn-ghost" id="ip-manual" data-i18n="importManual">Cargar a mano</button>
+              <button type="button" class="btn btn-primary" id="ip-use" data-i18n="importUse">Usar esto</button>
+            </div>
+          </div>
+        </div>
+
         <!-- subir -->
         <label class="drop" id="drop" for="file">
           <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m6 10 6-6 6 6"/><path d="M4 20h16"/></svg></span>
@@ -672,6 +734,7 @@
           <p data-i18n="dropHint">JPG o PNG · una foto del celular sirve · la primera puede tardar (baja el modelo)</p>
           <input type="file" id="file" accept="image/png,image/jpeg,image/webp">
         </label>
+        <p class="import-example" id="import-example"><a href="#" id="ml-example" data-i18n="importExample">o probá con un producto de ejemplo</a></p>
 
         <!-- procesando -->
         <div class="proc hidden" id="proc">
@@ -1352,6 +1415,19 @@
         photosHint: 'sumá más productos o ángulos · cada una es independiente',
         photoRemove: 'Quitar foto',
         dlAllPhotos: 'Bajar todas las fotos',
+        importLbl: 'Pegá el link de tu publicación de Mercado Libre',
+        importPh: 'mercadolibre.com.ar/...',
+        importGo: 'Traé mi producto',
+        importOr: 'o cargá la foto a mano',
+        importExample: 'o probá con un producto de ejemplo',
+        importFound: 'Encontramos tu producto',
+        importTitlePh: 'Nombre del producto',
+        importManual: 'Cargar a mano',
+        importUse: 'Usar esto',
+        importEmpty: 'Pegá el link de tu publicación primero.',
+        importLoading: 'Buscando…',
+        importFail: 'No pudimos leer ese link. Fijate que sea de una publicación de Mercado Libre, o cargá el producto a mano.',
+        importNoSpecs: 'Sin medidas en la publicación · las cargás vos',
         dropTitle: 'Arrastrá tu foto o tocá para elegir',
         dropHint: 'JPG o PNG · una foto del celular sirve · la primera puede tardar (baja el modelo)',
         procText: 'Sacando el fondo…',
@@ -1627,6 +1703,19 @@
         photosHint: 'add more products or angles · each one is independent',
         photoRemove: 'Remove photo',
         dlAllPhotos: 'Download all photos',
+        importLbl: 'Paste the link to your Mercado Libre listing',
+        importPh: 'mercadolibre.com.ar/...',
+        importGo: 'Bring my product',
+        importOr: 'or upload the photo yourself',
+        importExample: 'or try a sample product',
+        importFound: 'We found your product',
+        importTitlePh: 'Product name',
+        importManual: 'Upload manually',
+        importUse: 'Use this',
+        importEmpty: 'Paste your listing link first.',
+        importLoading: 'Looking…',
+        importFail: 'We couldn\'t read that link. Make sure it\'s a Mercado Libre listing, or upload the product yourself.',
+        importNoSpecs: 'No measurements in the listing · you add them',
         dropTitle: 'Drag your photo or tap to choose',
         dropHint: 'JPG or PNG · a phone photo works fine · the first one may take a moment (loading the model)',
         procText: 'Removing the background…',
@@ -1971,6 +2060,8 @@
 
     function show(state){
       drop.classList.toggle('hidden', state !== 'drop');
+      { const ib = $('import-box'), ix = $('import-example'); if (ib) ib.classList.toggle('hidden', state !== 'drop'); if (ix) ix.classList.toggle('hidden', state !== 'drop'); }
+      if (state === 'drop'){ const f = $('import-form'), p = $('import-preview'); if (f) f.classList.remove('hidden'); if (p) p.classList.add('hidden'); }
       procEl.classList.toggle('hidden', state !== 'proc');
       resultEl.classList.toggle('hidden', state !== 'result');
       $('wizard').classList.toggle('hidden', state !== 'wizard');
@@ -1993,6 +2084,87 @@
     ;['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
     drop.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) handleFile(f); });
     fileInput.addEventListener('change', e => { const f = e.target.files[0]; if (f) handleFile(f); });
+
+    // ---------- importar publicación de Mercado Libre ----------
+    let lastImport = null;
+    const escHtml = s => String(s == null ? '' : s).replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
+    function cleanTitle(s){ s = (s || '').split(',')[0].split(' - ')[0].split(' | ')[0].trim(); return s.length > 52 ? s.slice(0, 52).trim() + '…' : s; }
+    function importError(msg){ const e = $('import-err'); e.textContent = msg; e.classList.remove('hidden'); }
+    function clearImportError(){ $('import-err').classList.add('hidden'); }
+    function showImportForm(){ $('import-form').classList.remove('hidden'); $('import-preview').classList.add('hidden'); }
+
+    async function doImport(){
+      const url = $('ml-url').value.trim();
+      clearImportError();
+      if (!url){ importError(t('importEmpty')); return; }
+      const btn = $('ml-go'); btn.disabled = true; const old = btn.textContent; btn.textContent = t('importLoading');
+      try {
+        const r = await fetch('/api/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || !data.ok || !Array.isArray(data.images) || !data.images.length){ importError(t('importFail')); return; }
+        renderImportPreview(data);
+      } catch { importError(t('importFail')); }
+      finally { btn.disabled = false; btn.textContent = old; }
+    }
+
+    function renderImportPreview(data){
+      lastImport = data;
+      $('ip-title').value = cleanTitle(data.title);
+      const tw = $('ip-thumbs'); tw.innerHTML = '';
+      data.images.slice(0, 4).forEach((u, i) => {
+        const im = new Image(); im.crossOrigin = 'anonymous'; im.src = u; im.className = 'ip-thumb' + (i === 0 ? ' on' : ''); im.dataset.idx = String(i); im.alt = '';
+        im.addEventListener('click', () => { tw.querySelectorAll('.ip-thumb').forEach(t => t.classList.remove('on')); im.classList.add('on'); });
+        tw.appendChild(im);
+      });
+      const s = data.specs || {}; const chips = [];
+      if (s.alto || s.ancho || s.prof){ const u = s.unit || 'cm'; const parts = [s.alto && `${t('dimAlto')} ${s.alto}`, s.ancho && `${t('dimAncho')} ${s.ancho}`, s.prof && `${t('dimProf')} ${s.prof}`].filter(Boolean); chips.push(`${parts.join(' · ')} ${u}`); }
+      if (s.weight) chips.push(`${s.weight.value} ${s.weight.unit}`);
+      if (s.brand) chips.push(s.brand);
+      $('ip-specs').innerHTML = chips.length ? chips.map(c => `<span class="ip-chip">${escHtml(c)}</span>`).join('') : `<span class="ip-chip ip-chip-muted">${escHtml(t('importNoSpecs'))}</span>`;
+      $('import-form').classList.add('hidden'); $('import-preview').classList.remove('hidden');
+    }
+
+    async function urlToBlob(url){ const r = await fetch(url, { mode: 'cors' }); if (!r.ok) throw new Error('img'); return await r.blob(); }
+
+    async function useImport(){
+      if (!lastImport) return;
+      const data = lastImport;
+      // ejemplo precargado: no pasa por el motor (no gasta crédito, anda sin backend)
+      if (data.demo){ await loadDemoProduct(); applyImportPrefill(data); return; }
+      const sel = $('ip-thumbs').querySelector('.ip-thumb.on') || $('ip-thumbs').querySelector('.ip-thumb');
+      const imgUrl = sel ? data.images[+sel.dataset.idx] : data.images[0];
+      try {
+        const blob = await urlToBlob(imgUrl);
+        const named = new File([blob], 'mercadolibre.jpg', { type: blob.type || 'image/jpeg' });
+        await handleFile(named);            // pipeline existente → abre el wizard de medidas
+        applyImportPrefill(data);           // rellena nombre / medidas / peso
+      } catch { show('drop'); showError(t('importFail')); }
+    }
+
+    // vuelca los datos importados en los campos del wizard de medidas
+    function applyImportPrefill(data){
+      const s = data.specs || {};
+      const name = ($('ip-title') && $('ip-title').value) ? $('ip-title').value : cleanTitle(data.title);
+      const nameEl = $('wz-name'); if (nameEl) nameEl.value = name.slice(0, 40);
+      const kindEl = $('wz-kind'); if (kindEl && !kindEl.value && (s.model || s.brand)) kindEl.value = String(s.model || s.brand).slice(0, 40);
+      if (s.unit){ const chip = $('wz-unit') && $('wz-unit').querySelector(`.chip[data-unit="${s.unit}"]`); if (chip) chip.click(); }
+      const setDim = (d, v) => { if (v == null || v === '') return; const el = document.querySelector(`.wz-dim[data-dim="${d}"]`); if (el) el.value = v; };
+      setDim('alto', s.alto); setDim('ancho', s.ancho); setDim('prof', s.prof);
+      if (s.weight){ const v = $('wz-hl-val'), l = $('wz-hl-lbl'); if (v && !v.value) v.value = s.weight.value; if (l && !l.value) l.value = String(s.weight.unit || 'kg').toUpperCase(); }
+    }
+
+    $('ml-go').addEventListener('click', doImport);
+    $('ml-url').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); doImport(); } });
+    $('ip-use').addEventListener('click', useImport);
+    $('ip-manual').addEventListener('click', () => { showImportForm(); $('file').click(); });
+    $('ip-x').addEventListener('click', showImportForm);
+    $('ml-example').addEventListener('click', async e => {
+      e.preventDefault();
+      try {
+        const blob = await makeDemoBlob();
+        renderImportPreview({ ok: true, demo: true, title: 'AUREO PARFUM 100 ml', images: [URL.createObjectURL(blob)], specs: { brand: 'AUREO', alto: '14', ancho: '6', prof: '4', unit: 'cm', weight: { value: '0.3', unit: 'kg' } } });
+      } catch {}
+    });
 
     function resizeForUpload(file){
       return new Promise((resolve, reject) => {
@@ -4676,8 +4848,10 @@
     // ---------- aplicar traducciones al cargar ----------
     applyI18n();
     setWizStep(1);   // barra de progreso visible desde el arranque (Producto)
-    if (new URLSearchParams(location.search).get('demo')) loadDemoProduct();   // → Galería (paso 3)
+    const _q = new URLSearchParams(location.search);
+    if (_q.get('demo')) loadDemoProduct();   // → Galería (paso 3)
     else restoreDraft();   // value-first: si había trabajo en progreso, lo traemos (nunca pantalla en blanco)
+    if (_q.get('import') === 'ml'){ const u = $('ml-url'); if (u){ u.scrollIntoView({ block: 'center', behavior: 'smooth' }); setTimeout(() => u.focus(), 120); } }
   </script>
 </body>
 </html>
