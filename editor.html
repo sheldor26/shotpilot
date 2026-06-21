@@ -1427,7 +1427,7 @@
       <p class="marca-soon" data-i18n="marcaSoon">Lo completás en "Mi marca" (pronto).</p>
       <div class="marca-actions">
         <button type="button" class="m-ghost" id="marca-skip" data-i18n="wizSaltear">Saltear por ahora</button>
-        <button type="button" class="m-primary" id="marca-apply" data-i18n="wizSeguir">Seguir</button>
+        <button type="button" class="m-primary" id="marca-apply" data-i18n="marcaApply">Ponele mi marca</button>
       </div>
     </div>
   </div>
@@ -1495,13 +1495,14 @@
         importManual: 'Cargar a mano',
         importUse: 'Usar esto',
         importEmpty: 'Pegá el link de tu publicación primero.',
+        offline: 'Parece que te quedaste sin conexión. Guardamos lo que hiciste — probá de nuevo en un toque.',
         importLoading: 'Buscando…',
         importFail: 'No pudimos leer ese link. Fijate que sea de una publicación de Mercado Libre, o cargá el producto a mano.',
         importNoSpecs: 'Sin medidas en la publicación · las cargás vos',
         importFeats: (n) => `${n} característica${n === 1 ? '' : 's'}`,
         dropTitle: 'Arrastrá tu foto o tocá para elegir',
         dropHint: 'JPG o PNG · una foto del celular sirve · la primera puede tardar (baja el modelo)',
-        procText: 'Sacando el fondo…',
+        procText: 'Estamos armando tu galería… tarda unos segundos.',
         tagBefore: 'Antes',
         tagAfter: 'Después',
         cmpAria: 'Comparar antes y después',
@@ -1555,7 +1556,7 @@
         dimsSwitchTitle: 'Mostrar medidas sobre la imagen',
         dimsStyleAria: 'Estilo de medidas',
         styleLines: 'Líneas',
-        styleBadge: 'Placa',
+        styleBadge: 'Etiqueta',
         dimAlto: 'Alto',
         dimAncho: 'Ancho',
         dimProf: 'Profundidad',
@@ -1566,7 +1567,7 @@
         stepProducto: 'Producto', stepDetalles: 'Detalles', stepGaleria: 'Galería', stepMarca: 'Marca', stepListo: 'Listo',
         wizSeguir: 'Seguir', wizAtras: '← Atrás', wizSaltear: 'Saltear por ahora', wizDescargar: 'Descargar galería',
         wizHint: 'Tu galería ya está lista', wizHintListo: 'Último paso',
-        marcaTitle: '¿Sumás tu marca?', marcaSub: 'Tu logo y colores, aplicados a todas las placas. Lo cargás una vez.',
+        marcaTitle: '¿Sumás tu marca?', marcaSub: 'Tu logo y colores, en todas tus imágenes. Lo cargás una vez.', marcaApply: 'Ponele mi marca',
         marcaLogo: '+ Logo', marcaSoon: 'Lo completás en "Mi marca" (pronto).', draftUnnamed: 'Sin nombre',
         wzStep1: '¿Qué medidas tiene?',
         wzStep1Sub: 'Dejá vacío lo que no aplique.',
@@ -1598,7 +1599,7 @@
         wzSkip: 'Editar manual',
         wzBack: 'Atrás',
         wzNext: 'Siguiente',
-        wzGenerate: 'Armar ficha',
+        wzGenerate: 'Armá mi galería',
         unit: 'Unidad',
         unitAria: 'Unidad de medida',
         systemAria: 'Sistema de medida',
@@ -1614,7 +1615,7 @@
         sideOut: 'Afuera',
         sideIn: 'Adentro',
         position: 'Posición',
-        posPlateAria: 'Posición de la placa',
+        posPlateAria: 'Posición de la etiqueta',
         posBL: 'Abajo izq.',
         posBR: 'Abajo der.',
         posTL: 'Arriba izq.',
@@ -1720,7 +1721,7 @@
         dlDims: 'Con medidas',
         dlDimsSub: 'producto + cotas',
         dlBanner: 'Con banner',
-        dlBannerSub: 'producto + placa/chapa',
+        dlBannerSub: 'producto + banner',
         dlAll: 'Todo aplicado',
         dlAllSub: 'medidas + banner',
         dlMain: 'Descargar',
@@ -1735,8 +1736,8 @@
         hintErase: 'Pintá sobre lo que quieras borrar · con zoom, ✋ o Espacio para mover',
         hintRestore: 'Pintá para traer de vuelta el producto · con zoom, ✋ o Espacio para mover',
         hintInpaint: 'Pintá el logo o la marca y tocá Quitar · con zoom, ✋ o Espacio para mover',
-        engineError: (s) => 'El motor devolvió un error (HTTP ' + s + ').',
-        processCantPhoto: 'No pudimos procesar la foto.',
+        engineError: (s) => 'No pudimos terminar. Guardamos lo que hiciste — probá de nuevo en un toque.',
+        processCantPhoto: 'No pudimos con esa foto. Probá con otra o sacala de nuevo.',
         uploadJpgPng: 'Subí una imagen JPG o PNG.',
         cantRemove: 'No se pudo quitar (error del motor). Probá de nuevo.',
         cantReadImage: 'No pudimos leer la imagen.',
@@ -1809,13 +1810,14 @@
         importManual: 'Upload manually',
         importUse: 'Use this',
         importEmpty: 'Paste your listing link first.',
+        offline: 'Looks like you lost connection. We saved your work — give it another try.',
         importLoading: 'Looking…',
         importFail: 'We couldn\'t read that link. Make sure it\'s a Mercado Libre listing, or upload the product yourself.',
         importNoSpecs: 'No measurements in the listing · you add them',
         importFeats: (n) => `${n} feature${n === 1 ? '' : 's'}`,
         dropTitle: 'Drag your photo or tap to choose',
         dropHint: 'JPG or PNG · a phone photo works fine · the first one may take a moment (loading the model)',
-        procText: 'Removing the background…',
+        procText: 'Building your gallery… this takes a few seconds.',
         tagBefore: 'Before',
         tagAfter: 'After',
         cmpAria: 'Compare before and after',
@@ -1880,7 +1882,7 @@
         stepProducto: 'Product', stepDetalles: 'Details', stepGaleria: 'Gallery', stepMarca: 'Brand', stepListo: 'Done',
         wizSeguir: 'Next', wizAtras: '← Back', wizSaltear: 'Skip for now', wizDescargar: 'Download gallery',
         wizHint: 'Your gallery is ready', wizHintListo: 'Last step',
-        marcaTitle: 'Add your brand?', marcaSub: 'Your logo and colors, applied to every placa. Set it up once.',
+        marcaTitle: 'Add your brand?', marcaSub: 'Your logo and colors, on every image. Set it up once.', marcaApply: 'Use my brand',
         marcaLogo: '+ Logo', marcaSoon: 'You complete it in "My brand" (soon).', draftUnnamed: 'Untitled',
         wzStep1: 'What are its dimensions?',
         wzStep1Sub: 'Leave blank what doesn’t apply.',
@@ -1912,7 +1914,7 @@
         wzSkip: 'Edit manually',
         wzBack: 'Back',
         wzNext: 'Next',
-        wzGenerate: 'Build shot',
+        wzGenerate: 'Build my gallery',
         unit: 'Unit',
         unitAria: 'Unit of measure',
         systemAria: 'Measurement system',
@@ -2049,8 +2051,8 @@
         hintErase: 'Paint over whatever you want to erase · when zoomed, ✋ or Space to move',
         hintRestore: 'Paint to bring the product back · when zoomed, ✋ or Space to move',
         hintInpaint: 'Paint over the logo or mark and tap Remove · when zoomed, ✋ or Space to move',
-        engineError: (s) => 'The engine returned an error (HTTP ' + s + ').',
-        processCantPhoto: 'We could not process the photo.',
+        engineError: (s) => 'We couldn\'t finish. We saved your work — give it another try.',
+        processCantPhoto: 'That photo didn\'t work. Try another or retake it.',
         uploadJpgPng: 'Upload a JPG or PNG image.',
         cantRemove: 'Could not remove it (engine error). Try again.',
         cantReadImage: 'We could not read the image.',
@@ -2226,7 +2228,7 @@
         const data = await r.json().catch(() => ({}));
         if (!r.ok || !data.ok || !Array.isArray(data.images) || !data.images.length){ importError(t('importFail')); return; }
         renderImportPreview(data);
-      } catch { importError(t('importFail')); }
+      } catch { importError(navigator.onLine ? t('importFail') : t('offline')); }
       finally { btn.disabled = false; btn.textContent = old; }
     }
 

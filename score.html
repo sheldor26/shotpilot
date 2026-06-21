@@ -83,7 +83,7 @@
         }
         const cover = await analyzeCover(data.images[0]);
         renderScore(url, data, cover);
-      } catch { showErr('No pudimos analizar ahora. Probá de nuevo en un momento.'); }
+      } catch { showErr(navigator.onLine ? 'No pudimos analizar ahora. Probá de nuevo en un momento.' : 'Parece que te quedaste sin conexión. Probá de nuevo en un toque.'); }
       finally { btn.disabled = false; btn.textContent = old; }
     }
 
@@ -126,11 +126,11 @@
           t: 'Medida correcta (cuadrada 1:1)',
           good: 'La portada es cuadrada (1:1).', bad: 'Las imágenes rinden más en 1:1 (ML recomienda 1200×1200).' },
         { ok: hasDims, pts: hasDims ? 2 : 0, max: 2,
-          t: 'Placa de medidas',
-          good: 'Tiene datos de medidas para mostrar.', bad: 'Sumá una placa de medidas: la gente pregunta el tamaño antes de comprar.' },
+          t: 'Imagen con las medidas',
+          good: 'Tiene datos de medidas para mostrar.', bad: 'Sumá una imagen con las medidas: la gente pregunta el tamaño antes de comprar.' },
         { ok: hasFeats, pts: hasFeats ? 2 : 0, max: 2,
-          t: 'Placa de características',
-          good: 'Tiene características para destacar.', bad: 'Sumá una placa de características: 3-4 beneficios claros sobre la foto.' },
+          t: 'Imagen con las características',
+          good: 'Tiene características para destacar.', bad: 'Sumá una imagen con las características: 3-4 beneficios claros sobre la foto.' },
       ];
       let got = 0, total = 0;
       crit.forEach(c => { if (c.skip) return; got += c.pts; total += c.max; });

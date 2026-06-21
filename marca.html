@@ -94,8 +94,8 @@
             <option>Manrope</option><option>Montserrat</option><option>Poppins</option><option>Inter</option><option>Sora</option><option>Oswald</option><option>Bebas Neue</option><option>Anton</option><option>Archivo Black</option>
           </select>
         </div>
-        <button type="button" class="sp-btn mk-save" id="mk-save">Guardar mi marca</button>
-        <p class="mk-saved" id="mk-saved">✓ Guardado. Se aplica solo a tus placas.</p>
+        <button type="button" class="sp-btn mk-save" id="mk-save">Guardá tu logo y colores</button>
+        <p class="mk-saved" id="mk-saved">✓ Guardado. Se aplica solo a tus imágenes.</p>
       </section>
 
       <!-- Tab: sellos e íconos -->
@@ -227,7 +227,7 @@
     }
     function onSealClick(r){
       if (r.requires_declaration && !declared.has(r.id)){ pendingSeal = r; openDecl(r); return; }
-      toast(`"${r.name}" listo para usar en tus placas.`);
+      toast(`"${r.name}" listo para usar en tus imágenes.`);
     }
 
     // declaración legal
