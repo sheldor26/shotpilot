@@ -551,6 +551,7 @@
   .feats-ico-btn:hover{border-color:var(--accent);color:var(--accent)}
   .feats-ico-btn svg{width:18px;height:18px}
   .feats-row .feats-txt{flex:1;min-width:0;border:1px solid var(--line);background:var(--white);border-radius:9px;padding:.45rem .6rem;font:inherit;font-size:.85rem;color:var(--ink)}
+  .incluye-check{flex:0 0 auto;width:34px;height:34px;border-radius:9px;background:var(--accent-tint);color:var(--accent);display:grid;place-items:center}
   .feats-row .feats-txt:focus{outline:none;border-color:var(--accent)}
   .feats-del{flex:0 0 auto;width:30px;height:30px;border:none;background:transparent;color:var(--ink-faint);font-size:1.2rem;line-height:1;cursor:pointer;border-radius:8px}
   .feats-del:hover{color:var(--accent);background:var(--cream-2)}
@@ -1231,6 +1232,42 @@
             </div>
           </div>
 
+          <!-- placa "Qué incluye" (checklist del contenido de la caja) -->
+          <div class="engine" id="incluye-panel">
+            <div class="dims-head">
+              <span class="dims-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg>
+                <span data-i18n="incluyeTitle">Qué incluye</span>
+              </span>
+              <span class="dims-head-actions">
+                <button type="button" class="panel-fold" id="incluye-fold" data-i18n-aria="foldPanel" aria-label="Plegar / desplegar" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+                <label class="dims-switch" data-i18n-title="incluyeSwitchTitle" title="Mostrar qué viene en la caja">
+                  <input type="checkbox" id="incluye-on">
+                  <span class="sw" aria-hidden="true"></span>
+                </label>
+              </span>
+            </div>
+            <div id="incluye-fields" style="display:none">
+              <div class="bn-block">
+                <span class="dims-mini-label" data-i18n="incluyeItems">Lo que viene en la caja — uno por línea</span>
+                <div id="incluye-rows" class="feats-rows"></div>
+                <button type="button" class="feats-add" id="incluye-add" data-i18n="incluyeAdd">+ Agregar ítem</button>
+              </div>
+              <div class="bn-row">
+                <span class="dims-mini-label" data-i18n="color">Color</span>
+                <div class="swatches" id="incluye-color"></div>
+                <input type="color" class="color-pick" id="incluye-pick" value="#16130F" data-i18n-title="customColor" title="Color personalizado">
+              </div>
+              <div class="bn-row">
+                <span class="dims-mini-label" data-i18n="position">Posición</span>
+                <div class="seg seg-sm" id="incluye-side" role="group">
+                  <button type="button" class="chip" data-side="r" aria-pressed="true" data-i18n="sideRight">Derecha</button>
+                  <button type="button" class="chip" data-side="l" aria-pressed="false" data-i18n="sideLeft">Izquierda</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- logo / marca de agua (opcional) -->
           <div class="engine" id="logo-panel">
             <div class="dims-head">
@@ -1636,7 +1673,17 @@
         viewMedidas: 'Medidas',
         viewBanner: 'Banner',
         viewFeats: 'Características',
+        viewIncluye: 'Qué incluye',
         viewTodo: 'Todo',
+        incluyeTitle: 'Qué incluye',
+        incluyeHeader: 'Incluye',
+        incluyeSwitchTitle: 'Mostrar qué viene en la caja',
+        incluyeItems: 'Lo que viene en la caja — uno por línea',
+        incluyeItemPh: 'Ej: Cable USB-C',
+        incluyeAdd: '+ Agregar ítem',
+        warnPrice: 'Ojo: ML no permite precios ni "oferta/descuento" en las imágenes. Mejor sacalo.',
+        warnShip: 'Ojo: ML no permite "envío gratis" en las imágenes. Mejor sacalo.',
+        warnContact: 'Ojo: ML no permite teléfono, redes ni links en las imágenes. Mejor sacalo.',
         pvPrev: 'Vista anterior',
         pvNext: 'Vista siguiente',
         bigprevHint: 'Arrastrá las puntas (círculos) para ajustar cada medida.',
@@ -1938,7 +1985,17 @@
         viewMedidas: 'Dimensions',
         viewBanner: 'Banner',
         viewFeats: 'Features',
+        viewIncluye: 'What\'s included',
         viewTodo: 'All',
+        incluyeTitle: 'What\'s included',
+        incluyeHeader: 'Includes',
+        incluyeSwitchTitle: 'Show what comes in the box',
+        incluyeItems: 'What comes in the box — one per line',
+        incluyeItemPh: 'E.g.: USB-C cable',
+        incluyeAdd: '+ Add item',
+        warnPrice: 'Heads up: ML doesn\'t allow prices or "sale/discount" on images. Better remove it.',
+        warnShip: 'Heads up: ML doesn\'t allow "free shipping" on images. Better remove it.',
+        warnContact: 'Heads up: ML doesn\'t allow phone, socials or links on images. Better remove it.',
         pvPrev: 'Previous view',
         pvNext: 'Next view',
         bigprevHint: 'Drag the endpoints (circles) to adjust each dimension.',
@@ -2430,7 +2487,7 @@
     // compone el producto centrado sobre blanco en cualquier medida W×H. Devuelve métricas.
     // layers: qué capas dibujar. Por defecto, las que estén activas (para la previa).
     function compose(tw, th, shadow, fill, layers){
-      const L = layers || { dims: dimsOn, banners: bannerOn, feats: featsOn };
+      const L = layers || { dims: dimsOn, banners: bannerOn, feats: featsOn, incluye: incluyeOn };
       canvas.width = tw; canvas.height = th;
       const ctx = canvas.getContext('2d');
       ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
@@ -2443,6 +2500,7 @@
       const res = { top: 0, right: 0, bottom: 0, left: 0 };
       if (L.banners){ const r = bannerReserve(tw, th); res.top += r.top || 0; res.bottom += r.bottom || 0; }
       if (L.feats){ const r = featsReserve(tw, th); res.top += r.top || 0; res.right += r.right || 0; res.bottom += r.bottom || 0; res.left += r.left || 0; }
+      if (L.incluye){ const r = incluyeReserve(tw, th); res.top += r.top || 0; res.right += r.right || 0; res.bottom += r.bottom || 0; res.left += r.left || 0; }
       const availTop = res.top, availLeft = res.left;
       const availW = tw - res.left - res.right, availH = th - res.top - res.bottom;
       // con placa el producto pierde espacio por la reserva: lo agrandamos dentro del área libre
@@ -2489,6 +2547,7 @@
       if (L.dims) drawDims(ctx, tw, th, { x: dx, y: dy, w: dw, h: dh });
       if (L.banners) drawBanners(ctx, tw, th, { x: dx, y: dy, w: dw, h: dh });
       if (L.feats) drawFeats(ctx, tw, th, { x: dx, y: dy, w: dw, h: dh });
+      if (L.incluye) drawIncluye(ctx, tw, th);
       if (logoOn && logoImg) drawLogo(ctx, tw, th);
       return { scaleUsed: scale, fillPct: Math.round(100 * Math.max(dw, dh) / Math.min(tw, th)) };
     }
@@ -2684,6 +2743,7 @@
       if (dimsOn) v.push('medidas');
       if (bannerOn) v.push('banner');
       if (featsOn) v.push('caracteristicas');
+      if (incluyeOn) v.push('incluye');
       return v;
     }
     function viewLayers(){
@@ -2691,6 +2751,7 @@
         dims: previewView === 'medidas' || previewView === 'todo',
         banners: previewView === 'banner' || previewView === 'todo',
         feats: previewView === 'caracteristicas' || previewView === 'todo',
+        incluye: previewView === 'incluye' || previewView === 'todo',
       };
     }
     function dimsVisible(){ return dimsOn && dimsStyle === 'lines' && (previewView === 'medidas' || previewView === 'todo'); }
@@ -2709,7 +2770,7 @@
       updateBigprevDraggable();
       renderResult();
     }
-    const VIEW_LAYERS = { producto: { dims: false, banners: false, feats: false }, medidas: { dims: true, banners: false, feats: false }, banner: { dims: false, banners: true, feats: false }, caracteristicas: { dims: false, banners: false, feats: true }, todo: { dims: true, banners: true, feats: true } };
+    const VIEW_LAYERS = { producto: { dims: false, banners: false, feats: false, incluye: false }, medidas: { dims: true, banners: false, feats: false, incluye: false }, banner: { dims: false, banners: true, feats: false, incluye: false }, caracteristicas: { dims: false, banners: false, feats: true, incluye: false }, incluye: { dims: false, banners: false, feats: false, incluye: true }, todo: { dims: true, banners: true, feats: true, incluye: true } };
     // compone la variante en un mini-canvas (thumbnail de la tab)
     function drawVariantThumb(mini, layers){
       const p = P();
@@ -2723,7 +2784,7 @@
     function buildPreviewTabs(keepRichest){
       const views = availableViews();
       if (keepRichest || !views.includes(previewView)) previewView = views[views.length - 1];
-      const LBL = { producto: t('viewProducto'), medidas: t('viewMedidas'), banner: t('viewBanner'), caracteristicas: t('viewFeats'), todo: t('viewTodo') };
+      const LBL = { producto: t('viewProducto'), medidas: t('viewMedidas'), banner: t('viewBanner'), caracteristicas: t('viewFeats'), incluye: t('viewIncluye'), todo: t('viewTodo') };
       const row = $('pv-tabrow'); row.innerHTML = '';
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       views.forEach(v => {
@@ -3974,6 +4035,54 @@
       layout: 'cards', font: 'Manrope', color: '#16130F', side: 'r', scale: 1,
       items: [ { icon:'check', text:'' }, { icon:'bolt', text:'' }, { icon:'shield', text:'' } ],
     };
+
+    // ============ placa "Qué incluye" (checklist del contenido de la caja) ============
+    // Tipo de placa nuevo (Prompt 9). Data-driven, recoloreable (incluye.color → brand kit).
+    // Reutiliza las primitivas del motor (rr, featWrap, drawFeatIcon) — no reescribe nada.
+    let incluyeOn = false, incluyeFolded = false;
+    const incluye = { color: '#16130F', side: 'r', items: [{ text: '' }, { text: '' }, { text: '' }] };
+    function incluyeItems(){ return incluye.items.filter(it => (it.text || '').trim()); }
+    function incluyeReserve(tw, th){
+      if (!incluyeOn || !incluyeItems().length) return { left: 0, right: 0, top: 0, bottom: 0 };
+      const w = Math.round(tw * 0.42);
+      return incluye.side === 'l' ? { left: w, right: 0, top: 0, bottom: 0 } : { left: 0, right: w, top: 0, bottom: 0 };
+    }
+    function incluyeVisible(){ return incluyeOn && incluyeItems().length > 0 && (previewView === 'incluye' || previewView === 'todo'); }
+    function drawIncluye(ctx, tw, th){
+      if (!incluyeOn) return;
+      const items = incluyeItems(); if (!items.length) return;
+      const rv = incluyeReserve(tw, th); const colW = rv.left || rv.right; if (!colW) return;
+      const m = colW * 0.08;
+      const x0 = (incluye.side === 'l' ? 0 : tw - colW) + m, cw = colW - m * 2;
+      const padY = th * 0.07, panelH = th - padY * 2;
+      // panel-tarjeta blanco
+      ctx.save(); ctx.shadowColor = 'rgba(40,24,16,.14)'; ctx.shadowBlur = colW * 0.05; ctx.shadowOffsetY = colW * 0.018;
+      rr(ctx, x0, padY, cw, panelH, cw * 0.06); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.restore();
+      const inX = x0 + cw * 0.1, inW = cw * 0.8;
+      // título
+      const titleFs = Math.min(cw * 0.115, th * 0.05);
+      ctx.fillStyle = incluye.color; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+      ctx.font = `800 ${titleFs}px "Manrope", sans-serif`;
+      ctx.fillText((t('incluyeHeader') || 'INCLUYE').toUpperCase(), inX, padY + cw * 0.17);
+      const lineY = padY + cw * 0.22;
+      ctx.save(); ctx.globalAlpha = 0.18; ctx.strokeStyle = incluye.color; ctx.lineWidth = Math.max(1, cw * 0.006);
+      ctx.beginPath(); ctx.moveTo(inX, lineY); ctx.lineTo(inX + inW, lineY); ctx.stroke(); ctx.restore();
+      // ítems con tilde
+      const n = items.length, top = lineY + cw * 0.09, bottom = padY + panelH - cw * 0.06;
+      const rowH = Math.min((bottom - top) / n, th * 0.11);
+      const icoR = Math.min(rowH * 0.24, cw * 0.07);
+      const fs = Math.min(rowH * 0.32, cw * 0.085);
+      const tx = inX + icoR * 2 + cw * 0.06, txW = inX + inW - tx;
+      items.forEach((it, i) => {
+        const cy = top + rowH * i + rowH / 2;
+        ctx.fillStyle = incluye.color; ctx.beginPath(); ctx.arc(inX + icoR, cy, icoR, 0, Math.PI * 2); ctx.fill();
+        drawFeatIcon(ctx, 'check', inX + icoR, cy, icoR * 1.05, '#ffffff', 2.3);
+        ctx.fillStyle = '#1A1614'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.font = `600 ${fs}px "Manrope", sans-serif`;
+        const lines = featWrap(ctx, it.text, txW, 2);
+        const lh = fs * 1.18, sy = cy - (lines.length - 1) * lh / 2;
+        lines.forEach((l, k) => ctx.fillText(l, tx, sy + k * lh));
+      });
+    }
     const featLoaded = new Set();
     function ensureFeatFont(){
       if (!featsOn || !document.fonts) return;
@@ -4108,6 +4217,62 @@
     });
     $('feats-fold').addEventListener('click', () => { featsFolded = !featsFolded; syncFeatsFold(); });
     renderFeatRows();
+
+    // ---- placa "Qué incluye" (checklist) ----
+    function renderIncluyeRows(){
+      const wrap = $('incluye-rows'); if (!wrap) return; wrap.innerHTML = '';
+      incluye.items.forEach((it, i) => {
+        const row = document.createElement('div'); row.className = 'feats-row incluye-row'; row.dataset.i = String(i);
+        row.innerHTML = `<span class="incluye-check" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg></span>`
+          + `<input class="feats-txt" maxlength="40" placeholder="${t('incluyeItemPh')}">`
+          + `<button type="button" class="feats-del" data-act="del" aria-label="${t('dimRemove')}">×</button>`;
+        row.querySelector('.feats-txt').value = it.text;
+        wrap.appendChild(row);
+      });
+    }
+    $('incluye-rows').addEventListener('input', e => {
+      const row = e.target.closest('.incluye-row'); if (!row) return;
+      if (e.target.classList.contains('feats-txt')){ incluye.items[+row.dataset.i].text = e.target.value; renderResult(); }
+    });
+    $('incluye-rows').addEventListener('click', e => {
+      const btn = e.target.closest('[data-act="del"]'); if (!btn) return;
+      if (incluye.items.length <= 1) return;
+      incluye.items.splice(+btn.closest('.incluye-row').dataset.i, 1); renderIncluyeRows(); renderResult();
+    });
+    $('incluye-add').addEventListener('click', () => {
+      if (incluye.items.length >= 8) return;
+      incluye.items.push({ text: '' }); renderIncluyeRows();
+      const ins = $('incluye-rows').querySelectorAll('.feats-txt'); if (ins.length) ins[ins.length - 1].focus();
+    });
+    buildSwatches('incluye-color', incluye.color, hex => { incluye.color = hex; $('incluye-pick').value = hex; renderResult(); });
+    $('incluye-pick').addEventListener('input', e => { incluye.color = e.target.value; $('incluye-color').querySelectorAll('.swatch').forEach(s => s.setAttribute('aria-pressed', 'false')); renderResult(); });
+    $('incluye-side').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => { incluye.side = c.dataset.side; syncSeg('incluye-side', 'side', incluye.side); renderResult(); }));
+    function syncIncluyeFold(){ $('incluye-fields').style.display = (incluyeOn && !incluyeFolded) ? 'block' : 'none'; $('incluye-fold').classList.toggle('folded', incluyeFolded); }
+    $('incluye-on').addEventListener('change', e => {
+      incluyeOn = e.target.checked;
+      if (incluyeOn) incluyeFolded = false;
+      $('incluye-fold').style.display = incluyeOn ? 'grid' : 'none';
+      syncIncluyeFold(); updateDlVariants(); buildPreviewTabs(incluyeOn); renderResult();
+    });
+    $('incluye-fold').addEventListener('click', () => { incluyeFolded = !incluyeFolded; syncIncluyeFold(); });
+    renderIncluyeRows();
+
+    // ---- regla de placas: NUNCA precio / "envío gratis" / contacto en la imagen (avisar) ----
+    const FORBIDDEN_PLACA = [
+      { re: /(\$\s*\d|\bars\b|\bpesos?\b|\bprecio\b|\boferta\b|\bdescuento\b|\brebaja\b|\bpromo\b|\d+\s*%|%\s*off)/i, key: 'warnPrice' },
+      { re: /(env[ií]o\s*(gratis|sin\s*cargo)|free\s*shipping)/i, key: 'warnShip' },
+      { re: /(whatsapp|\bwsp\b|\bwpp\b|tel[eé]fono|instagram|facebook|\b@[a-z0-9_]{2,}|https?:\/\/|www\.|\.com\b|\d{3}[-\s.]?\d{3,4}[-\s.]?\d{3,4})/i, key: 'warnContact' },
+    ];
+    let _placaWarnCool = false;
+    function checkPlacaText(value){
+      const s = String(value || ''); if (s.length < 3) return;
+      for (const f of FORBIDDEN_PLACA){ if (f.re.test(s)){ if (!_placaWarnCool){ _placaWarnCool = true; showToast(t(f.key), 'err'); setTimeout(() => { _placaWarnCool = false; }, 3500); } return; } }
+    }
+    // delegado: cubre características, qué incluye y los textos del banner sin tocar sus handlers
+    document.addEventListener('input', e => {
+      const el = e.target;
+      if (el && el.matches && el.matches('#feats-rows .feats-txt, #incluye-rows .feats-txt, #bn-title, #bn-sub, #bn-big, #bn-small')) checkPlacaText(el.value);
+    });
 
     // ---- logo / marca de agua ----
     function syncLogoFold(){
@@ -4374,21 +4539,22 @@
 
     // descarga por capas
     const DL_VARIANTS = {
-      clean:  { dims: false, banners: false, feats: false, sfx: 'limpia' },
-      dims:   { dims: true,  banners: false, feats: false, sfx: 'medidas' },
-      banner: { dims: false, banners: true,  feats: false, sfx: 'banner' },
-      feats:  { dims: false, banners: false, feats: true,  sfx: 'caracteristicas' },
-      all:    { dims: true,  banners: true,  feats: true,  sfx: 'completa' },
+      clean:   { dims: false, banners: false, feats: false, incluye: false, sfx: 'limpia' },
+      dims:    { dims: true,  banners: false, feats: false, incluye: false, sfx: 'medidas' },
+      banner:  { dims: false, banners: true,  feats: false, incluye: false, sfx: 'banner' },
+      feats:   { dims: false, banners: false, feats: true,  incluye: false, sfx: 'caracteristicas' },
+      incluye: { dims: false, banners: false, feats: false, incluye: true,  sfx: 'incluye' },
+      all:     { dims: true,  banners: true,  feats: true,  incluye: true,  sfx: 'completa' },
     };
     async function downloadLayers(key){
       const p = P(), v = DL_VARIANTS[key];
-      compose(p.w, p.h, shadowOn, p.fill, { dims: v.dims, banners: v.banners, feats: v.feats });
+      compose(p.w, p.h, shadowOn, p.fill, { dims: v.dims, banners: v.banners, feats: v.feats, incluye: v.incluye });
       downloadBlob(await exportBlob(), `shotpilot-${presetKey}-${v.sfx}-${p.w}x${p.h}.png`);
       renderResult();   // restaurar la previa a la vista completa
     }
-    function viewSfx(){ return previewView === 'todo' ? 'completa' : previewView === 'medidas' ? 'medidas' : previewView === 'banner' ? 'banner' : previewView === 'caracteristicas' ? 'caracteristicas' : 'limpia'; }
+    function viewSfx(){ return previewView === 'todo' ? 'completa' : previewView === 'medidas' ? 'medidas' : previewView === 'banner' ? 'banner' : previewView === 'caracteristicas' ? 'caracteristicas' : previewView === 'incluye' ? 'incluye' : 'limpia'; }
     function updateDlVariants(){
-      const hasLayers = dimsOn || bannerOn || featsOn;
+      const hasLayers = dimsOn || bannerOn || featsOn || incluyeOn;
       $('dl-separate').style.display = hasLayers ? 'inline-flex' : 'none';
       $('dl-note').style.display = hasLayers ? 'block' : 'none';
     }
@@ -4408,6 +4574,7 @@
       if (dimsOn) keys.push('dims');
       if (bannerOn) keys.push('banner');
       if (featsOn) keys.push('feats');
+      if (incluyeOn) keys.push('incluye');
       for (const k of keys){ await downloadLayers(k); await new Promise(r => setTimeout(r, 350)); }
       btn.disabled = false;
     });
@@ -4635,10 +4802,20 @@
           $('bn-big').value = hlVal; $('bn-small').value = hlLbl;
         }
       }
-      // 4) respuestas del rubro -> placa de características (se suman a las importadas)
+      // 4) el campo "incluye" -> placa "Qué incluye" (su propia placa)
+      const incTxt = (wzAnswers.incluye || '').trim();
+      if (incTxt){
+        const parts = incTxt.split(/[\n,;·•]+/).map(x => x.replace(/\s+/g, ' ').trim()).filter(x => x.length >= 2).slice(0, 8);
+        if (parts.length){
+          incluye.items = parts.map(text => ({ text: text.slice(0, 40) }));
+          renderIncluyeRows();
+          if (!incluyeOn){ const ion = $('incluye-on'); if (ion){ ion.checked = true; ion.dispatchEvent(new Event('change', { bubbles: true })); } }
+        }
+      }
+      // 5) demás respuestas del rubro -> placa de características (se suman a las importadas; "incluye" ya tiene su placa)
       const featLines = [];
       (RUBROS[wzRubro] || RUBROS.general).fields.forEach(k => {
-        if (k === 'nombre') return;
+        if (k === 'nombre' || k === 'incluye') return;
         const v = (wzAnswers[k] || '').replace(/\s+/g, ' ').trim(); if (!v) return;
         const lab = fLabel(k);
         let line = (lab.length + v.length + 2 <= 48) ? `${lab}: ${v}` : (v.length <= 48 ? v : v.slice(0, 47).trim() + '…');
@@ -4683,6 +4860,7 @@
         banner: JSON.parse(JSON.stringify(banner)),
         bnVals: { title: $('bn-title').value, sub: $('bn-sub').value, big: $('bn-big').value, small: $('bn-small').value, badgeOn: $('bn-badge-on').checked },
         featsOn, featsFolded, featsTplIdx, feats: JSON.parse(JSON.stringify(feats)),
+        incluyeOn, incluyeFolded, incluye: JSON.parse(JSON.stringify(incluye)),
         presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn, reflectOn, previewView, bgColor, bgGrad,
         logoOn, logoFolded, logoMode, logoCorner, logoSize, logoOpacity, logoPos: logoPos ? { ...logoPos } : null,
         enhanceFx, enhFolded, enhB, enhC, enhS,
@@ -4697,6 +4875,7 @@
         bnVals:{title:'',sub:'',big:'',small:'',badgeOn:false},
         featsOn:false, featsFolded:false, featsTplIdx:0,
         feats:{ layout:'cards', font:'Manrope', color:'#16130F', side:'r', scale:1, items:[{icon:'check',text:''},{icon:'bolt',text:''},{icon:'shield',text:''}] },
+        incluyeOn:false, incluyeFolded:false, incluye:{ color:'#16130F', side:'r', items:[{text:''},{text:''},{text:''}] },
         presetKey, customW: PRESETS.custom.w, customH: PRESETS.custom.h, shadowOn:false, reflectOn:false, previewView:'producto', bgColor:'#FFFFFF', bgGrad:-1,
         logoOn:false, logoFolded:false, logoMode:'corner', logoCorner:'br', logoSize:18, logoOpacity:1, logoPos:null,
         enhanceFx:false, enhFolded:false, enhB:100, enhC:100, enhS:100,
@@ -4739,6 +4918,13 @@
       $('feats-leader-hint').style.display = feats.layout==='leader' ? 'block' : 'none';
       [...$('feats-templates').children].forEach((el,idx) => el.setAttribute('aria-pressed', idx===featsTplIdx ? 'true' : 'false'));
       renderFeatRows();
+      // qué incluye
+      incluyeOn = !!s.incluyeOn; incluyeFolded = !!s.incluyeFolded;
+      if (s.incluye){ incluye.color=s.incluye.color || '#16130F'; incluye.side=s.incluye.side || 'r'; incluye.items=JSON.parse(JSON.stringify(s.incluye.items||[])); }
+      if (!incluye.items.length) incluye.items=[{text:''}];
+      $('incluye-on').checked=incluyeOn; $('incluye-fold').style.display=incluyeOn ? 'grid' : 'none'; syncIncluyeFold();
+      syncSeg('incluye-side','side',incluye.side); $('incluye-pick').value=incluye.color;
+      renderIncluyeRows();
       presetKey=s.presetKey; PRESETS.custom.w=s.customW; PRESETS.custom.h=s.customH;
       $('cs-w').value=s.customW; $('cs-h').value=s.customH;
       updateDestTrigger();
