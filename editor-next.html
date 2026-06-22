@@ -219,7 +219,16 @@
     .drop-ic{ width:52px; height:52px; border-radius:14px; background:var(--accent-tint); color:var(--accent); display:grid; place-items:center; font-size:1.5rem; margin-bottom:.3rem }
     .drop b{ font-size:1rem; color:var(--ink) }
     .drop-sub{ font-size:.82rem; color:var(--ink-faint) }
+    .or-ml{ display:flex; align-items:center; gap:.7rem; max-width:380px; margin:1.1rem auto .7rem; color:var(--ink-faint); font-size:.8rem }
+    .or-ml::before, .or-ml::after{ content:""; flex:1; height:1px; background:var(--line) }
+    .import-row{ display:flex; gap:.5rem; max-width:380px; margin:0 auto }
+    .import-row input{ flex:1; min-width:0; font:inherit; font-size:.95rem; padding:.7rem .85rem; border:1.5px solid var(--line); border-radius:11px; background:var(--white); color:var(--ink) }
+    .import-row input:focus{ outline:none; border-color:var(--accent) }
+    .btn-import{ flex:none; font:inherit; font-weight:700; font-size:.9rem; color:var(--ink); background:var(--white); border:1.5px solid var(--line); border-radius:11px; padding:.7rem 1.1rem; cursor:pointer }
+    .btn-import:hover:not(:disabled){ border-color:var(--ink) }
+    .btn-import:disabled{ opacity:.6; cursor:default }
     .ex{ margin-top:1rem } .ex a{ color:var(--ink-soft); font-size:.88rem; text-decoration:underline }
+    @media(max-width:430px){ .import-row{ flex-wrap:wrap } .btn-import{ width:100% } }
     .up-err{ color:var(--accent); font-size:.86rem; margin:.9rem 0 0 }
     .proc{ max-width:300px; margin:12vh auto 0; text-align:center; color:var(--ink-soft); font-size:.95rem }
     .scanbox{ position:relative; width:200px; aspect-ratio:3/4; margin:0 auto 1.2rem; border-radius:14px; overflow:hidden; border:1px solid var(--line); background:#f3ece2 }
@@ -354,6 +363,12 @@
       <span class="drop-sub">Tocá para abrir la cámara o la galería</span>
     </label>
     <p class="up-err" id="up-err" hidden></p>
+    <div class="or-ml"><span>o pegá el link de Mercado Libre</span></div>
+    <div class="import-row">
+      <input type="url" id="ml-url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="mercadolibre.com.ar/...">
+      <button class="btn-import" id="ml-go" type="button">Importar</button>
+    </div>
+    <p class="up-err" id="import-err" hidden></p>
     <p class="ex"><a href="?demo=1">o probá con un producto de ejemplo</a></p>
   </section>
 
@@ -1230,22 +1245,54 @@
     unlocked = false;   // foto nueva = arranca con marca de agua hasta gastar 1 crédito
   }
   const showUpErr = msg => { const e = $('up-err'); e.textContent = msg; e.hidden = false; };
+  // núcleo compartido: blob de foto → resize → /remove → cutout → editor (lo usan subida y import)
+  async function processPhoto(blob){
+    $('proc-img').src = URL.createObjectURL(blob);
+    $('empty').hidden = true; $('proc').hidden = false;
+    const srcBlob = await resizeForUpload(blob);
+    const fd = new FormData();
+    fd.append('image', srcBlob, 'foto.jpg'); fd.append('model', 'isnet'); fd.append('white_bg', 'false');
+    fd.append('enhance', 'false'); fd.append('wb', 'false'); fd.append('main_only', 'true');
+    const resp = await removeBg(fd);
+    if (!resp.ok) throw new Error('El motor no pudo terminar (' + resp.status + '). Probá de nuevo en un toque.');
+    await loadCutoutImage(await resp.blob());
+    $('proc').hidden = true; startEditor();
+  }
   async function handleUpload(file){
     if (!file || !/^image\/(png|jpe?g|webp)$/.test(file.type)){ showUpErr('Subí una foto JPG, PNG o WEBP.'); return; }
-    $('up-err').hidden = true; $('proc-img').src = URL.createObjectURL(file);
-    $('empty').hidden = true; $('proc').hidden = false;
+    $('up-err').hidden = true;
+    try { await processPhoto(file); }
+    catch (e){ $('proc').hidden = true; $('empty').hidden = false; showUpErr(e.message || 'No pudimos procesar la foto. Probá de nuevo.'); }
+  }
+
+  // ---- import de Mercado Libre por link (reusa /api/import del editor viejo) ----
+  const showImpErr = msg => { const e = $('import-err'); e.textContent = msg; e.hidden = false; };
+  // vuelca specs/características importadas al estado (medidas + beneficios)
+  function applyImportPrefill(data){
+    const s = data.specs || {}, d = state.layers.dims;
+    if (s.unit) d.unit = s.unit;
+    if (s.alto != null && s.alto !== '') d.alto = String(s.alto);
+    if (s.ancho != null && s.ancho !== '') d.ancho = String(s.ancho);
+    if (s.prof != null && s.prof !== '') d.prof = String(s.prof);
+    if (d.alto || d.ancho) d.on = true;
+    const feats = Array.isArray(data.features) ? data.features.filter(Boolean) : [];
+    if (feats.length){ state.layers.feats.items = feats.slice(0, 6).map(f => String(f).slice(0, 48)); state.layers.feats.pos = null; state.layers.feats.on = true; }
+  }
+  async function importFromML(){
+    const url = ($('ml-url').value || '').trim();
+    if (!url){ showImpErr('Pegá el link de tu publicación de Mercado Libre.'); return; }
+    $('import-err').hidden = true;
+    const btn = $('ml-go'); btn.disabled = true; const prev = btn.textContent; btn.textContent = 'Importando…';
     try {
-      const srcBlob = await resizeForUpload(file);
-      const fd = new FormData();
-      fd.append('image', srcBlob, 'foto.jpg'); fd.append('model', 'isnet'); fd.append('white_bg', 'false');
-      fd.append('enhance', 'false'); fd.append('wb', 'false'); fd.append('main_only', 'true');
-      const resp = await removeBg(fd);
-      if (!resp.ok) throw new Error('El motor no pudo terminar (' + resp.status + '). Probá de nuevo en un toque.');
-      await loadCutoutImage(await resp.blob());
-      $('proc').hidden = true; startEditor();
-    } catch (e){
-      $('proc').hidden = true; $('empty').hidden = false; showUpErr(e.message || 'No pudimos procesar la foto. Probá de nuevo.');
-    }
+      const r = await fetch('/api/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.ok || !Array.isArray(data.images) || !data.images.length) throw new Error('No pudimos leer esa publicación. Revisá el link y probá de nuevo.');
+      applyImportPrefill(data);                              // medidas + beneficios al estado
+      const ir = await fetch(data.images[0], { mode: 'cors' });
+      if (!ir.ok) throw new Error('No pudimos bajar la imagen de la publicación.');
+      await processPhoto(await ir.blob());                   // misma tubería que la subida
+    } catch (e){ $('proc').hidden = true; $('empty').hidden = false; showImpErr(e.message || 'No pudimos importar.'); }
+    finally { btn.disabled = false; btn.textContent = prev; }
   }
   function wireUpload(){
     const drop = $('drop'), file = $('file');
@@ -1253,6 +1300,8 @@
     ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
     ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
     drop.addEventListener('drop', e => { const f = e.dataTransfer.files && e.dataTransfer.files[0]; if (f) handleUpload(f); });
+    const mlgo = $('ml-go'); if (mlgo) mlgo.addEventListener('click', importFromML);
+    const mlurl = $('ml-url'); if (mlurl) mlurl.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); importFromML(); } });
   }
 
   // ============================ arranque ============================
