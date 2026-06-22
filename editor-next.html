@@ -572,23 +572,26 @@
   function productBox(){
     const res = { top: 0, right: 0, bottom: 0, left: 0 }, L = state.layers, vp = visiblePlaca();
     // El banner reserva la banda REAL que ocupa (según su posición y alto, que el usuario puede
-    // mover/agrandar) + un margen, así el producto se acomoda y nunca queda tapado ni cortado.
+    // mover/agrandar) + un margen chico, así el producto se acomoda pegado al banner sin taparse.
+    let bannerSide = null;
     if (L.banner.on && vp === 'banner'){
-      const bb = bannerBand(), gap = OUT.h * 0.04;
-      if (bb.y + bb.h / 2 < OUT.h / 2) res.top    = Math.max(res.top,    bb.y + bb.h + gap);
-      else                             res.bottom = Math.max(res.bottom, OUT.h - bb.y + gap);
+      const bb = bannerBand(), gap = OUT.h * 0.02;
+      if (bb.y + bb.h / 2 < OUT.h / 2){ res.top    = Math.max(res.top,    bb.y + bb.h + gap); bannerSide = 'top'; }
+      else                            { res.bottom = Math.max(res.bottom, OUT.h - bb.y + gap); bannerSide = 'bottom'; }
     }
     if (L.feats.on   && vp === 'feats')   res.right += OUT.w * 0.30;
     if (L.incluye.on && vp === 'incluye') res.bottom += OUT.h * 0.16;
     const aw = OUT.w - res.left - res.right, ah = OUT.h - res.top - res.bottom;
     const bw = cutout.w, bh = cutout.h;   // bbox ajustado (sin padding transparente)
-    // foto sola → maximizar; cualquier placa de info activa → dejar aire
-    const infoOn = (L.banner.on && vp === 'banner') || (L.feats.on && vp === 'feats') ||
-                   (L.incluye.on && vp === 'incluye') || (L.dims.on && vp === 'dims');
-    const fill = infoOn ? FILL_INFO : FILL_PHOTO;
+    // con banner el producto se maximiza (igual que la foto sola); con beneficios/incluye/dims, más chico
+    const otherInfo = (L.feats.on && vp === 'feats') || (L.incluye.on && vp === 'incluye') || (L.dims.on && vp === 'dims');
+    const fill = (bannerSide || !otherInfo) ? FILL_PHOTO : FILL_INFO;
     const base = Math.min(aw * fill / bw, ah * fill / bh) * state.product.scale;
     const dw = bw * base, dh = bh * base;
-    const x = res.left + (aw - dw) / 2, y = res.top + (ah - dh) / 2;
+    let x = res.left + (aw - dw) / 2, y = res.top + (ah - dh) / 2;
+    // pegar el producto al borde del banner (menos espacio muerto entre imagen y banner)
+    if (bannerSide === 'top')    y = res.top;
+    if (bannerSide === 'bottom') y = res.top + ah - dh;
     return (productBoxCache = { x, y, w: dw, h: dh });
   }
   function render(){
