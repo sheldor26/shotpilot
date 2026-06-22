@@ -478,7 +478,7 @@
       // Arrancan en null y se inicializan la 1ª vez desde el layout; después mandan lo arrastrado.
       dims:    { on: false, unit: 'cm', alto: '14', ancho: '6', prof: '', pos: null, stroke: 3, labelSize: 34 },
       banner:  { on: false, text: 'ENVÍO GRATIS', color: '#1B49B8', pos: 'top', place: null, textColor: '#ffffff', fontSize: 52, textShadow: false, opacity: 100, style: 'solid' },
-      feats:   { on: false, items: ['Larga duración', 'Fragancia amaderada', 'Frasco de vidrio'], pos: null, bulletColor: '#d8381f', fontSize: 30, style: 'dots', font: 'manrope' },
+      feats:   { on: false, items: ['Larga duración', 'Fragancia amaderada', 'Frasco de vidrio'], pos: null, bulletColor: '#d8381f', fontSize: 40, style: 'chips', font: 'manrope', connect: true },
       incluye: { on: false, items: ['Perfume 100 ml', 'Estuche original'], title: 'INCLUYE' },
       // placas de conversión (E12)
       hero:    { on: false, eyebrow: '', headline: 'El detalle que se nota', sub: '', font: 'manrope', pos: 'left' },
@@ -683,7 +683,7 @@
       if (bb.y + bb.h / 2 < OUT.h / 2){ res.top    = Math.max(res.top,    bb.y + bb.h + gap); bannerSide = 'top'; }
       else                            { res.bottom = Math.max(res.bottom, OUT.h - bb.y + gap); bannerSide = 'bottom'; }
     }
-    if (L.feats.on   && vp === 'feats')   res.right += OUT.w * 0.30;
+    if (L.feats.on   && vp === 'feats')   res.right += OUT.w * 0.36;
     if (L.incluye.on && vp === 'incluye') res.bottom += incluyeHeight() + 36 + OUT.h * 0.03;
     if (L.hero.on    && vp === 'hero')    res[L.hero.pos === 'right' ? 'right' : 'left'] += OUT.w * 0.46;
     if (L.garantia.on&& vp === 'garantia')res.bottom += OUT.h * 0.18;
@@ -691,9 +691,9 @@
     const aw = OUT.w - res.left - res.right, ah = OUT.h - res.top - res.bottom;
     const bw = cutout.w, bh = cutout.h;   // bbox ajustado (sin padding transparente)
     // con banner/garantía/hero el producto se maximiza; con beneficios/incluye/dims/social, más chico
-    const heroOn = L.hero.on && vp === 'hero';
-    const otherInfo = (L.feats.on && vp === 'feats') || (L.incluye.on && vp === 'incluye') || (L.dims.on && vp === 'dims') || (L.social.on && vp === 'social');
-    const fill = (bannerSide || heroOn || !otherInfo) ? FILL_PHOTO : FILL_INFO;
+    const heroOn = L.hero.on && vp === 'hero', featsOn = L.feats.on && vp === 'feats';
+    const otherInfo = (L.incluye.on && vp === 'incluye') || (L.dims.on && vp === 'dims') || (L.social.on && vp === 'social');
+    const fill = (bannerSide || heroOn || featsOn || !otherInfo) ? FILL_PHOTO : FILL_INFO;
     const base = Math.min(aw * fill / bw, ah * fill / bh) * state.product.scale;
     const dw = bw * base, dh = bh * base;
     let x = res.left + (aw - dw) / 2, y = res.top + (ah - dh) / 2;
@@ -833,15 +833,23 @@
   function ensureFeatPos(){
     const f = state.layers.feats, n = f.items.length;
     if (f.pos && f.pos.length === n) return;
-    const colW = OUT.w * 0.30, x = OUT.w - colW + 50, gap = OUT.h / (n + 1);
+    const x = OUT.w * 0.62, gap = OUT.h / (n + 1);   // columna derecha más ancha → chips más grandes
     f.pos = f.items.map((_, i) => (f.pos && f.pos[i]) ? f.pos[i] : { x, y: gap * (i + 1) });
   }
   function drawFeats(){
     ensureFeatPos();
-    const f = state.layers.feats, sel = state.selected === 'feats';
+    const f = state.layers.feats, sel = state.selected === 'feats', box = productBoxCache;
     f.items.forEach((s, i) => {
       if (!s.trim()) return;
       const p = f.pos[i], g = new Konva.Group({ x: p.x, y: p.y, draggable: true }), fs = f.fontSize, col = f.bulletColor;
+      // línea conectora al producto (callout): convierte el aire muerto en estructura
+      if (f.connect && box && box.w && p.x > box.x + box.w * 0.5){
+        const ay = Math.max(box.y + 30, Math.min(box.y + box.h - 30, p.y)), ax = box.x + box.w - 8;
+        const conn = new Konva.Line({ points: [ax, ay, p.x - 12, p.y], stroke: rgba(col, 0.55), strokeWidth: 2, lineCap: 'round', listening: false });
+        const dot = new Konva.Circle({ x: ax, y: ay, radius: 7, fill: col, listening: false });
+        dot.shadowColor(col); dot.shadowBlur(10); dot.shadowOpacity(0.5);
+        mainLayer.add(conn, dot);
+      }
       const ff = fontById(f.font);   // tipografía elegida para el texto del beneficio
       const tInk = state.bg.color ? inkOn(state.bg.color) : ink;   // contraste del texto contra el fondo
       g.add(new Konva.Circle({ radius: px(22), fill: sel ? 'rgba(216,56,31,0.12)' : 'rgba(0,0,0,0.001)' }));   // 44px táctil
@@ -886,7 +894,7 @@
         t.position({ x: contentX, y: -t.height() / 2 }); g.add(t);
       }
       g.on('dragmove', () => { const sn = applySnap(g.x(), g.y()); g.position({ x: sn.x, y: sn.y }); p.x = sn.x; p.y = sn.y; drawGuides(sn.guides); mainLayer.batchDraw(); });
-      g.on('dragend', () => clearGuides());
+      g.on('dragend', () => { clearGuides(); if (f.connect) render(); });   // recalcula la línea al producto
       g.on('click tap', () => selectPart('feats'));
       g.on('mouseenter', () => stage.container().style.cursor = 'grab');
       g.on('mouseleave', () => stage.container().style.cursor = 'default');
@@ -1438,9 +1446,10 @@
         'Tocá + para agregar un beneficio (ej: “Batería 12 horas”). Va a aparecer un puntito sobre tu foto que podés mover.'),
       f.items.length ? thumbGrid('Estilo', FEAT_TPLS.map(o => ({ id: o.id, name: o.name, svg: featThumbSVG(o.id, f.bulletColor) })), f.style, v => { f.style = v; render(); renderPanel(); }) : '',
       f.items.length ? fontRow('Tipografía', f.font, v => { f.font = v; loadFontThen(v, render); }) : '',
+      f.items.length ? toggleRow('Conectar con líneas al producto', f.connect, v => { f.connect = v; render(); }) : '',
       moreSection('feats',
         colorRow('Color del punto', withPalette(['#d8381f', '#1B49B8', '#1f9d55', '#241E1A']), f.bulletColor, v => { f.bulletColor = v; render(); renderPanel(); }),
-        sliderRow('Tamaño de letra', f.fontSize, 22, 44, v => { f.fontSize = v; render(); }))); },
+        sliderRow('Tamaño de letra', f.fontSize, 22, 56, v => { f.fontSize = v; render(); }))); },
     incluye: root => { const c = state.layers.incluye; root.append(
       toggleRow('Mostrar "Qué incluye"', c.on, v => { c.on = v; render(); renderToolbar(); }),
       listEditor('Qué incluye', c.items, () => render(), 'Agregar ítem', 'Ej: 1 parlante, cable USB, manual',
