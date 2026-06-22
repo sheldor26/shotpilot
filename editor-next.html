@@ -1202,16 +1202,29 @@
     const c = state.layers.compara, accent = c.accent || '#1f9d55', style = c.style || 'tarjeta', g = new Konva.Group();
     const rows = c.rows.filter(r => r.label && r.label.trim());
     const tf = fontById(c.font || 'manrope');
-    // paleta por estilo (monocromo + 1 acento)
+    // paleta por estilo (monocromo + 1 acento). mineInk = color del contenido de la columna ganadora.
     let st;
+    const bgRect = stops => g.add(new Konva.Rect({ x: 0, y: 0, width: OUT.w, height: OUT.h, fillLinearGradientStartPoint: { x: 0, y: 0 }, fillLinearGradientEndPoint: { x: 0, y: OUT.h }, fillLinearGradientColorStops: stops }));
     if (style === 'oscuro'){
-      g.add(new Konva.Rect({ x: 0, y: 0, width: OUT.w, height: OUT.h, fillLinearGradientStartPoint: { x: 0, y: 0 }, fillLinearGradientEndPoint: { x: 0, y: OUT.h }, fillLinearGradientColorStops: [0, '#17171E', 1, '#0B0B0F'] }));
-      st = { label: '#C7C7D0', title: accent, card: '#1C1C24', header: accent, headerInk: '#fff', yes: accent, yesInk: '#0B0B0F', noRing: '#2A2A33', noX: '#5A5A66', zebra: 'rgba(255,255,255,0.05)', shadow: true, badge: accent, badgeInk: '#fff', divider: false };
+      bgRect([0, '#17171E', 1, '#0B0B0F']);
+      st = { label: '#C7C7D0', title: accent, mineInk: accent, card: '#1C1C24', header: accent, headerInk: '#fff', yes: accent, yesInk: '#0B0B0F', noRing: '#2A2A33', noX: '#5A5A66', zebra: 'rgba(255,255,255,0.05)', glow: true, shadow: false, badge: accent, badgeInk: '#fff', divider: false };
     } else if (style === 'editorial'){
       g.add(new Konva.Rect({ x: 0, y: 0, width: OUT.w, height: OUT.h, fill: '#FAF7F0' }));
-      st = { label: '#3A352E', title: '#1A1614', card: null, header: null, headerInk: '#1A1614', yes: '#1A1614', yesInk: '#FAF7F0', noRing: '#ECE5D8', noX: '#B9B0A0', zebra: 'rgba(0,0,0,0.025)', shadow: false, badge: '#1A1614', badgeInk: '#FAF7F0', divider: true };
+      st = { label: '#3A352E', title: '#1A1614', mineInk: '#1A1614', card: null, header: null, headerInk: '#1A1614', yes: '#1A1614', yesInk: '#FAF7F0', noRing: '#ECE5D8', noX: '#B9B0A0', zebra: 'rgba(0,0,0,0.025)', glow: false, shadow: false, badge: '#1A1614', badgeInk: '#FAF7F0', divider: true };
+    } else if (style === 'lujo'){
+      bgRect([0, '#15110C', 1, '#0B0907']);
+      st = { label: '#9A9384', title: accent, mineInk: accent, card: '#1C1710', header: accent, headerInk: '#15110C', yes: accent, yesInk: '#15110C', noRing: '#2A2418', noX: '#6B5F4A', zebra: 'rgba(255,255,255,0.035)', glow: true, shadow: false, badge: accent, badgeInk: '#15110C', divider: false };
+    } else if (style === 'tech'){
+      bgRect([0, '#0A0E1A', 1, '#131A2E']);
+      st = { label: '#A9B2C4', title: accent, mineInk: accent, card: 'rgba(255,255,255,0.07)', header: accent, headerInk: '#06121F', yes: accent, yesInk: '#06121F', noRing: 'rgba(255,255,255,0.08)', noX: '#5C6680', zebra: 'rgba(255,255,255,0.04)', glow: true, shadow: false, badge: accent, badgeInk: '#06121F', divider: false };
+    } else if (style === 'suizo'){
+      g.add(new Konva.Rect({ x: 0, y: 0, width: OUT.w, height: OUT.h, fill: '#FFFFFF' }));
+      st = { label: '#6B6B6B', title: '#111111', mineInk: '#111111', card: '#FFFFFF', header: accent, headerInk: '#fff', yes: accent, yesInk: '#fff', noRing: '#EDEDED', noX: '#BFBFBF', zebra: 'rgba(0,0,0,0.02)', glow: false, shadow: false, hairline: true, badge: '#111111', badgeInk: '#fff', divider: false };
+    } else if (style === 'bold'){
+      g.add(new Konva.Rect({ x: 0, y: 0, width: OUT.w, height: OUT.h, fill: '#FBF7F0' }));
+      st = { label: '#1A1614', title: accent, mineInk: '#ffffff', card: accent, header: accentDark(accent), headerInk: '#fff', yes: '#ffffff', yesInk: accent, noRing: '#E9E2D6', noX: '#A89F90', zebra: 'rgba(0,0,0,0.03)', glow: false, shadow: true, badge: accentDark(accent), badgeInk: '#fff', divider: false };
     } else {
-      st = { label: state.bg.color ? inkOn(state.bg.color) : ink, title: accent, card: shade(accent, 0.86), header: accent, headerInk: '#fff', yes: accent, yesInk: '#fff', noRing: '#e6e3de', noX: '#9a948c', zebra: 'rgba(0,0,0,0.035)', shadow: true, badge: accent, badgeInk: '#fff', divider: false };
+      st = { label: state.bg.color ? inkOn(state.bg.color) : ink, title: accent, mineInk: accent, card: shade(accent, 0.86), header: accent, headerInk: '#fff', yes: accent, yesInk: '#fff', noRing: '#e6e3de', noX: '#9a948c', zebra: 'rgba(0,0,0,0.035)', glow: false, shadow: true, badge: accent, badgeInk: '#fff', divider: false };
     }
     const safe = OUT.w * 0.08, top = OUT.h * 0.18;
     const tableW = OUT.w - safe * 2, x0 = safe;
@@ -1227,7 +1240,8 @@
       g.add(new Konva.Line({ points: [mineX + mineW, top + 6, mineX + mineW, top + tableH], stroke: '#D8CFC0', strokeWidth: 1.5, listening: false }));
     } else {
       const mineBody = new Konva.Rect({ x: mineX, y: mineTop, width: mineW, height: tableH + elev, fill: st.card, cornerRadius: 24 });
-      if (style === 'oscuro'){ mineBody.stroke(accent); mineBody.strokeWidth(1.5); mineBody.shadowColor(accent); mineBody.shadowBlur(50); mineBody.shadowOpacity(0.4); }
+      if (st.glow){ mineBody.stroke(accent); mineBody.strokeWidth(1.5); mineBody.shadowColor(accent); mineBody.shadowBlur(50); mineBody.shadowOpacity(0.4); }
+      else if (st.hairline){ mineBody.stroke('#E6E6E6'); mineBody.strokeWidth(1.5); }
       else { mineBody.shadowColor(accent); mineBody.shadowBlur(28); mineBody.shadowOpacity(0.28); mineBody.shadowOffsetY(8); }
       g.add(mineBody);
       g.add(new Konva.Rect({ x: mineX, y: mineTop, width: mineW, height: headH, fill: st.header, cornerRadius: 24 }));
@@ -1245,12 +1259,16 @@
     const cell = (cx, mid, yes, val, mineCol) => {
       if (val && val.trim()){
         const w2 = colW - 12;
-        g.add(new Konva.Text({ text: val.trim(), x: cx - w2 / 2, y: mid - rowH / 2, width: w2, height: rowH, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: mineCol ? '800' : '600', fontSize: 27, lineHeight: 1.1, fill: mineCol ? st.title : st.noX, listening: false }));
+        g.add(new Konva.Text({ text: val.trim(), x: cx - w2 / 2, y: mid - rowH / 2, width: w2, height: rowH, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: mineCol ? '800' : '600', fontSize: 27, lineHeight: 1.1, fill: mineCol ? st.mineInk : st.noX, listening: false }));
       } else comparaMark(g, cx, mid, yes, st);
     };
     rows.forEach((r, i) => {
       const ry = top + headH + i * rowH, mid = ry + rowH / 2;
-      g.add(new Konva.Text({ text: r.label, x: x0 + 4, y: ry, width: labelW - 20, height: rowH, verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '600', fontSize: 30, fill: st.label, listening: false }));
+      if (r.featured){   // fila destacada: el argumento más fuerte ancla el ojo
+        g.add(new Konva.Rect({ x: x0 - 8, y: ry, width: mineX - x0, height: rowH, fill: rgba(accent, 0.12), cornerRadius: 10, listening: false }));
+        g.add(new Konva.Rect({ x: x0 - 8, y: ry + 9, width: 5, height: rowH - 18, fill: accent, cornerRadius: 3, listening: false }));
+      }
+      g.add(new Konva.Text({ text: r.label, x: x0 + 8, y: ry, width: labelW - 24, height: rowH, verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: r.featured ? '800' : '600', fontSize: 30, fill: st.label, listening: false }));
       cell(colOtherX + colW / 2, mid, r.other, r.otherVal, false);
       cell(colMineX + colW / 2, mid, r.mine, r.mineVal, true);
     });
@@ -1581,6 +1599,12 @@
     sel.style.fontFamily = fontById(current).css;
     return field(label, sel);
   }
+  // select genérico (cuando hay muchas opciones para un segmentado)
+  function selectRow(label, opts, current, onPick){
+    const sel = h('select', { class: 'font-select', onchange(){ onPick(this.value); } });
+    opts.forEach(([v, t]) => { const o = h('option', { value: v }, t); if (v === current) o.selected = true; sel.append(o); });
+    return field(label, sel);
+  }
   // selector de tema (preset de marca): fondo + acento + tipografía coordinados
   function presetRow(){
     const wrap = h('div', { class: 'swatches', style: 'gap:.6rem' });
@@ -1645,6 +1669,7 @@
             h('input', { type: 'text', value: r.otherVal || '', placeholder: 'Otro (ej: Plástico)', style: 'flex:1', oninput(){ r.otherVal = this.value; render(); } })),
           h('div', { class: 'tgl-row' },
             tick('mine', 'Este'), tick('other', 'Otro'),
+            h('button', { class: 'tgl', type: 'button', 'aria-pressed': String(!!r.featured), style: r.featured ? 'flex:none;border-color:var(--accent);color:var(--accent)' : 'flex:none', title: 'Destacar esta fila', onclick(){ c.rows.forEach((x, j) => x.featured = j === i ? !x.featured : false); render(); redraw(); } }, '★'),
             h('button', { class: 'mini', type: 'button', title: 'Quitar fila', onclick(){ c.rows.splice(i, 1); render(); redraw(); } }, '×'))));
       });
       if (c.rows.length < 6) wrap.append(h('button', { class: 'add-btn', type: 'button', onclick(){ c.rows.push({ label: '', mine: true, other: false }); render(); redraw(); } }, '+ Agregar fila'));
@@ -1790,7 +1815,7 @@
     compara: root => { const c = state.layers.compara; root.append(
       toggleRow('Mostrar comparativa', c.on, v => { c.on = v; render(); renderToolbar(); }),
       c.on ? hint('Mostrá por qué tu producto gana. No nombres marcas de la competencia (ML lo penaliza).') : '',
-      segRow('Estilo', [['tarjeta', 'Tarjeta'], ['editorial', 'Editorial'], ['oscuro', 'Oscuro']], c.style, v => { c.style = v; render(); renderPanel(); }),
+      selectRow('Estilo', [['tarjeta', 'Tarjeta'], ['editorial', 'Editorial'], ['oscuro', 'Oscuro'], ['lujo', 'Lujo dorado'], ['tech', 'Tech glass'], ['suizo', 'Minimal suizo'], ['bold', 'Bold']], c.style, v => { c.style = v; render(); renderPanel(); }),
       textRow('Título', c.title, v => { c.title = v; render(); }, 'Ej: Por qué elegir este producto'),
       textRow('Tu columna', c.mine, v => { c.mine = v; render(); }, 'Ej: Este'),
       textRow('La otra', c.other, v => { c.other = v; render(); }, 'Ej: Lo común'),
