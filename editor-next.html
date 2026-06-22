@@ -307,6 +307,7 @@
       <a href="/marca">Mi marca</a>
       <a href="/cuenta">Cuenta</a>
       <button type="button" id="help-btn-m">¿Cómo funciona?</button>
+      <button type="button" id="new-prod" style="color:var(--accent)">＋ Producto nuevo</button>
     </div>
   </header>
 
@@ -485,7 +486,7 @@
     bg:      { color: '#ffffff', style: 'gradiente' },   // gradiente | plano | estudio | foco
     product: { scale: 1, shadow: false, shadowInt: 60, dx: 0, dy: 0 },
     realce:  { brillo: 100, contraste: 100, color: 100, nitidez: 0 },
-    retoque: { mode: 'borrar', size: 70 },   // pincel: borrar / restaurar (sacar logo, restos de fondo)
+    retoque: { mode: 'borrar', size: 70, hardness: 65 },   // pincel: borrar / restaurar (sacar logo, restos de fondo)
     layers: {
       // `pos`/`place` guardan las posiciones que el usuario arrastra (coords del lienzo 1200×1200).
       // Arrancan en null y se inicializan la 1ª vez desde el layout; después mandan lo arrastrado.
@@ -651,11 +652,12 @@
     computeCutout(); extractPalette(); if (!originalCutout) snapshotOriginal();
     // tocar el vacío deselecciona (salvo en modo Retoque, donde el toque pinta)
     stage.on('click tap', e => { if (state.selected === 'retoque') return; if (e.target === stage || e.target.getLayer() === bgLayer) selectPart(null); });
-    // ---- pincel de Retoque (borrar / restaurar) ----
+    // ---- pincel de Retoque (borrar / restaurar) con cursor en vivo + borde suave + trazo interpolado ----
     let painting = false;
-    stage.on('mousedown touchstart', () => { if (state.selected !== 'retoque') return; painting = true; retoqueStroke(); });
-    stage.on('mousemove touchmove', () => { if (painting && state.selected === 'retoque') retoqueStroke(); });
-    stage.on('mouseup touchend', () => { if (painting){ painting = false; saveImage(); render(); } });
+    stage.on('mousedown touchstart', () => { if (state.selected !== 'retoque') return; painting = true; lastPt = null; retoquePaint(); });
+    stage.on('mousemove touchmove', () => { if (state.selected !== 'retoque') return; updateBrushCursor(); if (painting) retoquePaint(); });
+    stage.on('mouseup touchend', () => { if (painting){ painting = false; lastPt = null; saveImage(); render(); } });
+    stage.on('mouseleave', () => { if (state.selected === 'retoque') clearBrushCursor(); });
     // seguridad: bloquear click derecho sobre el lienzo (que no puedan "Guardar imagen" sin procesar)
     const cont = stage.container();
     cont.addEventListener('contextmenu', e => e.preventDefault());
@@ -670,24 +672,49 @@
     stage.scale({ x: scale, y: scale });
     if (ready) render(); else stage.batchDraw();   // re-render para que los handles mantengan su tamaño en pantalla
   }
-  // pinta un trazo de Retoque sobre el recorte: borra (alfa) o restaura (desde el original)
-  function retoqueStroke(){
+  // ---- motor de pincel (estilo Adobe Express): estampa con borde suave + trazo interpolado ----
+  let lastPt = null, _stampKey = '', _stamp = null;
+  function brushStamp(r, hardness){
+    const key = Math.round(r) + '_' + hardness; if (key === _stampKey && _stamp) return _stamp;
+    const d = Math.max(2, Math.ceil(r * 2)), c = document.createElement('canvas'); c.width = c.height = d;
+    const x = c.getContext('2d'), g = x.createRadialGradient(r, r, 0, r, r, r), stop = Math.min(0.96, hardness);
+    g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(stop, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = g; x.beginPath(); x.arc(r, r, r, 0, Math.PI * 2); x.fill();
+    _stampKey = key; _stamp = c; return c;
+  }
+  function retoquePaint(){
     if (!productImg || !productBoxCache || !cutout) return;
     const box = productBoxCache, sc = stage.scaleX() || 1, p = stage.getPointerPosition(); if (!p) return;
-    const fx = (p.x / sc - box.x) / box.w, fy = (p.y / sc - box.y) / box.h;
-    if (fx < -0.05 || fx > 1.05 || fy < -0.05 || fy > 1.05) return;   // fuera del producto
-    const ix = cutout.x + fx * cutout.w, iy = cutout.y + fy * cutout.h, r = Math.max(6, state.retoque.size / box.w * cutout.w);
-    const ctx = productImg.getContext('2d');
-    ctx.save();
-    if (state.retoque.mode === 'restaurar' && originalCutout){
-      ctx.beginPath(); ctx.arc(ix, iy, r, 0, Math.PI * 2); ctx.clip(); ctx.drawImage(originalCutout, 0, 0);
-    } else {
-      ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(ix, iy, r, 0, Math.PI * 2); ctx.fill();
-    }
-    ctx.restore();
-    const node = productLayer.findOne('Image'); if (node){ if (node.isCached && node.isCached()) node.clearCache(); }
+    const ix = cutout.x + (p.x / sc - box.x) / box.w * cutout.w, iy = cutout.y + (p.y / sc - box.y) / box.h * cutout.h;
+    const r = Math.max(5, (state.retoque.size / 2) * (cutout.w / box.w)), hard = (state.retoque.hardness != null ? state.retoque.hardness : 65) / 100;
+    const stamp = brushStamp(r, hard), ctx = productImg.getContext('2d'), restore = state.retoque.mode === 'restaurar';
+    const put = (x, y) => {
+      if (restore){
+        if (!originalCutout) return;
+        const t = document.createElement('canvas'); t.width = t.height = Math.ceil(r * 2); const tc = t.getContext('2d');
+        tc.drawImage(originalCutout, -(x - r), -(y - r));
+        tc.globalCompositeOperation = 'destination-in'; tc.drawImage(stamp, 0, 0);
+        ctx.drawImage(t, x - r, y - r);
+      } else {
+        ctx.save(); ctx.globalCompositeOperation = 'destination-out'; ctx.drawImage(stamp, x - r, y - r); ctx.restore();
+      }
+    };
+    if (lastPt){ const dx = ix - lastPt.x, dy = iy - lastPt.y, dist = Math.hypot(dx, dy), steps = Math.max(1, Math.floor(dist / Math.max(2, r * 0.3))); for (let i = 1; i <= steps; i++) put(lastPt.x + dx * i / steps, lastPt.y + dy * i / steps); }
+    else put(ix, iy);
+    lastPt = { x: ix, y: iy };
+    const node = productLayer.findOne('Image'); if (node && node.isCached && node.isCached()) node.clearCache();
     productLayer.batchDraw();
   }
+  // círculo del pincel que sigue al cursor (doble trazo: se ve sobre claro y oscuro)
+  function updateBrushCursor(){
+    guideLayer.destroyChildren();
+    const p = stage.getPointerPosition(); if (!p){ guideLayer.batchDraw(); return; }
+    const sc = stage.scaleX() || 1, x = p.x / sc, y = p.y / sc, rad = state.retoque.size / 2;
+    guideLayer.add(new Konva.Circle({ x, y, radius: rad, stroke: 'rgba(0,0,0,0.55)', strokeWidth: px(3), listening: false }));
+    guideLayer.add(new Konva.Circle({ x, y, radius: rad, stroke: '#fff', strokeWidth: px(1.5), listening: false }));
+    guideLayer.batchDraw();
+  }
+  function clearBrushCursor(){ guideLayer.destroyChildren(); guideLayer.batchDraw(); }
 
   // ---- snapping: imanta a bordes/centro del producto, centro y bordes del lienzo ----
   function applySnap(x, y){
@@ -872,7 +899,7 @@
     if (!exporting && wmOn()) mainLayer.add(new Konva.Image({ image: wmCanvas(), x: 0, y: 0, width: OUT.w, height: OUT.h, listening: false }));
     // en modo Retoque: el fondo no captura clicks (para no deseleccionar) y el cursor es pincel
     if (bgLayer) bgLayer.listening(state.selected !== 'retoque');
-    if (stage) stage.container().style.cursor = state.selected === 'retoque' ? 'crosshair' : 'default';
+    if (stage) stage.container().style.cursor = state.selected === 'retoque' ? 'none' : 'default';
     stage.batchDraw();
   }
   const ink = '#241E1A';
@@ -1646,7 +1673,8 @@
     retoque: root => { const rt = state.retoque; root.append(
       hint('Pintá sobre la foto para BORRAR restos de fondo o un logo, o RESTAURAR lo que borraste de más. Soltá para aplicar.'),
       segRow('Modo', [['borrar', 'Borrar'], ['restaurar', 'Restaurar']], rt.mode, v => { rt.mode = v; renderPanel(); }),
-      sliderRow('Tamaño del pincel', rt.size, 20, 200, v => { rt.size = v; }, v => v + 'px')); },
+      sliderRow('Tamaño del pincel', rt.size, 20, 240, v => { rt.size = v; }, v => v + 'px'),
+      sliderRow('Suavizar bordes', rt.hardness, 0, 100, v => { rt.hardness = v; }, v => v + '%')); },
     realce: root => { const r = state.realce; root.append(
       hint('Hacé tu foto más nítida y vendedora. Tocá "Mejorar automáticamente" o ajustá a mano.'),
       h('button', { class: 'auto-btn', type: 'button', onclick(){ r.brillo = 108; r.contraste = 114; r.color = 116; r.nitidez = 35; render(); renderPanel(); } }, '✨ Mejorar automáticamente'),
@@ -2054,6 +2082,14 @@
   function closeHelp(){ helpBd.classList.remove('open'); }
   $('help-btn').addEventListener('click', openHelp);
   $('help-btn-m').addEventListener('click', openHelp);
+
+  // empezar un producto nuevo (descarta foto + placas, con confirmación)
+  $('new-prod').addEventListener('click', () => {
+    toggleMenu(false);
+    if (!confirm('¿Empezar un producto nuevo? Vas a perder la foto y las placas de este producto. Descargá la galería antes si la querés guardar.')) return;
+    clearSession();
+    location.href = location.pathname;   // vuelve a la pantalla de subir foto, limpio
+  });
   $('help-x').addEventListener('click', closeHelp);
   helpBd.addEventListener('click', e => { if (e.target === helpBd) closeHelp(); });
   $('help-reset').addEventListener('click', () => {
