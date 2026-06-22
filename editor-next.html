@@ -486,6 +486,7 @@
       compara: { on: false, mine: 'Este', other: 'Lo común', accent: '#1f9d55',
         rows: [{ label: 'Materiales que duran', mine: true, other: false }, { label: 'Listo para usar', mine: true, other: false }, { label: 'Garantía y soporte', mine: true, other: false }, { label: 'Precio justo', mine: true, other: true }] },
       social:  { on: false, rating: '4.6', count: '128', quote: 'Llegó en 2 días, igual que la foto.', sold: '500' },
+      panel:   { on: false, dark: true, items: [{ icon: 'bolt', title: 'Carga rápida', sub: '100% en 90 min' }, { icon: 'drop', title: 'Resistente al agua', sub: 'Norma IPX7' }, { icon: 'clock', title: '12 h de batería', sub: 'por carga' }, { icon: 'shield', title: 'Garantía 1 año', sub: '' }] },
       // placas estilo Mercado Libre (E13) — fieles a las publicaciones reales
       barra:   { on: false, left: 'NEGRO', right: '2 LTS', dark: true },
       lateral: { on: false, brand: 'AROMA INTENSO', size: '500 ML', soft: false, seal: '' },
@@ -494,7 +495,7 @@
     },
   };
   // partes con presencia en el lienzo (las que tienen capa propia)
-  const LAYER_IDS = ['dims', 'banner', 'feats', 'incluye', 'hero', 'garantia', 'compara', 'social', 'barra', 'lateral', 'pack', 'logo'];
+  const LAYER_IDS = ['dims', 'banner', 'feats', 'incluye', 'hero', 'garantia', 'compara', 'social', 'panel', 'barra', 'lateral', 'pack', 'logo'];
   // placas de "composición completa": ocultan el producto grande (dibujan lo suyo)
   const FULL_PLACAS = ['compara'];
   const isLayer = id => LAYER_IDS.includes(id);
@@ -515,15 +516,16 @@
     garantia:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z"/><path d="m9 12 2 2 4-4"/></svg>',
     compara: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h7v16H4zM13 4h7v16h-7z"/><path d="M6.5 9.5 8 11l2-2.5"/><path d="m16 9 2 2M18 9l-2 2"/></svg>',
     social:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.5 6.8 19.2l1-5.8L3.5 9.2l5.9-.9z"/></svg>',
+    panel:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="13" y="3" width="8" height="18" rx="2" fill="currentColor" stroke="none"/><circle cx="15.5" cy="7" r="1" fill="#fff"/><circle cx="15.5" cy="12" r="1" fill="#fff"/><circle cx="15.5" cy="17" r="1" fill="#fff"/><path d="M3 5h7M3 12h7M3 19h7"/></svg>',
     barra:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><rect x="3" y="18" width="18" height="3" rx="1.5" fill="currentColor"/></svg>',
     lateral: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="12" height="18" rx="2"/><rect x="18" y="3" width="3" height="18" rx="1.5" fill="currentColor"/></svg>',
     pack:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9.5 12 8v8M12 16h-1.5m1.5 0h1.5"/></svg>',
   };
-  const TLABEL = { fondo:'Fondo', realce:'Realce', producto:'Fotos', escena:'Escena IA', dims:'Medidas', feats:'Beneficios', incluye:'Qué incluye', logo:'Logo', banner:'Banner', hero:'Titular', garantia:'Confianza', compara:'Comparativa', social:'Reseñas', barra:'Barra', lateral:'Barra lateral', pack:'Cantidad' };
+  const TLABEL = { fondo:'Fondo', realce:'Realce', producto:'Fotos', escena:'Escena IA', dims:'Medidas', feats:'Beneficios', incluye:'Qué incluye', logo:'Logo', banner:'Banner', hero:'Titular', garantia:'Confianza', compara:'Comparativa', social:'Reseñas', panel:'Panel', barra:'Barra', lateral:'Barra lateral', pack:'Cantidad' };
   const GROUPS = [
     { label: 'Foto',        tools: ['fondo', 'realce', 'producto'] },
     { label: 'Información',  tools: ['dims', 'feats', 'incluye', 'banner'] },
-    { label: 'Vender',      tools: ['hero', 'garantia', 'compara', 'social'] },
+    { label: 'Vender',      tools: ['hero', 'panel', 'garantia', 'compara', 'social'] },
     { label: 'Marketplace', tools: ['barra', 'lateral', 'pack'] },
     { label: 'Marca',       tools: ['logo'] },
   ];
@@ -698,6 +700,7 @@
     if (L.social.on  && vp === 'social')  res.bottom += socialHeight() + 40 + OUT.h * 0.03;
     if (L.barra.on   && vp === 'barra')   res.bottom += OUT.h * 0.17 + OUT.h * 0.02;
     if (L.lateral.on && vp === 'lateral') res.right  += OUT.w * 0.27 + OUT.w * 0.02;
+    if (L.panel.on   && vp === 'panel')   res.right  += OUT.w * 0.42 + OUT.w * 0.02;
     const aw = OUT.w - res.left - res.right, ah = OUT.h - res.top - res.bottom;
     const bw = cutout.w, bh = cutout.h;   // bbox ajustado (sin padding transparente)
     // con banner/garantía/hero el producto se maximiza; con beneficios/incluye/dims/social, más chico
@@ -716,7 +719,7 @@
   }
   // ¿esta placa exige fondo blanco puro? (portada ML: sin gradiente/halo). El guardrail real
   // de plataforma se decide en otra fase; acá ya dejamos la portada limpia.
-  const PLACA_IDS = ['dims', 'banner', 'feats', 'incluye', 'hero', 'garantia', 'compara', 'social', 'barra', 'lateral', 'pack'];
+  const PLACA_IDS = ['dims', 'banner', 'feats', 'incluye', 'hero', 'garantia', 'compara', 'social', 'panel', 'barra', 'lateral', 'pack'];
   const isPortada = () => !PLACA_IDS.includes(visiblePlaca());
   function render(){
     bgLayer.destroyChildren(); productLayer.destroyChildren(); mainLayer.destroyChildren(); guideLayer.destroyChildren();
@@ -787,6 +790,7 @@
     if (state.layers.garantia.on&& vp === 'garantia')drawGarantia(box);
     if (state.layers.compara.on && vp === 'compara') drawCompara();
     if (state.layers.social.on  && vp === 'social')  drawSocial();
+    if (state.layers.panel.on   && vp === 'panel')   drawPanel();
     if (state.layers.barra.on   && vp === 'barra')   drawBarra();
     if (state.layers.lateral.on && vp === 'lateral') drawLateral();
     if (state.layers.pack.on    && vp === 'pack')    drawPack();
@@ -870,7 +874,18 @@
       // El texto se limita al ancho que entra hasta el borde del lienzo (envuelve, no se sale).
       const fitW = (offset) => Math.max(140, OUT.w - p.x - offset - 18);
       const accent = col, aDark = accentDark(col);
-      if (f.style === 'chips'){
+      if (f.style === 'spec'){
+        // chip rectangular sólido con gradiente (estilo specs de electrónica): "8 GB RAM"
+        const padX = 30, t = new Konva.Text({ text: s, fontFamily: ff.css, fontStyle: ff.w, fontSize: fs, fill: '#fff', listening: false });
+        const maxW = fitW(padX * 2); if (t.width() > maxW) t.width(maxW);
+        const bh = t.height() + 28, bw = t.width() + padX * 2;
+        const rect = new Konva.Rect({ x: 0, y: -bh / 2, width: bw, height: bh, cornerRadius: 14,
+          fillLinearGradientStartPoint: { x: 0, y: -bh / 2 }, fillLinearGradientEndPoint: { x: bw, y: bh / 2 },
+          fillLinearGradientColorStops: [0, accent, 1, aDark], listening: false });
+        rect.shadowColor('#1A1614'); rect.shadowBlur(22); rect.shadowOffsetY(10); rect.shadowOpacity(0.22); g.add(rect);
+        g.add(new Konva.Line({ points: [16, -bh / 2 + 4, bw - 16, -bh / 2 + 4], stroke: 'rgba(255,255,255,0.3)', strokeWidth: 1.5, lineCap: 'round', listening: false }));
+        t.position({ x: padX, y: -t.height() / 2 }); g.add(t);
+      } else if (f.style === 'chips'){
         // píldora de vidrio oscuro premium: sombra neutra suave (sin glow de color),
         // filo de luz arriba y un punto de acento sutil → elegante sobre cualquier foto.
         const padX = 30, dotR = 9, gapD = 18;
@@ -1111,6 +1126,37 @@
     g.on('click tap', () => selectPart('social')); mainLayer.add(g);
   }
 
+  // ---------- PANEL DE BENEFICIOS (estilo ML/A+): filas ícono + título + subtítulo ----------
+  function drawPanel(){
+    const pn = state.layers.panel, items = pn.items.filter(it => it.title && it.title.trim());
+    const accent = incluyeAccent(), aDark = accentDark(accent), dark = pn.dark, g = new Konva.Group();
+    const panelW = OUT.w * 0.42, x = OUT.w - panelW, safe = 56;
+    if (dark) g.add(new Konva.Rect({ x, y: 0, width: panelW, height: OUT.h, fill: '#141414' }));
+    const n = items.length || 1, top = OUT.h * 0.13, bottom = OUT.h * 0.09, areaH = OUT.h - top - bottom, rowH = areaH / n;
+    const iconC = x + safe, tileSize = 76, textX = x + safe + (dark ? 78 : tileSize + 28), tw = panelW - (textX - x) - safe;
+    const titleInk = dark ? '#ffffff' : INK, subInk = dark ? '#9CA0A6' : '#6B7280';
+    items.forEach((it, i) => {
+      const ry = top + i * rowH, mid = ry + rowH / 2;
+      if (i > 0) g.add(new Konva.Line({ points: [x + safe, ry, x + panelW - safe, ry], stroke: dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.10)', strokeWidth: 1.5, listening: false }));
+      if (dark){
+        drawGlyph(g, it.icon, iconC + 26, mid, 54, accent, 2.6);
+      } else {
+        const tile = new Konva.Rect({ x: iconC, y: mid - tileSize / 2, width: tileSize, height: tileSize, cornerRadius: 18,
+          fillLinearGradientStartPoint: { x: iconC, y: mid - tileSize / 2 }, fillLinearGradientEndPoint: { x: iconC + tileSize, y: mid + tileSize / 2 },
+          fillLinearGradientColorStops: [0, accent, 1, aDark] });
+        tile.shadowColor(accent); tile.shadowBlur(14); tile.shadowOffsetY(5); tile.shadowOpacity(0.4); g.add(tile);
+        drawGlyph(g, it.icon, iconC + tileSize / 2, mid, 42, '#ffffff', 2.6);
+      }
+      const tEl = new Konva.Text({ text: it.title, x: textX, width: tw, fontFamily: 'Manrope, sans-serif', fontStyle: '700', fontSize: 36, fill: titleInk, listening: false });
+      const hasSub = it.sub && it.sub.trim();
+      const sEl = hasSub ? new Konva.Text({ text: it.sub, x: textX, width: tw, fontFamily: 'Manrope, sans-serif', fontStyle: '400', fontSize: 25, fill: subInk, listening: false }) : null;
+      const totalH = tEl.height() + (sEl ? sEl.height() + 6 : 0);
+      tEl.y(mid - totalH / 2); g.add(tEl);
+      if (sEl){ sEl.y(tEl.y() + tEl.height() + 6); g.add(sEl); }
+    });
+    g.on('click tap', () => selectPart('panel')); mainLayer.add(g);
+  }
+
   // ---------- BARRA INFERIOR (estilo ML): marca izq + tamaño der ----------
   function drawBarra(){
     const b = state.layers.barra, g = new Konva.Group();
@@ -1305,7 +1351,7 @@
   }
   // ---- galería de plantillas: grilla de miniaturas con preview real del estilo ----
   const BANNER_TPLS = [{ id: 'solid', name: 'Barra' }, { id: 'outline', name: 'Con borde' }, { id: 'ribbon', name: 'Cinta' }, { id: 'pill', name: 'Píldora' }];
-  const FEAT_TPLS = [{ id: 'dots', name: 'Puntos' }, { id: 'chips', name: 'Etiquetas' }, { id: 'tag', name: 'Numerado' }, { id: 'check', name: 'Con tilde' }];
+  const FEAT_TPLS = [{ id: 'dots', name: 'Puntos' }, { id: 'chips', name: 'Etiquetas' }, { id: 'tag', name: 'Numerado' }, { id: 'check', name: 'Con tilde' }, { id: 'spec', name: 'Specs' }];
   function bannerThumbSVG(id, color){
     const head = '<svg viewBox="0 0 80 56" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="56" rx="6" fill="#fff"/><rect x="32" y="26" width="16" height="22" rx="3" fill="#e6ddcf"/>';
     const bar = id === 'outline' ? `<rect x="0" y="6" width="80" height="13" fill="${color}"/><rect x="4" y="9" width="72" height="7" fill="none" stroke="#fff" stroke-width="1.3"/>`
@@ -1317,7 +1363,8 @@
   function featThumbSVG(id, color){
     let rows = '';
     [16, 30, 44].forEach((y, k) => {
-      rows += id === 'chips' ? `<rect x="38" y="${y - 5}" width="36" height="10" rx="5" fill="${color}"/>`
+      rows += id === 'spec' ? `<rect x="38" y="${y - 6}" width="36" height="12" rx="3" fill="${color}"/>`
+        : id === 'chips' ? `<rect x="38" y="${y - 5}" width="36" height="10" rx="5" fill="${color}"/>`
         : id === 'tag' ? `<circle cx="42" cy="${y}" r="5" fill="${color}"/><text x="42" y="${y + 2.4}" font-size="6" font-weight="700" fill="#fff" text-anchor="middle">${k + 1}</text><rect x="51" y="${y - 2}" width="22" height="4" rx="2" fill="#d9d0c2"/>`
         : id === 'check' ? `<path d="M38 ${y} l3 3 l6 -7" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="51" y="${y - 2}" width="22" height="4" rx="2" fill="#d9d0c2"/>`
         : `<circle cx="40" cy="${y}" r="3" fill="${color}"/><rect x="47" y="${y - 2}" width="26" height="4" rx="2" fill="#d9d0c2"/>`;
@@ -1389,6 +1436,25 @@
     };
     redraw();
     return field('Sellos', wrap);
+  }
+  // editor de filas del panel: ícono + título + subtítulo (2 niveles)
+  function panelEditor(pn){
+    const wrap = h('div', {});
+    const redraw = () => {
+      wrap.innerHTML = '';
+      pn.items.forEach((it, i) => {
+        const sel = h('select', { class: 'font-select', style: 'flex:1', onchange(){ it.icon = this.value; render(); } });
+        ICON_OPTS.forEach(ic => { const o = h('option', { value: ic }, ICON_LABEL[ic] || ic); if (ic === it.icon) o.selected = true; sel.append(o); });
+        wrap.append(h('div', { class: 'row-col' },
+          h('div', { class: 'tgl-row' }, sel,
+            h('button', { class: 'mini', type: 'button', title: 'Quitar fila', onclick(){ pn.items.splice(i, 1); render(); redraw(); } }, '×')),
+          h('input', { type: 'text', value: it.title, placeholder: 'Título (ej: Carga rápida)', oninput(){ it.title = this.value; render(); } }),
+          h('input', { type: 'text', value: it.sub, placeholder: 'Detalle (ej: 100% en 90 min)', oninput(){ it.sub = this.value; render(); } })));
+      });
+      if (pn.items.length < 6) wrap.append(h('button', { class: 'add-btn', type: 'button', onclick(){ pn.items.push({ icon: 'star', title: '', sub: '' }); render(); redraw(); } }, '+ Agregar fila'));
+    };
+    redraw();
+    return field('Filas', wrap);
   }
   // editor de filas de comparativa: texto + tu columna ✓ + la otra ✓
   function comparaEditor(c){
@@ -1546,6 +1612,11 @@
       textRow('Cantidad de opiniones', s.count, v => { s.count = v; render(); }, 'Ej: 128'),
       textRow('Unidades vendidas', s.sold, v => { s.sold = v; render(); }, 'Ej: 500'),
       moreSection('social', textRow('Reseña destacada', s.quote, v => { s.quote = v; render(); }, 'Ej: Llegó en 2 días, igual que la foto.'))); },
+    panel: root => { const pn = state.layers.panel; root.append(
+      toggleRow('Mostrar panel', pn.on, v => { pn.on = v; render(); renderToolbar(); }),
+      hint('Lista de features con ícono + título + detalle (estilo ficha A+). Subí cada beneficio a una línea clara.'),
+      panelEditor(pn),
+      segRow('Estilo', [['true', 'Oscuro'], ['false', 'Claro']], String(pn.dark), v => { pn.dark = v === 'true'; render(); renderPanel(); })); },
     barra: root => { const b = state.layers.barra; root.append(
       toggleRow('Mostrar barra inferior', b.on, v => { b.on = v; render(); renderToolbar(); }),
       hint('Estilo Mercado Libre: variante a la izquierda + tamaño/cantidad a la derecha.'),
@@ -1696,6 +1767,7 @@
     if (L.lateral.on) out.push({ k: 'lateral', label: 'lateral' });
     if (L.pack.on) out.push({ k: 'pack', label: 'cantidad' });
     if (L.hero.on) out.push({ k: 'hero', label: 'titular' });
+    if (L.panel.on) out.push({ k: 'panel', label: 'panel' });
     if (L.feats.on) out.push({ k: 'feats', label: 'beneficios' });
     if (L.banner.on) out.push({ k: 'banner', label: 'banner' });
     if (L.dims.on) out.push({ k: 'dims', label: 'medidas' });
