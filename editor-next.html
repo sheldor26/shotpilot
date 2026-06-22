@@ -496,7 +496,7 @@
       // placas de conversión (E12)
       hero:    { on: false, eyebrow: '', headline: 'El detalle que se nota', sub: '', font: 'manrope', pos: 'left' },
       garantia:{ on: false, items: [{ icon: 'shield', text: 'Garantía 6 meses' }, { icon: 'truck', text: 'Envío a todo el país' }, { icon: 'ret', text: 'Devolución 30 días' }], accent: '#1f9d55' },
-      compara: { on: false, mine: 'Este', other: 'Lo común', accent: '#1f9d55',
+      compara: { on: false, mine: 'Este', other: 'Lo común', accent: '#1f9d55', style: 'tarjeta', font: 'manrope', badge: 'RECOMENDADO',
         rows: [{ label: 'Materiales que duran', mine: true, other: false }, { label: 'Listo para usar', mine: true, other: false }, { label: 'Garantía y soporte', mine: true, other: false }, { label: 'Precio justo', mine: true, other: true }] },
       social:  { on: false, rating: '4.6', count: '128', quote: 'Llegó en 2 días, igual que la foto.', sold: '500' },
       panel:   { on: false, dark: true, items: [{ icon: 'bolt', title: 'Carga rápida', sub: '100% en 90 min' }, { icon: 'drop', title: 'Resistente al agua', sub: 'Norma IPX7' }, { icon: 'clock', title: '12 h de batería', sub: 'por carga' }, { icon: 'shield', title: 'Garantía 1 año', sub: '' }] },
@@ -1124,46 +1124,64 @@
   }
 
   // ---------- COMPARATIVA: tabla "Este vs. lo común" (placa de composición completa) ----------
-  function comparaMark(g, cx, cy, yes, accent){
+  function comparaMark(g, cx, cy, yes, st){
     if (yes){
-      g.add(new Konva.Circle({ x: cx, y: cy, radius: 23, fill: accent, listening: false }));
-      g.add(new Konva.Line({ points: [cx - 10, cy + 1, cx - 3, cy + 8, cx + 11, cy - 8], stroke: '#fff', strokeWidth: 4.2, lineCap: 'round', lineJoin: 'round', listening: false }));
+      g.add(new Konva.Circle({ x: cx, y: cy, radius: 23, fill: st.yes, listening: false }));
+      g.add(new Konva.Line({ points: [cx - 10, cy + 1, cx - 3, cy + 8, cx + 11, cy - 8], stroke: st.yesInk, strokeWidth: 4.2, lineCap: 'round', lineJoin: 'round', listening: false }));
     } else {
-      g.add(new Konva.Circle({ x: cx, y: cy, radius: 23, fill: '#e6e3de', listening: false }));
-      g.add(new Konva.Line({ points: [cx - 8, cy - 8, cx + 8, cy + 8], stroke: '#9a948c', strokeWidth: 4, lineCap: 'round', listening: false }));
-      g.add(new Konva.Line({ points: [cx + 8, cy - 8, cx - 8, cy + 8], stroke: '#9a948c', strokeWidth: 4, lineCap: 'round', listening: false }));
+      g.add(new Konva.Circle({ x: cx, y: cy, radius: 23, fill: st.noRing, listening: false }));
+      g.add(new Konva.Line({ points: [cx - 8, cy - 8, cx + 8, cy + 8], stroke: st.noX, strokeWidth: 4, lineCap: 'round', listening: false }));
+      g.add(new Konva.Line({ points: [cx + 8, cy - 8, cx - 8, cy + 8], stroke: st.noX, strokeWidth: 4, lineCap: 'round', listening: false }));
     }
   }
   function drawCompara(){
-    const c = state.layers.compara, accent = c.accent || '#1f9d55', g = new Konva.Group();
+    const c = state.layers.compara, accent = c.accent || '#1f9d55', style = c.style || 'tarjeta', g = new Konva.Group();
     const rows = c.rows.filter(r => r.label && r.label.trim());
-    const tInk = state.bg.color ? inkOn(state.bg.color) : ink;
+    const tf = fontById(c.font || 'manrope');
+    // paleta por estilo (monocromo + 1 acento)
+    let st;
+    if (style === 'oscuro'){
+      g.add(new Konva.Rect({ x: 0, y: 0, width: OUT.w, height: OUT.h, fillLinearGradientStartPoint: { x: 0, y: 0 }, fillLinearGradientEndPoint: { x: 0, y: OUT.h }, fillLinearGradientColorStops: [0, '#17171E', 1, '#0B0B0F'] }));
+      st = { label: '#C7C7D0', title: accent, card: '#1C1C24', header: accent, headerInk: '#fff', yes: accent, yesInk: '#0B0B0F', noRing: '#2A2A33', noX: '#5A5A66', zebra: 'rgba(255,255,255,0.05)', shadow: true, badge: accent, badgeInk: '#fff', divider: false };
+    } else if (style === 'editorial'){
+      g.add(new Konva.Rect({ x: 0, y: 0, width: OUT.w, height: OUT.h, fill: '#FAF7F0' }));
+      st = { label: '#3A352E', title: '#1A1614', card: null, header: null, headerInk: '#1A1614', yes: '#1A1614', yesInk: '#FAF7F0', noRing: '#ECE5D8', noX: '#B9B0A0', zebra: 'rgba(0,0,0,0.025)', shadow: false, badge: '#1A1614', badgeInk: '#FAF7F0', divider: true };
+    } else {
+      st = { label: state.bg.color ? inkOn(state.bg.color) : ink, title: accent, card: shade(accent, 0.86), header: accent, headerInk: '#fff', yes: accent, yesInk: '#fff', noRing: '#e6e3de', noX: '#9a948c', zebra: 'rgba(0,0,0,0.035)', shadow: true, badge: accent, badgeInk: '#fff', divider: false };
+    }
     const safe = OUT.w * 0.08, top = OUT.h * 0.18;
     const tableW = OUT.w - safe * 2, x0 = safe;
     const labelW = tableW * 0.50, colW = tableW * 0.25;
     const colOtherX = x0 + labelW, colMineX = x0 + labelW + colW;
     const headH = 92, rowH = Math.min(118, (OUT.h * 0.56) / Math.max(rows.length, 1)), tableH = headH + rows.length * rowH;
-    const elev = 28, mineX = colMineX - 8, mineW = colW + 16, mineTop = top - elev;   // columna propia elevada
-    g.add(new Konva.Text({ text: 'POR QUÉ ESTE', x: x0, y: top - 92, width: tableW, align: 'center', fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 34, letterSpacing: 4, fill: accent }));
-    // zebra striping en las filas (lado izquierdo, no bajo la columna resaltada)
-    rows.forEach((r, i) => { if (i % 2 === 1) g.add(new Konva.Rect({ x: x0, y: top + headH + i * rowH, width: mineX - x0, height: rowH, fill: 'rgba(0,0,0,0.035)', listening: false })); });
-    // columna "Este" resaltada y FLOTANDO (cuerpo claro + header sólido + sombra)
-    const mineBody = new Konva.Rect({ x: mineX, y: mineTop, width: mineW, height: tableH + elev, fill: shade(accent, 0.86), cornerRadius: 24 });
-    mineBody.shadowColor(accent); mineBody.shadowBlur(28); mineBody.shadowOpacity(0.28); mineBody.shadowOffsetY(8); g.add(mineBody);
-    g.add(new Konva.Rect({ x: mineX, y: mineTop, width: mineW, height: headH, fill: accent, cornerRadius: 24 }));
-    g.add(new Konva.Rect({ x: mineX, y: mineTop + headH - 24, width: mineW, height: 24, fill: accent }));
-    // badge "RECOMENDADO" sobre la columna
-    const bg2 = new Konva.Rect({ x: mineX + mineW / 2 - 110, y: mineTop - 50, width: 220, height: 44, cornerRadius: 22, fill: accent });
-    bg2.shadowColor('#000'); bg2.shadowBlur(12); bg2.shadowOpacity(0.18); g.add(bg2);
-    g.add(new Konva.Text({ text: 'RECOMENDADO', x: mineX + mineW / 2 - 110, y: mineTop - 50, width: 220, height: 44, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 22, letterSpacing: 1, fill: '#fff', listening: false }));
-    g.add(new Konva.Text({ text: c.other || 'Lo común', x: colOtherX, y: top, width: colW, height: headH, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '700', fontSize: 30, fill: tInk }));
-    g.add(new Konva.Text({ text: c.mine || 'Este', x: mineX, y: mineTop, width: mineW, height: headH, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 32, fill: '#fff' }));
+    const elev = 28, mineX = colMineX - 8, mineW = colW + 16, mineTop = top - elev;
+    g.add(new Konva.Text({ text: 'POR QUÉ ESTE', x: x0, y: top - 92, width: tableW, align: 'center', fontFamily: tf.css, fontStyle: tf.w, fontSize: 36, letterSpacing: 3, fill: st.title }));
+    rows.forEach((r, i) => { if (i % 2 === 1) g.add(new Konva.Rect({ x: x0, y: top + headH + i * rowH, width: mineX - x0, height: rowH, fill: st.zebra, listening: false })); });
+    // columna ganadora: tarjeta flotante / borde+glow (oscuro) / divisor (editorial)
+    if (st.divider){
+      g.add(new Konva.Line({ points: [mineX, top + 6, mineX, top + tableH ], stroke: '#D8CFC0', strokeWidth: 1.5, listening: false }));
+      g.add(new Konva.Line({ points: [mineX + mineW, top + 6, mineX + mineW, top + tableH], stroke: '#D8CFC0', strokeWidth: 1.5, listening: false }));
+    } else {
+      const mineBody = new Konva.Rect({ x: mineX, y: mineTop, width: mineW, height: tableH + elev, fill: st.card, cornerRadius: 24 });
+      if (style === 'oscuro'){ mineBody.stroke(accent); mineBody.strokeWidth(1.5); mineBody.shadowColor(accent); mineBody.shadowBlur(50); mineBody.shadowOpacity(0.4); }
+      else { mineBody.shadowColor(accent); mineBody.shadowBlur(28); mineBody.shadowOpacity(0.28); mineBody.shadowOffsetY(8); }
+      g.add(mineBody);
+      g.add(new Konva.Rect({ x: mineX, y: mineTop, width: mineW, height: headH, fill: st.header, cornerRadius: 24 }));
+      g.add(new Konva.Rect({ x: mineX, y: mineTop + headH - 24, width: mineW, height: 24, fill: st.header }));
+    }
+    // badge sobre la columna
+    if (c.badge && c.badge.trim()){
+      const bw2 = Math.max(180, c.badge.length * 14 + 60), bg2 = new Konva.Rect({ x: mineX + mineW / 2 - bw2 / 2, y: mineTop - 50, width: bw2, height: 44, cornerRadius: 22, fill: st.badge });
+      bg2.shadowColor('#000'); bg2.shadowBlur(12); bg2.shadowOpacity(0.18); g.add(bg2);
+      g.add(new Konva.Text({ text: c.badge.toUpperCase(), x: mineX + mineW / 2 - bw2 / 2, y: mineTop - 50, width: bw2, height: 44, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 22, letterSpacing: 1, fill: st.badgeInk, listening: false }));
+    }
+    g.add(new Konva.Text({ text: c.other || 'Lo común', x: colOtherX, y: top, width: colW, height: headH, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '700', fontSize: 30, fill: st.label }));
+    g.add(new Konva.Text({ text: c.mine || 'Este', x: mineX, y: mineTop, width: mineW, height: headH, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 32, fill: st.headerInk }));
     rows.forEach((r, i) => {
       const ry = top + headH + i * rowH, mid = ry + rowH / 2;
-      const lbl = new Konva.Text({ text: r.label, x: x0 + 4, y: ry, width: labelW - 20, height: rowH, verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '600', fontSize: 30, fill: tInk, listening: false });
-      g.add(lbl);
-      comparaMark(g, colOtherX + colW / 2, mid, r.other, accent);
-      comparaMark(g, colMineX + colW / 2, mid, r.mine, accent);
+      g.add(new Konva.Text({ text: r.label, x: x0 + 4, y: ry, width: labelW - 20, height: rowH, verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '600', fontSize: 30, fill: st.label, listening: false }));
+      comparaMark(g, colOtherX + colW / 2, mid, r.other, st);
+      comparaMark(g, colMineX + colW / 2, mid, r.mine, st);
     });
     g.on('click tap', () => selectPart('compara')); mainLayer.add(g);
   }
@@ -1697,10 +1715,14 @@
     compara: root => { const c = state.layers.compara; root.append(
       toggleRow('Mostrar comparativa', c.on, v => { c.on = v; render(); renderToolbar(); }),
       c.on ? hint('Mostrá por qué tu producto gana. No nombres marcas de la competencia (ML lo penaliza).') : '',
+      segRow('Estilo', [['tarjeta', 'Tarjeta'], ['editorial', 'Editorial'], ['oscuro', 'Oscuro']], c.style, v => { c.style = v; render(); renderPanel(); }),
       textRow('Tu columna', c.mine, v => { c.mine = v; render(); }, 'Ej: Este'),
       textRow('La otra', c.other, v => { c.other = v; render(); }, 'Ej: Lo común'),
       comparaEditor(c),
-      colorRow('Color', withPalette(['#1f9d55', '#1B49B8', '#d8381f', '#241E1A']), c.accent, v => { c.accent = v; render(); renderPanel(); })); },
+      colorRow('Color', withPalette(['#1f9d55', '#1B49B8', '#d8381f', '#241E1A', '#b8924a']), c.accent, v => { c.accent = v; render(); renderPanel(); }),
+      moreSection('compara',
+        fontRow('Tipografía del título', c.font, v => { c.font = v; loadFontThen(v, render); }),
+        textRow('Etiqueta destacada', c.badge, v => { c.badge = v; render(); }, 'Ej: LA QUE CONVIENE'))); },
     social: root => { const s = state.layers.social; root.append(
       toggleRow('Mostrar reseñas', s.on, v => { s.on = v; render(); renderToolbar(); }),
       hint('Usá el rating y las opiniones REALES de tu publicación. No inventes números. Un 4,5 vende más que un 5,0 perfecto (genera más confianza).'),
