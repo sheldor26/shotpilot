@@ -486,11 +486,15 @@
       compara: { on: false, mine: 'Este', other: 'Lo común', accent: '#1f9d55',
         rows: [{ label: 'Materiales que duran', mine: true, other: false }, { label: 'Listo para usar', mine: true, other: false }, { label: 'Garantía y soporte', mine: true, other: false }, { label: 'Precio justo', mine: true, other: true }] },
       social:  { on: false, rating: '4.6', count: '128', quote: 'Llegó en 2 días, igual que la foto.', sold: '500' },
+      // placas estilo Mercado Libre (E13) — fieles a las publicaciones reales
+      barra:   { on: false, left: 'NEGRO', right: '2 LTS', dark: true },
+      lateral: { on: false, brand: 'AROMA INTENSO', size: '500 ML', soft: false, seal: '' },
+      pack:    { on: false, qty: '6', label: 'UNIDADES', dark: true },
       logo:    { on: false, text: 'TU MARCA', corner: 'br', size: 18, opacity: 100, place: null },
     },
   };
   // partes con presencia en el lienzo (las que tienen capa propia)
-  const LAYER_IDS = ['dims', 'banner', 'feats', 'incluye', 'hero', 'garantia', 'compara', 'social', 'logo'];
+  const LAYER_IDS = ['dims', 'banner', 'feats', 'incluye', 'hero', 'garantia', 'compara', 'social', 'barra', 'lateral', 'pack', 'logo'];
   // placas de "composición completa": ocultan el producto grande (dibujan lo suyo)
   const FULL_PLACAS = ['compara'];
   const isLayer = id => LAYER_IDS.includes(id);
@@ -511,12 +515,16 @@
     garantia:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z"/><path d="m9 12 2 2 4-4"/></svg>',
     compara: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h7v16H4zM13 4h7v16h-7z"/><path d="M6.5 9.5 8 11l2-2.5"/><path d="m16 9 2 2M18 9l-2 2"/></svg>',
     social:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.5 6.8 19.2l1-5.8L3.5 9.2l5.9-.9z"/></svg>',
+    barra:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><rect x="3" y="18" width="18" height="3" rx="1.5" fill="currentColor"/></svg>',
+    lateral: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="12" height="18" rx="2"/><rect x="18" y="3" width="3" height="18" rx="1.5" fill="currentColor"/></svg>',
+    pack:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9.5 12 8v8M12 16h-1.5m1.5 0h1.5"/></svg>',
   };
-  const TLABEL = { fondo:'Fondo', realce:'Realce', producto:'Fotos', escena:'Escena IA', dims:'Medidas', feats:'Beneficios', incluye:'Qué incluye', logo:'Logo', banner:'Banner', hero:'Titular', garantia:'Confianza', compara:'Comparativa', social:'Reseñas' };
+  const TLABEL = { fondo:'Fondo', realce:'Realce', producto:'Fotos', escena:'Escena IA', dims:'Medidas', feats:'Beneficios', incluye:'Qué incluye', logo:'Logo', banner:'Banner', hero:'Titular', garantia:'Confianza', compara:'Comparativa', social:'Reseñas', barra:'Barra', lateral:'Barra lateral', pack:'Cantidad' };
   const GROUPS = [
     { label: 'Foto',        tools: ['fondo', 'realce', 'producto'] },
     { label: 'Información',  tools: ['dims', 'feats', 'incluye', 'banner'] },
     { label: 'Vender',      tools: ['hero', 'garantia', 'compara', 'social'] },
+    { label: 'Marketplace', tools: ['barra', 'lateral', 'pack'] },
     { label: 'Marca',       tools: ['logo'] },
   ];
   // Escena IA se ocultó (E10): no mostrar features "pronto" hasta que funcionen. Vuelve cuando esté lista.
@@ -688,6 +696,8 @@
     if (L.hero.on    && vp === 'hero')    res[L.hero.pos === 'right' ? 'right' : 'left'] += OUT.w * 0.46;
     if (L.garantia.on&& vp === 'garantia')res.bottom += OUT.h * 0.18;
     if (L.social.on  && vp === 'social')  res.bottom += socialHeight() + 40 + OUT.h * 0.03;
+    if (L.barra.on   && vp === 'barra')   res.bottom += OUT.h * 0.17 + OUT.h * 0.02;
+    if (L.lateral.on && vp === 'lateral') res.right  += OUT.w * 0.27 + OUT.w * 0.02;
     const aw = OUT.w - res.left - res.right, ah = OUT.h - res.top - res.bottom;
     const bw = cutout.w, bh = cutout.h;   // bbox ajustado (sin padding transparente)
     // con banner/garantía/hero el producto se maximiza; con beneficios/incluye/dims/social, más chico
@@ -706,7 +716,7 @@
   }
   // ¿esta placa exige fondo blanco puro? (portada ML: sin gradiente/halo). El guardrail real
   // de plataforma se decide en otra fase; acá ya dejamos la portada limpia.
-  const PLACA_IDS = ['dims', 'banner', 'feats', 'incluye', 'hero', 'garantia', 'compara', 'social'];
+  const PLACA_IDS = ['dims', 'banner', 'feats', 'incluye', 'hero', 'garantia', 'compara', 'social', 'barra', 'lateral', 'pack'];
   const isPortada = () => !PLACA_IDS.includes(visiblePlaca());
   function render(){
     bgLayer.destroyChildren(); productLayer.destroyChildren(); mainLayer.destroyChildren(); guideLayer.destroyChildren();
@@ -777,6 +787,9 @@
     if (state.layers.garantia.on&& vp === 'garantia')drawGarantia(box);
     if (state.layers.compara.on && vp === 'compara') drawCompara();
     if (state.layers.social.on  && vp === 'social')  drawSocial();
+    if (state.layers.barra.on   && vp === 'barra')   drawBarra();
+    if (state.layers.lateral.on && vp === 'lateral') drawLateral();
+    if (state.layers.pack.on    && vp === 'pack')    drawPack();
     if (state.layers.logo.on && !cleanCover) drawLogo();   // sin logo en la portada ML
     if (!cleanCover) drawPlateNumber();                    // numeración (no en la portada ML)
     drawSelection(box);
@@ -1098,6 +1111,56 @@
     g.on('click tap', () => selectPart('social')); mainLayer.add(g);
   }
 
+  // ---------- BARRA INFERIOR (estilo ML): marca izq + tamaño der ----------
+  function drawBarra(){
+    const b = state.layers.barra, g = new Konva.Group();
+    const barH = OUT.h * 0.17, y = OUT.h - barH, pad = 72;
+    const fillCol = b.dark ? '#111111' : incluyeAccent(), tcol = b.dark ? '#ffffff' : inkOn(fillCol);
+    g.add(new Konva.Rect({ x: 0, y, width: OUT.w, height: barH, fill: fillCol }));
+    g.add(new Konva.Text({ text: (b.left || '').toUpperCase(), x: pad, y, width: OUT.w * 0.5 - pad * 1.3, height: barH, verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 58, letterSpacing: 1, fill: tcol, listening: false }));
+    g.add(new Konva.Text({ text: (b.right || '').toUpperCase(), x: OUT.w * 0.5, y, width: OUT.w * 0.5 - pad, height: barH, align: 'right', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 66, letterSpacing: 1, fill: tcol, listening: false }));
+    g.on('click tap', () => selectPart('barra')); mainLayer.add(g);
+  }
+
+  // ---------- BARRA LATERAL VERTICAL (estilo ML): marca rotada + tamaño + sello ----------
+  function drawLateral(){
+    const l = state.layers.lateral, g = new Konva.Group();
+    const barW = OUT.w * 0.27, x = OUT.w - barW;
+    const fillCol = l.soft ? shade(incluyeAccent(), 0.86) : incluyeAccent(), tcol = l.soft ? '#1A1614' : inkOn(fillCol);
+    g.add(new Konva.Rect({ x, y: 0, width: barW, height: OUT.h, fill: fillCol }));
+    // bloque de tamaño abajo (tono distinto)
+    const boxH = OUT.h * 0.16, boxY = OUT.h - boxH;
+    g.add(new Konva.Rect({ x, y: boxY, width: barW, height: boxH, fill: l.soft ? shade(incluyeAccent(), 0.74) : shade(fillCol, -0.16) }));
+    g.add(new Konva.Text({ text: l.size || '', x, y: boxY, width: barW, height: boxH, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 60, fill: tcol, listening: false }));
+    // marca rotada -90, centrada en el área sobre el bloque de tamaño
+    let fs = 66; const span = OUT.h - boxH - 120;
+    const t = new Konva.Text({ text: (l.brand || '').toUpperCase(), fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: fs, letterSpacing: 3, fill: tcol, listening: false });
+    while (t.width() > span && fs > 34){ fs -= 4; t.fontSize(fs); }
+    t.offsetX(t.width() / 2); t.offsetY(t.height() / 2);
+    const tg = new Konva.Group({ x: x + barW / 2, y: (OUT.h - boxH) / 2, rotation: -90 }); tg.add(t); g.add(tg);
+    // sello opcional (badge negro arriba a la izquierda, sobre el producto)
+    if (l.seal && l.seal.trim()){
+      const sr = 78, scx = 150, scy = 150;
+      const sc = new Konva.Circle({ x: scx, y: scy, radius: sr, fill: '#111111' });
+      sc.shadowColor('#000'); sc.shadowBlur(16); sc.shadowOpacity(0.2); g.add(sc);
+      g.add(new Konva.Text({ text: l.seal.toUpperCase(), x: scx - sr, y: scy - sr, width: sr * 2, height: sr * 2, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 26, lineHeight: 1.1, letterSpacing: 1, fill: '#fff', listening: false }));
+    }
+    g.on('click tap', () => selectPart('lateral')); mainLayer.add(g);
+  }
+
+  // ---------- BADGE DE CANTIDAD (estilo ML): círculo ×N para packs ----------
+  function drawPack(){
+    const p = state.layers.pack, g = new Konva.Group();
+    const d = 300, cx = OUT.w - 70 - d / 2, cy = 70 + d / 2;
+    const fillCol = p.dark ? '#111111' : incluyeAccent(), tcol = p.dark ? '#ffffff' : inkOn(fillCol);
+    const c = new Konva.Circle({ x: cx, y: cy, radius: d / 2, fill: fillCol });
+    c.shadowColor('#000'); c.shadowBlur(30); c.shadowOpacity(0.18); c.shadowOffsetY(6); g.add(c);
+    const hasLabel = p.label && p.label.trim();
+    g.add(new Konva.Text({ text: '×' + (p.qty || '1'), x: cx - d / 2, y: cy - d / 2, width: d, height: hasLabel ? d * 0.82 : d, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 150, fill: tcol, listening: false }));
+    if (hasLabel) g.add(new Konva.Text({ text: p.label.toUpperCase(), x: cx - d / 2, y: cy + d * 0.2, width: d, align: 'center', fontFamily: 'Manrope, sans-serif', fontStyle: '700', fontSize: 30, letterSpacing: 2, fill: tcol, listening: false }));
+    g.on('click tap', () => selectPart('pack')); mainLayer.add(g);
+  }
+
   // numeración de placas "02 / 08" en una esquina fija → sensación de serie/marca
   function drawPlateNumber(){
     const order = galleryOrder(); if (order.length < 2) return;
@@ -1106,7 +1169,8 @@
     const tInk = state.bg.color ? inkOn(state.bg.color) : ink;
     // por defecto arriba a la derecha; en el hero va del lado del texto (el producto sangra al otro lado)
     let nx = OUT.w - 220, align = 'right';
-    if (key === 'hero' && state.layers.hero.pos === 'left'){ nx = 56; align = 'left'; }
+    // movés el número al lado libre cuando hay algo pegado arriba a la derecha
+    if ((key === 'hero' && state.layers.hero.pos === 'left') || key === 'pack' || key === 'lateral'){ nx = 56; align = 'left'; }
     mainLayer.add(new Konva.Text({ text: `${String(i + 1).padStart(2, '0')} / ${String(order.length).padStart(2, '0')}`,
       x: nx, y: 56, width: 164, align, fontFamily: 'Manrope, sans-serif', fontStyle: '700', fontSize: 28, letterSpacing: 2, fill: tInk, opacity: 0.4, listening: false }));
   }
@@ -1482,6 +1546,25 @@
       textRow('Cantidad de opiniones', s.count, v => { s.count = v; render(); }, 'Ej: 128'),
       textRow('Unidades vendidas', s.sold, v => { s.sold = v; render(); }, 'Ej: 500'),
       moreSection('social', textRow('Reseña destacada', s.quote, v => { s.quote = v; render(); }, 'Ej: Llegó en 2 días, igual que la foto.'))); },
+    barra: root => { const b = state.layers.barra; root.append(
+      toggleRow('Mostrar barra inferior', b.on, v => { b.on = v; render(); renderToolbar(); }),
+      hint('Estilo Mercado Libre: variante a la izquierda + tamaño/cantidad a la derecha.'),
+      textRow('Texto izquierda', b.left, v => { b.left = v; render(); }, 'Ej: NEGRO'),
+      textRow('Texto derecha (tamaño)', b.right, v => { b.right = v; render(); }, 'Ej: 2 LTS'),
+      segRow('Color', [['true', 'Negro'], ['false', 'De marca']], String(b.dark), v => { b.dark = v === 'true'; render(); renderPanel(); })); },
+    lateral: root => { const l = state.layers.lateral; root.append(
+      toggleRow('Mostrar barra lateral', l.on, v => { l.on = v; render(); renderToolbar(); }),
+      hint('Estilo packaging: marca/descriptor vertical + tamaño abajo. Ideal botellas y frascos.'),
+      textRow('Marca / descriptor', l.brand, v => { l.brand = v; render(); }, 'Ej: AROMA INTENSO'),
+      textRow('Tamaño', l.size, v => { l.size = v; render(); }, 'Ej: 500 ML'),
+      segRow('Estilo', [['false', 'De marca'], ['true', 'Pastel']], String(l.soft), v => { l.soft = v === 'true'; render(); renderPanel(); }),
+      moreSection('lateral', textRow('Sello (opcional)', l.seal, v => { l.seal = v; render(); }, 'Ej: Sin TACC'))); },
+    pack: root => { const p = state.layers.pack; root.append(
+      toggleRow('Mostrar cantidad', p.on, v => { p.on = v; render(); renderToolbar(); }),
+      hint('Para packs y combos: el círculo grande ×N justifica el precio del pack.'),
+      textRow('Cantidad', p.qty, v => { p.qty = v; render(); }, 'Ej: 6'),
+      textRow('Etiqueta', p.label, v => { p.label = v; render(); }, 'Ej: UNIDADES'),
+      segRow('Color', [['true', 'Negro'], ['false', 'De marca']], String(p.dark), v => { p.dark = v === 'true'; render(); renderPanel(); })); },
     logo: root => { const l = state.layers.logo; root.append(
       toggleRow('Mostrar logo', l.on, v => { l.on = v; render(); renderToolbar(); }),
       l.on ? hint('Arrastrá el logo para moverlo. Seleccionado, redimensionalo o giralo desde las esquinas.') : '',
@@ -1609,6 +1692,9 @@
   function galleryOrder(){
     const L = state.layers, out = [{ k: 'clean', label: 'portada' }];
     // orden del embudo: captar → desear → resolver → confianza → cerrar
+    if (L.barra.on) out.push({ k: 'barra', label: 'barra' });
+    if (L.lateral.on) out.push({ k: 'lateral', label: 'lateral' });
+    if (L.pack.on) out.push({ k: 'pack', label: 'cantidad' });
     if (L.hero.on) out.push({ k: 'hero', label: 'titular' });
     if (L.feats.on) out.push({ k: 'feats', label: 'beneficios' });
     if (L.banner.on) out.push({ k: 'banner', label: 'banner' });
