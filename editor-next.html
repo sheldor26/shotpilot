@@ -470,7 +470,7 @@
     selected: null,
     platform: 'ml',   // ml | ig | tn — regla de portada (ML exige fondo blanco sin texto/logo)
     theme:   { id: 'limpio', accent: '#d8381f', font: 'manrope', head: 'manrope' },   // look de marca (color+tipografía coherentes)
-    bg:      { color: '#ffffff' },
+    bg:      { color: '#ffffff', style: 'gradiente' },   // gradiente | plano | estudio | foco
     product: { scale: 1, shadow: false, shadowInt: 60 },
     realce:  { brillo: 100, contraste: 100, color: 100, nitidez: 0 },
     layers: {
@@ -479,7 +479,7 @@
       dims:    { on: false, unit: 'cm', alto: '14', ancho: '6', prof: '', pos: null, stroke: 3, labelSize: 34 },
       banner:  { on: false, text: 'ENVÍO GRATIS', color: '#1B49B8', pos: 'top', place: null, textColor: '#ffffff', fontSize: 52, textShadow: false, opacity: 100, style: 'solid' },
       feats:   { on: false, items: ['Larga duración', 'Fragancia amaderada', 'Frasco de vidrio'], pos: null, bulletColor: '#d8381f', fontSize: 40, style: 'chips', font: 'manrope', connect: true },
-      incluye: { on: false, items: ['Perfume 100 ml', 'Estuche original'], title: 'INCLUYE' },
+      incluye: { on: false, items: ['Perfume 100 ml', 'Estuche original'], title: 'INCLUYE', accent: '', dark: false },
       // placas de conversión (E12)
       hero:    { on: false, eyebrow: '', headline: 'El detalle que se nota', sub: '', font: 'manrope', pos: 'left' },
       garantia:{ on: false, items: [{ icon: 'shield', text: 'Garantía 6 meses' }, { icon: 'truck', text: 'Envío a todo el país' }, { icon: 'ret', text: 'Devolución 30 días' }], accent: '#1f9d55' },
@@ -730,33 +730,43 @@
       const r = new Konva.Rect({ x: 0, y: 0, width: OUT.w, height: OUT.h, fill: '#ffffff' });
       r.on('click tap', () => selectPart('fondo')); bgLayer.add(r);
     } else if (state.bg.color){
-      const base = state.bg.color;
-      // fondo con profundidad: gradiente radial sutil (centro apenas más claro, bordes más oscuros).
-      const r = new Konva.Rect({ x: 0, y: 0, width: OUT.w, height: OUT.h,
-        fillRadialGradientStartPoint: { x: OUT.w / 2, y: OUT.h * 0.42 },
-        fillRadialGradientEndPoint: { x: OUT.w / 2, y: OUT.h * 0.42 },
-        fillRadialGradientStartRadius: 0, fillRadialGradientEndRadius: OUT.w * 0.72,
-        fillRadialGradientColorStops: [0, shade(base, portada ? 0.0 : 0.05), 1, shade(base, portada ? -0.02 : -0.08)] });
-      r.on('click tap', () => selectPart('fondo')); bgLayer.add(r);
-      // mesh: blob de acento difuso en una esquina → fondo con color de marca, no plano
-      if (!portada){
-        const acc = state.theme.accent, br = OUT.w * 0.62;
-        bgLayer.add(new Konva.Circle({ x: OUT.w * 0.92, y: OUT.h * 0.08, radius: br,
-          fillRadialGradientStartPoint: { x: 0, y: 0 }, fillRadialGradientEndPoint: { x: 0, y: 0 },
-          fillRadialGradientStartRadius: 0, fillRadialGradientEndRadius: br,
-          fillRadialGradientColorStops: [0, rgba(acc, 0.14), 1, rgba(acc, 0)], listening: false }));
+      const base = state.bg.color, style = state.bg.style || 'gradiente', acc = state.theme.accent;
+      const onClick = r => { r.on('click tap', () => selectPart('fondo')); bgLayer.add(r); };
+      if (style === 'plano'){
+        onClick(new Konva.Rect({ x: 0, y: 0, width: OUT.w, height: OUT.h, fill: base }));
+      } else if (style === 'estudio'){
+        // estudio: pared arriba + piso un poco más oscuro (horizonte al 64%)
+        onClick(new Konva.Rect({ x: 0, y: 0, width: OUT.w, height: OUT.h,
+          fillLinearGradientStartPoint: { x: 0, y: 0 }, fillLinearGradientEndPoint: { x: 0, y: OUT.h },
+          fillLinearGradientColorStops: [0, shade(base, 0.04), 0.6, base, 0.64, shade(base, -0.06), 1, shade(base, -0.12)] }));
+      } else if (style === 'foco'){
+        // foco: viñeta marcada (centro claro, bordes oscuros) → dramático, producto al centro
+        onClick(new Konva.Rect({ x: 0, y: 0, width: OUT.w, height: OUT.h,
+          fillRadialGradientStartPoint: { x: OUT.w / 2, y: OUT.h * 0.45 }, fillRadialGradientEndPoint: { x: OUT.w / 2, y: OUT.h * 0.45 },
+          fillRadialGradientStartRadius: 0, fillRadialGradientEndRadius: OUT.w * 0.62,
+          fillRadialGradientColorStops: [0, shade(base, 0.1), 1, shade(base, -0.32)] }));
+      } else {
+        // gradiente (default): radial sutil + blob de acento + halo + grano
+        onClick(new Konva.Rect({ x: 0, y: 0, width: OUT.w, height: OUT.h,
+          fillRadialGradientStartPoint: { x: OUT.w / 2, y: OUT.h * 0.42 }, fillRadialGradientEndPoint: { x: OUT.w / 2, y: OUT.h * 0.42 },
+          fillRadialGradientStartRadius: 0, fillRadialGradientEndRadius: OUT.w * 0.72,
+          fillRadialGradientColorStops: [0, shade(base, portada ? 0.0 : 0.05), 1, shade(base, portada ? -0.02 : -0.08)] }));
+        if (!portada){
+          const br = OUT.w * 0.62;
+          bgLayer.add(new Konva.Circle({ x: OUT.w * 0.92, y: OUT.h * 0.08, radius: br,
+            fillRadialGradientStartPoint: { x: 0, y: 0 }, fillRadialGradientEndPoint: { x: 0, y: 0 }, fillRadialGradientStartRadius: 0, fillRadialGradientEndRadius: br,
+            fillRadialGradientColorStops: [0, rgba(acc, 0.14), 1, rgba(acc, 0)], listening: false }));
+        }
       }
-      // halo: brillo suave detrás del producto (foco). Invisible sobre blanco, ayuda en color/oscuro.
-      if (!portada){
-        const hr = Math.max(box.w, box.h) * 0.95;   // glow claro de foco que se desvanece (sin anillo)
+      // halo de foco detrás del producto (en estilos con profundidad, no en plano)
+      if (!portada && style !== 'plano'){
+        const hr = Math.max(box.w, box.h) * 0.95;
         bgLayer.add(new Konva.Circle({ x: box.x + box.w / 2, y: box.y + box.h * 0.45, radius: hr,
-          fillRadialGradientStartPoint: { x: 0, y: 0 }, fillRadialGradientEndPoint: { x: 0, y: 0 },
-          fillRadialGradientStartRadius: 0, fillRadialGradientEndRadius: hr,
-          fillRadialGradientColorStops: [0, 'rgba(255,255,255,0.38)', 0.6, 'rgba(255,255,255,0.12)', 1, 'rgba(255,255,255,0)'],
-          listening: false }));
+          fillRadialGradientStartPoint: { x: 0, y: 0 }, fillRadialGradientEndPoint: { x: 0, y: 0 }, fillRadialGradientStartRadius: 0, fillRadialGradientEndRadius: hr,
+          fillRadialGradientColorStops: [0, 'rgba(255,255,255,0.32)', 0.6, 'rgba(255,255,255,0.1)', 1, 'rgba(255,255,255,0)'], listening: false }));
       }
-      // grano: textura sutil que mata el banding y da terminación premium
-      if (!portada) bgLayer.add(new Konva.Rect({ x: 0, y: 0, width: OUT.w, height: OUT.h, fillPatternImage: grainImage(), fillPatternRepeat: 'repeat', opacity: 0.05, listening: false }));
+      // grano: textura sutil (no en plano)
+      if (!portada && style !== 'plano') bgLayer.add(new Konva.Rect({ x: 0, y: 0, width: OUT.w, height: OUT.h, fillPatternImage: grainImage(), fillPatternRepeat: 'repeat', opacity: 0.05, listening: false }));
     }
     const vp = visiblePlaca();
     const hideProduct = FULL_PLACAS.includes(vp);   // placas de composición completa dibujan lo suyo
@@ -825,9 +835,12 @@
       const pos = d.pos[key];
       const dimInk = state.bg.color ? inkOn(state.bg.color) : ink;   // contraste contra el fondo
       const line = new Konva.Line({ points: [pos.p1.x, pos.p1.y, pos.p2.x, pos.p2.y], stroke: dimInk, strokeWidth: d.stroke, hitStrokeWidth: px(20) });
-      // topes perpendiculares en cada punta → lee como cota de medida, no como un rayón
-      const ddx = pos.p2.x - pos.p1.x, ddy = pos.p2.y - pos.p1.y, len = Math.hypot(ddx, ddy) || 1, nx = -ddy / len, ny = ddx / len, cap = 15;
-      const tick = p => new Konva.Line({ points: [p.x - nx * cap, p.y - ny * cap, p.x + nx * cap, p.y + ny * cap], stroke: dimInk, strokeWidth: d.stroke, listening: false });
+      // topes perpendiculares en cada punta → lee como cota de medida, no como un rayón.
+      // Se recalculan al arrastrar para que NO queden barritas sueltas en la posición vieja.
+      const cap = 15;
+      const tickPts = p => { const dx = pos.p2.x - pos.p1.x, dy = pos.p2.y - pos.p1.y, len = Math.hypot(dx, dy) || 1, nx = -dy / len, ny = dx / len; return [p.x - nx * cap, p.y - ny * cap, p.x + nx * cap, p.y + ny * cap]; };
+      const t1 = new Konva.Line({ points: tickPts(pos.p1), stroke: dimInk, strokeWidth: d.stroke, listening: false });
+      const t2 = new Konva.Line({ points: tickPts(pos.p2), stroke: dimInk, strokeWidth: d.stroke, listening: false });
       const text = new Konva.Text({ text: fmt(val), fontFamily: 'Manrope, sans-serif', fontStyle: '700', fontSize: d.labelSize, fill: ink, listening: false });
       const bg = new Konva.Rect({ fill: '#fff', cornerRadius: 10, listening: false });
       bg.shadowColor('#000'); bg.shadowBlur(12); bg.shadowOpacity(0.14); bg.shadowOffsetY(2);
@@ -835,12 +848,13 @@
         text.position({ x: mx - text.width() / 2, y: my - text.height() / 2 });
         bg.position({ x: text.x() - 12, y: text.y() - 7 }); bg.size({ width: text.width() + 24, height: text.height() + 14 }); };
       place();
-      const g = new Konva.Group(); g.add(line, tick(pos.p1), tick(pos.p2), bg, text);
+      const g = new Konva.Group(); g.add(line, t1, t2, bg, text);
       g.on('click tap', () => selectPart('dims'));
       mainLayer.add(g);
       if (sel) ['p1', 'p2'].forEach(end => {
-        mainLayer.add(makeHandle(pos[end].x, pos[end].y, (nx, ny) => {
-          pos[end] = { x: nx, y: ny }; line.points([pos.p1.x, pos.p1.y, pos.p2.x, pos.p2.y]); place();
+        mainLayer.add(makeHandle(pos[end].x, pos[end].y, (nx2, ny2) => {
+          pos[end] = { x: nx2, y: ny2 }; line.points([pos.p1.x, pos.p1.y, pos.p2.x, pos.p2.y]);
+          t1.points(tickPts(pos.p1)); t2.points(tickPts(pos.p2)); place();
         }));
       });
     });
@@ -932,13 +946,13 @@
 
   function drawIncluye(){
     const c = state.layers.incluye, g = new Konva.Group(), items = c.items.filter(s => s.trim());
-    const accent = incluyeAccent();
+    const accent = c.accent || incluyeAccent(), cardFill = c.dark ? '#1A1614' : '#ffffff', itemInk = c.dark ? '#ffffff' : INK;
     // alto de la tarjeta según cantidad de ítems (2 columnas si son 4+)
     const twoCol = items.length >= 4;
     const cardH = incluyeHeight(), cardY = OUT.h - cardH - 36, cardX = 48, cardW = OUT.w - 96;
     // tarjeta con sombra suave (sin el borde beige random)
-    const card = new Konva.Rect({ x: cardX, y: cardY, width: cardW, height: cardH, fill: '#ffffff', cornerRadius: 26 });
-    card.shadowColor('#000'); card.shadowBlur(34); card.shadowOpacity(0.12); card.shadowOffsetY(10);
+    const card = new Konva.Rect({ x: cardX, y: cardY, width: cardW, height: cardH, fill: cardFill, cornerRadius: 26 });
+    card.shadowColor('#000'); card.shadowBlur(34); card.shadowOpacity(c.dark ? 0.22 : 0.12); card.shadowOffsetY(10);
     g.add(card);
     // eyebrow: mayúsculas con tracking, en color de acento
     g.add(new Konva.Text({ text: (c.title || 'INCLUYE').toUpperCase(), x: cardX + 40, y: cardY + 32, fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 24, letterSpacing: 3, fill: accent }));
@@ -954,7 +968,7 @@
       circ.shadowColor(accent); circ.shadowBlur(10); circ.shadowOffsetY(3); circ.shadowOpacity(0.4); g.add(circ);
       g.add(new Konva.Line({ points: [ix + 9, iy + 16, ix + 14, iy + 21, ix + 23, iy + 10], stroke: '#fff', strokeWidth: 3.4, lineCap: 'round', lineJoin: 'round', listening: false }));
       const chipW = qty ? 58 : 0;
-      const lbl = new Konva.Text({ text: label, x: ix + 46, y: iy, width: colW - 56 - chipW, fontFamily: 'Manrope, sans-serif', fontStyle: '600', fontSize: 28, fill: INK, listening: false });
+      const lbl = new Konva.Text({ text: label, x: ix + 46, y: iy, width: colW - 56 - chipW, fontFamily: 'Manrope, sans-serif', fontStyle: '600', fontSize: 28, fill: itemInk, listening: false });
       lbl.y(iy + 16 - lbl.height() / 2); g.add(lbl);
       if (qty){
         const cw = 50, cx = ix + colW - 56 - cw + 6, cy = iy + 16 - 17;
@@ -1285,7 +1299,7 @@
     let reg = null; const L = state.layers, s = state.selected;
     if (s === 'producto' || s === 'realce') reg = box;
     else if (s === 'fondo') reg = { x: 6, y: 6, w: OUT.w - 12, h: OUT.h - 12 };
-    else if (s === 'incluye' && L.incluye.on){ const h = OUT.h * 0.16; reg = { x: 30, y: OUT.h - h, w: OUT.w - 60, h: h - 10 }; }
+    else if (s === 'incluye' && L.incluye.on){ const ch = incluyeHeight(); reg = { x: 48, y: OUT.h - ch - 36, w: OUT.w - 96, h: ch }; }
     if (reg) mainLayer.add(new Konva.Rect({ x: reg.x, y: reg.y, width: reg.w, height: reg.h, stroke: '#d8381f', strokeWidth: px(2), dash: [px(8), px(6)], cornerRadius: 8, listening: false }));
   }
 
@@ -1531,6 +1545,7 @@
       segRow('Plataforma', [['ml', 'Mercado Libre'], ['ig', 'Instagram'], ['tn', 'Tienda Nube']], state.platform, v => { state.platform = v; render(); renderPanel(); }),
       state.platform === 'ml' ? hint('Para Mercado Libre la portada va en blanco puro, sin texto ni logo (regla de ML). El color de fondo se aplica al resto de las placas.') : '',
       colorRow('Color de fondo', withPalette(BG_COLORS), state.bg.color, v => { state.bg.color = v; render(); renderPanel(); }),
+      segRow('Estilo de fondo', [['gradiente', 'Degradé'], ['plano', 'Plano'], ['estudio', 'Estudio'], ['foco', 'Foco']], state.bg.style, v => { state.bg.style = v; render(); renderPanel(); }),
       moreSection('fondo', colorPick('Color personalizado', state.bg.color, v => { state.bg.color = v; render(); renderPanel(); }))),
     producto: root => root.append(
       sliderRow('Qué tan grande se ve el producto', Math.round(state.product.scale * 100), 60, 130, v => { state.product.scale = v / 100; render(); }, v => v + '%'),
@@ -1539,6 +1554,7 @@
     realce: root => { const r = state.realce; root.append(
       hint('Hacé tu foto más nítida y vendedora. Tocá "Mejorar automáticamente" o ajustá a mano.'),
       h('button', { class: 'auto-btn', type: 'button', onclick(){ r.brillo = 108; r.contraste = 114; r.color = 116; r.nitidez = 35; render(); renderPanel(); } }, '✨ Mejorar automáticamente'),
+      h('button', { class: 'add-btn', type: 'button', style: 'display:block;margin:-.4rem 0 .8rem', onclick(){ r.brillo = 100; r.contraste = 100; r.color = 100; r.nitidez = 0; render(); renderPanel(); } }, '↺ Volver al original'),
       sliderRow('Brillo', r.brillo, 60, 140, v => { r.brillo = v; render(); }, v => v + '%'),
       sliderRow('Contraste', r.contraste, 60, 140, v => { r.contraste = v; render(); }, v => v + '%'),
       withHelp(sliderRow('Color', r.color, 0, 200, v => { r.color = v; render(); }, v => v + '%'), 'Si la foto salió amarillenta o apagada, ajustá acá. Subilo para colores más vivos.'),
@@ -1584,6 +1600,8 @@
       toggleRow('Mostrar "Qué incluye"', c.on, v => { c.on = v; render(); renderToolbar(); }),
       listEditor('Qué incluye', c.items, () => render(), 'Agregar ítem', 'Ej: 1 parlante, cable USB, manual',
         'Sumá lo que viene en la caja, uno por línea (ej: “1 parlante”, “cable USB”, “manual”). Aparece como una lista sobre tu foto.'),
+      colorRow('Color', withPalette(['#d8381f', '#1B49B8', '#1f9d55', '#b8924a', '#241E1A']), c.accent || incluyeAccent(), v => { c.accent = v; render(); renderPanel(); }),
+      segRow('Tarjeta', [['false', 'Clara'], ['true', 'Oscura']], String(c.dark), v => { c.dark = v === 'true'; render(); renderPanel(); }),
       moreSection('incluye', textRow('Título', c.title, v => { c.title = v; render(); }, 'Ej: INCLUYE'))); },
     hero: root => { const hL = state.layers.hero; root.append(
       toggleRow('Mostrar titular', hL.on, v => { hL.on = v; render(); renderToolbar(); }),
