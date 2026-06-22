@@ -20,6 +20,8 @@
 
   <!-- Konva.js (MIT) — solo la capa de manipulación visual. La IA de fondo sigue en el motor. -->
   <script src="https://cdn.jsdelivr.net/npm/konva@9.3.16/konva.min.js"></script>
+  <!-- Supabase (auth) — misma sesión que la landing y /cuenta -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root{
@@ -168,6 +170,45 @@
     @keyframes coachIn{ from{ opacity:0; transform:translateX(-50%) translateY(-8px) } to{ opacity:1; transform:translateX(-50%) translateY(0) } }
     .coach .x{ background:none; border:0; color:rgba(255,255,255,.7); cursor:pointer; font-size:.95rem; flex:none; padding:0; line-height:1 }
     @media(min-width:860px){ .coach{ top:auto; bottom:24px; left:auto; right:24px; transform:none; animation:none } }
+    /* login (Supabase) */
+    .auth-slot{ display:flex; align-items:center; gap:.35rem }
+    .btn-login{ font:inherit; font-weight:700; font-size:.84rem; color:var(--ink); background:var(--white); border:1.5px solid var(--line); border-radius:9px; padding:.45rem .85rem; cursor:pointer }
+    .btn-login:hover{ border-color:var(--ink) }
+    .auth-me{ font-size:.8rem; font-weight:700; color:var(--ink-soft); max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+    @media(max-width:760px){ .auth-me{ display:none } }
+    .auth-modal{ position:fixed; inset:0; z-index:95; display:flex; align-items:center; justify-content:center; padding:20px }
+    .auth-modal[hidden]{ display:none }
+    .auth-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.42) }
+    .auth-box{ position:relative; width:min(380px,92vw); background:#fff; border:1px solid var(--line); border-radius:18px; box-shadow:0 24px 60px -20px rgba(0,0,0,.4); padding:1.6rem 1.5rem }
+    .auth-x{ position:absolute; top:.6rem; right:.8rem; background:none; border:0; font-size:1.5rem; color:var(--ink-faint); cursor:pointer; line-height:1 }
+    .auth-box h3{ margin:.1rem 0 .3rem; font-size:1.2rem; font-weight:800 }
+    .auth-sub{ color:var(--ink-soft); font-size:.88rem; margin:0 0 1.1rem; line-height:1.45 }
+    .auth-google{ width:100%; display:inline-flex; align-items:center; justify-content:center; gap:.6rem; font:inherit; font-size:.92rem; font-weight:700; color:var(--ink); background:#fff; border:1px solid var(--line); border-radius:11px; padding:.7rem; cursor:pointer }
+    .auth-google:hover{ background:var(--cream-2) }
+    .auth-or{ text-align:center; color:var(--ink-faint); font-size:.8rem; margin:.9rem 0 }
+    #auth-email{ width:100%; box-sizing:border-box; padding:.65rem .8rem; border:1px solid var(--line); border-radius:11px; font:inherit; font-size:.92rem; background:#fff }
+    #auth-email:focus{ outline:none; border-color:var(--accent) }
+    .auth-send{ width:100%; margin-top:.6rem; padding:.75rem; border:0; border-radius:11px; font:inherit; font-weight:800; font-size:.92rem; color:#fff; background:var(--accent); cursor:pointer }
+    .auth-send:disabled{ opacity:.6; cursor:default }
+    .auth-status{ font-size:.84rem; margin:.7rem 0 0; min-height:1.1em }
+    .auth-status.ok{ color:#1f9d55 } .auth-status.err{ color:var(--accent) }
+    /* créditos en el header */
+    .auth-cred{ font:inherit; font-weight:800; font-size:.78rem; color:var(--accent); background:var(--accent-tint); border:0; border-radius:999px; padding:.32rem .7rem; cursor:pointer; white-space:nowrap }
+    .auth-cred:hover{ background:#fbd5cd }
+    /* packs */
+    .packs-list{ display:flex; flex-direction:column; gap:.55rem; margin:.4rem 0 .9rem }
+    .pack-card{ position:relative; display:grid; grid-template-columns:1fr auto; align-items:center; gap:.2rem .8rem; text-align:left; font:inherit; padding:.85rem 1rem; border:1.5px solid var(--line); border-radius:13px; background:var(--white); cursor:pointer; transition:border-color .15s }
+    .pack-card:hover{ border-color:var(--ink-faint) }
+    .pack-card.pop{ border-color:var(--accent) }
+    .pack-name{ font-weight:800; font-size:.98rem; color:var(--ink) }
+    .pack-credits{ grid-column:1; font-size:.82rem; color:var(--ink-soft) }
+    .pack-price{ grid-column:2; grid-row:1 / span 2; font-weight:800; font-size:1.1rem; color:var(--ink) }
+    .pack-tag{ position:absolute; top:-9px; left:14px; font-size:.64rem; font-weight:800; text-transform:uppercase; letter-spacing:.03em; color:#fff; background:var(--accent); padding:.12rem .5rem; border-radius:999px }
+    .packs-note{ font-size:.78rem; color:var(--ink-faint); margin:.2rem 0 0; text-align:center }
+    .packs-loading{ color:var(--ink-faint); text-align:center; padding:1rem }
+    #toast{ position:fixed; top:14px; left:50%; transform:translateX(-50%) translateY(-20px); z-index:120; background:#241E1A; color:#fff; font-size:.9rem; font-weight:600; padding:.7rem 1.1rem; border-radius:999px; box-shadow:0 12px 32px rgba(0,0,0,.3); opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; max-width:90vw; text-align:center }
+    #toast.show{ opacity:1; transform:translateX(-50%) translateY(0) }
+    #toast.err{ background:var(--accent) } #toast.ok{ background:#1f9d55 }
     .pronto{ display:inline-block; font-size:.66rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--accent); background:var(--accent-tint); padding:.15rem .45rem; border-radius:999px; margin-bottom:.6rem }
 
     .empty{ max-width:480px; margin:11vh auto 0; padding:0 24px; text-align:center }
@@ -220,6 +261,7 @@
       <a href="/cuenta">Cuenta</a>
     </nav>
     <div class="top-right">
+      <div class="auth-slot" id="auth-slot"></div>
       <button class="icon-btn" id="undo-btn" type="button" title="Deshacer" aria-label="Deshacer" disabled>⤺</button>
       <button class="icon-btn help-btn-desktop" id="help-btn" type="button" title="¿Cómo funciona?" aria-label="¿Cómo funciona?">?</button>
       <button class="dl-btn" id="dl-btn" type="button">Descargar galería</button>
@@ -246,6 +288,38 @@
       <button class="big-add" id="help-reset" type="button" style="width:100%;justify-content:center">Volver a ver los consejos</button>
     </div>
   </div>
+
+  <!-- Login (Supabase auth) -->
+  <div class="auth-modal" id="auth-modal" hidden>
+    <div class="auth-backdrop" id="auth-backdrop"></div>
+    <div class="auth-box" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+      <button class="auth-x" id="auth-close" type="button" aria-label="Cerrar">&times;</button>
+      <h3 id="auth-title">Entrá a tu cuenta</h3>
+      <p class="auth-sub">Para guardar tus créditos y descargas en cualquier dispositivo.</p>
+      <button class="auth-google" id="auth-google" type="button">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38z"/></svg>
+        Continuar con Google
+      </button>
+      <div class="auth-or"><span>o con tu email</span></div>
+      <input id="auth-email" type="email" inputmode="email" autocomplete="email" placeholder="tu@email.com">
+      <button class="auth-send" id="auth-send" type="button">Enviame el link de acceso</button>
+      <p class="auth-status" id="auth-status" role="status"></p>
+    </div>
+  </div>
+
+  <!-- Packs (comprar créditos) -->
+  <div class="auth-modal" id="packs-modal" hidden>
+    <div class="auth-backdrop" id="packs-backdrop"></div>
+    <div class="auth-box" role="dialog" aria-modal="true" aria-labelledby="packs-title">
+      <button class="auth-x" id="packs-close" type="button" aria-label="Cerrar">&times;</button>
+      <h3 id="packs-title">Comprá créditos</h3>
+      <p class="auth-sub">1 crédito = 1 foto limpia (sin marca de agua).</p>
+      <div class="packs-list" id="packs-list"></div>
+      <p class="packs-note">Pago único con MercadoPago. Sin suscripción, sin tarjeta guardada.</p>
+    </div>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
 
   <main class="editor" id="editor" hidden>
     <nav class="toolbar" id="toolbar" aria-label="Herramientas"></nav>
@@ -915,10 +989,10 @@
   }
   function downloadBlob(blob, name){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0); }
 
-  // value-first idéntico al viejo (wmOn): anónimo / sin crédito → marca de agua; con crédito → limpio (gasta 1).
-  // En el demo queda anónimo (entitled=false) → marca de agua. Login/motor se cablean en el cutover (E11).
-  let entitled = false;
-  function wmOn(){ return !entitled; }
+  // value-first/créditos (PR3): marca de agua salvo que la foto esté desbloqueada (1 crédito gastado) o sea pago.
+  // Igual criterio que el editor viejo (wmOn). El gasto real ocurre en ensureUnlocked() al descargar.
+  let paid = false, unlocked = false, authProfile = null;
+  function wmOn(){ return !paid && !unlocked; }
 
   const VARIANTS = { clean: {}, dims: { dims: true }, banner: { banner: true }, feats: { feats: true }, incluye: { incluye: true } };
   // renderiza UNA variante a 1200×1200 desde el lienzo Konva, sin handles/guías (selected=null)
@@ -947,7 +1021,7 @@
     if (!stage) return;
     const btn = $('dl-btn'); btn.disabled = true; const prev = btn.textContent; btn.textContent = 'Generando…';
     try {
-      // créditos/value-first: con sesión+crédito se gastaría 1 acá (igual que ensureUnlocked del viejo); en demo → anónimo.
+      await ensureUnlocked();   // value-first: empuja a login/spend; igual baja (con marca si sigue anónimo/sin crédito)
       const order = galleryOrder(), files = [];
       for (let i = 0; i < order.length; i++){
         const cv = exportVariantCanvas(VARIANTS[order[i].k]);
@@ -957,6 +1031,132 @@
       downloadBlob(makeZip(files), 'shotpilot-galeria.zip');
     } finally { btn.disabled = false; btn.textContent = prev; }
   }
+
+  // ============================ PR2: login (Supabase auth) ============================
+  // Misma storageKey que el resto del sitio → la sesión se comparte (landing, /cuenta, editor).
+  // El cliente se crea inline sobre el global del CDN para no convertir este script en módulo.
+  const SB_URL = 'https://ntybvdfyxesxpoukyqpf.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50eWJ2ZGZ5eGVzeHBvdWt5cXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3OTk5NzcsImV4cCI6MjA5NzM3NTk3N30.txWMTF34NaN_NDVtcbgx_69kDSX4Bm9mBfJYf7PIvAw';
+  let sb = null, authUser = null;
+  try { if (window.supabase) sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: window.localStorage, storageKey: 'sb-ntybvdfyxesxpoukyqpf-auth-token' } }); }
+  catch (e) { console.error('Supabase init', e); }
+  const AUTH_REDIRECT = location.origin + location.pathname + (new URLSearchParams(location.search).get('demo') ? '?demo=1' : '');
+  async function authToken(){ if (!sb) return null; try { const { data } = await sb.auth.getSession(); return data.session ? data.session.access_token : null; } catch (e) { return null; } }
+  function authModal(open){ const m = $('auth-modal'); if (!m) return; m.hidden = !open; if (open){ const s = $('auth-status'); s.textContent = ''; s.className = 'auth-status'; setTimeout(() => $('auth-email').focus(), 30); } }
+  const escHtml = s => String(s || '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
+  function renderAuthSlot(){
+    const slot = $('auth-slot'); if (!slot) return;
+    if (authUser){
+      const name = (authUser.email || 'cuenta').split('@')[0];
+      const cred = authProfile ? authProfile.credits : null;
+      slot.innerHTML = `<button class="auth-cred" id="auth-buy" type="button" title="Comprar créditos">${cred == null ? '·' : cred} créd. +</button><span class="auth-me" title="${escHtml(authUser.email)}">${escHtml(name)}</span><button class="icon-btn" id="auth-out" type="button" title="Cerrar sesión" aria-label="Cerrar sesión">⎋</button>`;
+      const buy = $('auth-buy'); if (buy) buy.addEventListener('click', openPacks);
+      const out = $('auth-out'); if (out) out.addEventListener('click', () => sb && sb.auth.signOut());
+    } else {
+      slot.innerHTML = `<button class="btn-login" id="auth-open" type="button">Entrar</button>`;
+      const op = $('auth-open'); if (op) op.addEventListener('click', () => authModal(true));
+    }
+  }
+  function onAuth(session){ authUser = session ? session.user : null; renderAuthSlot(); if (authUser){ authModal(false); loadProfile().then(renderAuthSlot); } else { authProfile = null; unlocked = false; } }
+  renderAuthSlot();   // botón inmediato, sin parpadeo
+  if (sb){
+    // onAuthStateChange emite INITIAL_SESSION con la sesión ya restaurada (un solo camino, sin getSession aparte)
+    sb.auth.onAuthStateChange((_e, session) => onAuth(session));
+    $('auth-send').addEventListener('click', async () => {
+      const email = ($('auth-email').value || '').trim(), st = $('auth-status');
+      if (!email || !email.includes('@')){ st.textContent = 'Escribí un email válido.'; st.className = 'auth-status err'; return; }
+      const btn = $('auth-send'); btn.disabled = true; const prev = btn.textContent; btn.textContent = 'Enviando…';
+      try { const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: AUTH_REDIRECT } }); if (error) throw error;
+        st.textContent = 'Te mandamos el link a tu mail. Revisá la bandeja (y el spam).'; st.className = 'auth-status ok';
+      } catch (e){ st.textContent = 'No pudimos enviarlo: ' + (e.message || e); st.className = 'auth-status err'; }
+      finally { btn.disabled = false; btn.textContent = prev; }
+    });
+    $('auth-google').addEventListener('click', async () => {
+      try { await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: AUTH_REDIRECT } }); }
+      catch (e){ const st = $('auth-status'); st.textContent = 'No pudimos abrir Google: ' + (e.message || e); st.className = 'auth-status err'; }
+    });
+    $('auth-close').addEventListener('click', () => authModal(false));
+    $('auth-backdrop').addEventListener('click', () => authModal(false));
+    $('auth-email').addEventListener('keydown', e => { if (e.key === 'Enter') $('auth-send').click(); });
+  }
+
+  // ============================ PR3: créditos (gastar 1 al bajar limpio) + packs ============================
+  async function loadProfile(){
+    if (!sb || !authUser){ authProfile = null; return; }
+    try { const { data } = await sb.from('profiles').select('credits,free_photos_used,free_scenes_used').eq('id', authUser.id).single(); authProfile = data || null; }
+    catch (e){ authProfile = null; }
+  }
+  async function motorSpend(kind){
+    const token = await authToken(); if (!token) return { ok: false, reason: 'auth' };
+    const fd = new FormData(); fd.append('kind', kind);
+    try { const r = await fetch(MOTOR_URL + '/spend', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd }); return await r.json(); }
+    catch (e){ return { ok: false, reason: 'net' }; }
+  }
+  // asegura que la galería salga limpia: si hace falta, pide login y gasta 1 crédito. true = quedó limpia.
+  async function ensureUnlocked(){
+    if (paid || unlocked) return true;
+    const token = await authToken();
+    if (!token){ authModal(true); return false; }          // anónimo → pedir login (igual baja con marca)
+    const res = await motorSpend('photo');
+    if (res && res.ok){ unlocked = true; loadProfile().then(renderAuthSlot); return true; }
+    await loadProfile(); renderAuthSlot();
+    showToast(res && res.reason === 'auth' ? 'Entrá para bajarla sin marca de agua.' : 'Te quedaste sin créditos.', 'err');
+    openPacks(); return false;                              // sin crédito → ofrecer packs (igual baja con marca)
+  }
+  // ---- packs / comprar créditos (MercadoPago) ----
+  const PACK_NAMES = { inicial: 'Inicial', probe: 'Probá', vendedor: 'Vendedor', tienda: 'Tienda' };
+  function packsModal(open){ const m = $('packs-modal'); if (m) m.hidden = !open; }
+  async function openPacks(){
+    packsModal(true);
+    const list = $('packs-list'); list.innerHTML = '<p class="packs-loading">…</p>';
+    try {
+      const r = await fetch(MOTOR_URL + '/packs'); const data = await r.json();
+      list.innerHTML = '';
+      (data.packs || []).forEach(p => {
+        const pop = p.id === 'vendedor';
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'pack-card' + (pop ? ' pop' : '');
+        const ars = Number(p.ars).toLocaleString('es-AR');
+        b.innerHTML = (pop ? '<span class="pack-tag">Más elegido</span>' : '') + `<span class="pack-name">${escHtml(PACK_NAMES[p.id] || p.id)}</span><span class="pack-credits">${escHtml(p.credits)} créditos</span><span class="pack-price">$${ars}</span>`;
+        b.addEventListener('click', () => buyPack(p.id, b));
+        list.appendChild(b);
+      });
+      if (!list.children.length) list.innerHTML = '<p class="packs-loading">Los packs llegan pronto.</p>';
+    } catch (e){ list.innerHTML = '<p class="packs-loading">No pudimos cargar los packs. Probá de nuevo.</p>'; }
+  }
+  async function buyPack(id, btn){
+    const token = await authToken();
+    if (!token){ packsModal(false); authModal(true); return; }
+    if (btn) btn.disabled = true;
+    try {
+      const fd = new FormData(); fd.append('pack', id);
+      const r = await fetch(MOTOR_URL + '/checkout', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
+      const data = await r.json().catch(() => ({}));
+      if (r.ok && data.init_point){ location.href = data.init_point; return; }
+      throw new Error(data.error || 'error');
+    } catch (e){ if (btn) btn.disabled = false; showToast('No pudimos abrir el pago. Probá de nuevo.', 'err'); }
+  }
+  if ($('packs-close')) $('packs-close').addEventListener('click', () => packsModal(false));
+  if ($('packs-backdrop')) $('packs-backdrop').addEventListener('click', () => packsModal(false));
+  // toast simple
+  let toastTimer = null;
+  function showToast(text, kind){
+    const el = $('toast'); if (!el) return;
+    el.textContent = text; el.className = (kind || '') + ' show';
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.className = el.className.replace('show', '').trim(); }, 5000);
+  }
+  // regreso de MercadoPago (?pago=ok|pending|fail): avisa y pollea el saldo (el webhook acredita async)
+  (function handlePagoReturn(){
+    const pago = new URLSearchParams(location.search).get('pago'); if (!pago) return;
+    if (pago === 'ok'){
+      showToast('¡Pago recibido! Sumando tus créditos…', 'ok');
+      let n = 0; const before = (authProfile && authProfile.credits) || 0;
+      const iv = setInterval(async () => { n++; await loadProfile(); renderAuthSlot();
+        const now = (authProfile && authProfile.credits) || 0;
+        if (now > before){ showToast('¡Listo! Ya tenés ' + now + ' créditos.', 'ok'); clearInterval(iv); } else if (n >= 8) clearInterval(iv);
+      }, 2500);
+    } else if (pago === 'pending'){ showToast('Tu pago está pendiente. Te avisamos cuando se acredite.'); }
+    else { showToast('El pago no se completó. Probá de nuevo.', 'err'); }
+  })();
 
   // ============================ E10: navegación, ayuda y deshacer ============================
   // menú (mobile)
@@ -1027,6 +1227,7 @@
     c.getContext('2d').drawImage(img, 0, 0);
     productImg = c; computeCutout();
     state.layers.dims.pos = null; state.layers.feats.pos = null;   // re-ubicar cotas/puntos según el nuevo producto
+    unlocked = false;   // foto nueva = arranca con marca de agua hasta gastar 1 crédito
   }
   const showUpErr = msg => { const e = $('up-err'); e.textContent = msg; e.hidden = false; };
   async function handleUpload(file){
