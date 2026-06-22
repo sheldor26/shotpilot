@@ -475,6 +475,7 @@
     bg:      { color: '#ffffff', style: 'gradiente' },   // gradiente | plano | estudio | foco
     product: { scale: 1, shadow: false, shadowInt: 60, dx: 0, dy: 0 },
     realce:  { brillo: 100, contraste: 100, color: 100, nitidez: 0 },
+    retoque: { mode: 'borrar', size: 70 },   // pincel: borrar / restaurar (sacar logo, restos de fondo)
     layers: {
       // `pos`/`place` guardan las posiciones que el usuario arrastra (coords del lienzo 1200×1200).
       // Arrancan en null y se inicializan la 1ª vez desde el layout; después mandan lo arrastrado.
@@ -508,6 +509,7 @@
     fondo:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.35-4.35a2 2 0 0 0-2.83 0L4 20"/></svg>',
     realce:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M19 14v4"/><path d="M17 16h4"/></svg>',
     producto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3"/></svg>',
+    retoque: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 7-9 9-4 1 1-4 9-9a1.8 1.8 0 0 1 2.5 0L20 4.5a1.8 1.8 0 0 1 0 2.5z"/><path d="M5 21h14"/></svg>',
     escena:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8 19 13M15 9h.01M17.8 6.2 19 5M3 21l9-9M12.2 6.2 11 5"/></svg>',
     dims:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 8.7 8.7 21.3a1 1 0 0 1-1.4 0l-4.6-4.6a1 1 0 0 1 0-1.4L15.3 2.7a1 1 0 0 1 1.4 0l4.6 4.6a1 1 0 0 1 0 1.4Z"/><path d="m7.5 10.5 2 2M10.5 7.5l2 2M13.5 4.5l2 2M4.5 13.5l2 2"/></svg>',
     feats:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4M3 7l2 2 4-4M13 6h8M13 12h8M13 18h8"/></svg>',
@@ -523,9 +525,9 @@
     lateral: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="12" height="18" rx="2"/><rect x="18" y="3" width="3" height="18" rx="1.5" fill="currentColor"/></svg>',
     pack:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9.5 12 8v8M12 16h-1.5m1.5 0h1.5"/></svg>',
   };
-  const TLABEL = { fondo:'Fondo', realce:'Realce', producto:'Fotos', escena:'Escena IA', dims:'Medidas', feats:'Beneficios', incluye:'Qué incluye', logo:'Logo', banner:'Banner', hero:'Titular', garantia:'Confianza', compara:'Comparativa', social:'Reseñas', panel:'Panel', barra:'Barra', lateral:'Barra lateral', pack:'Cantidad' };
+  const TLABEL = { fondo:'Fondo', realce:'Realce', producto:'Fotos', retoque:'Retoque', escena:'Escena IA', dims:'Medidas', feats:'Beneficios', incluye:'Qué incluye', logo:'Logo', banner:'Banner', hero:'Titular', garantia:'Confianza', compara:'Comparativa', social:'Reseñas', panel:'Panel', barra:'Barra', lateral:'Barra lateral', pack:'Cantidad' };
   const GROUPS = [
-    { label: 'Foto',        tools: ['fondo', 'realce', 'producto'] },
+    { label: 'Foto',        tools: ['fondo', 'realce', 'producto', 'retoque'] },
     { label: 'Información',  tools: ['dims', 'feats', 'incluye', 'banner'] },
     { label: 'Vender',      tools: ['hero', 'panel', 'garantia', 'compara', 'social'] },
     { label: 'Marketplace', tools: ['barra', 'lateral', 'pack'] },
@@ -534,7 +536,9 @@
   // Escena IA se ocultó (E10): no mostrar features "pronto" hasta que funcionen. Vuelve cuando esté lista.
 
   // ============================ Konva ============================
-  let stage, bgLayer, productLayer, mainLayer, guideLayer, productImg, productBoxCache, cutout = null, ready = false;
+  let stage, bgLayer, productLayer, mainLayer, guideLayer, productImg, productBoxCache, cutout = null, ready = false, originalCutout = null;
+  // copia del recorte original (para que "Restaurar" pueda traer de vuelta lo borrado)
+  function snapshotOriginal(){ if (!productImg) return; const c = document.createElement('canvas'); c.width = productImg.width; c.height = productImg.height; c.getContext('2d').drawImage(productImg, 0, 0); originalCutout = c; }
   // bbox ajustado del recorte (igual que cutoutBox del editor viejo): se escala el producto SIN el
   // padding transparente, así llena igual que la descarga actual. Sin esto el producto sale chico.
   // bbox del objeto PRINCIPAL (mismo algoritmo que computeBox del editor viejo): cuenta píxeles
@@ -634,9 +638,14 @@
     bgLayer = new Konva.Layer(); productLayer = new Konva.Layer(); mainLayer = new Konva.Layer(); guideLayer = new Konva.Layer({ listening: false });
     stage.add(bgLayer); stage.add(productLayer); stage.add(mainLayer); stage.add(guideLayer);
     if (!productImg) productImg = makeDemoCanvas();   // si ya hay foto subida, se respeta
-    computeCutout(); extractPalette();
-    // tocar el vacío deselecciona
-    stage.on('click tap', e => { if (e.target === stage || e.target.getLayer() === bgLayer) selectPart(null); });
+    computeCutout(); extractPalette(); if (!originalCutout) snapshotOriginal();
+    // tocar el vacío deselecciona (salvo en modo Retoque, donde el toque pinta)
+    stage.on('click tap', e => { if (state.selected === 'retoque') return; if (e.target === stage || e.target.getLayer() === bgLayer) selectPart(null); });
+    // ---- pincel de Retoque (borrar / restaurar) ----
+    let painting = false;
+    stage.on('mousedown touchstart', () => { if (state.selected !== 'retoque') return; painting = true; retoqueStroke(); });
+    stage.on('mousemove touchmove', () => { if (painting && state.selected === 'retoque') retoqueStroke(); });
+    stage.on('mouseup touchend', () => { if (painting){ painting = false; saveImage(); render(); } });
     // seguridad: bloquear click derecho sobre el lienzo (que no puedan "Guardar imagen" sin procesar)
     const cont = stage.container();
     cont.addEventListener('contextmenu', e => e.preventDefault());
@@ -650,6 +659,24 @@
     stage.width(OUT.w * scale); stage.height(OUT.h * scale);
     stage.scale({ x: scale, y: scale });
     if (ready) render(); else stage.batchDraw();   // re-render para que los handles mantengan su tamaño en pantalla
+  }
+  // pinta un trazo de Retoque sobre el recorte: borra (alfa) o restaura (desde el original)
+  function retoqueStroke(){
+    if (!productImg || !productBoxCache || !cutout) return;
+    const box = productBoxCache, sc = stage.scaleX() || 1, p = stage.getPointerPosition(); if (!p) return;
+    const fx = (p.x / sc - box.x) / box.w, fy = (p.y / sc - box.y) / box.h;
+    if (fx < -0.05 || fx > 1.05 || fy < -0.05 || fy > 1.05) return;   // fuera del producto
+    const ix = cutout.x + fx * cutout.w, iy = cutout.y + fy * cutout.h, r = Math.max(6, state.retoque.size / box.w * cutout.w);
+    const ctx = productImg.getContext('2d');
+    ctx.save();
+    if (state.retoque.mode === 'restaurar' && originalCutout){
+      ctx.beginPath(); ctx.arc(ix, iy, r, 0, Math.PI * 2); ctx.clip(); ctx.drawImage(originalCutout, 0, 0);
+    } else {
+      ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(ix, iy, r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+    const node = productLayer.findOne('Image'); if (node){ if (node.isCached && node.isCached()) node.clearCache(); }
+    productLayer.batchDraw();
   }
 
   // ---- snapping: imanta a bordes/centro del producto, centro y bordes del lienzo ----
@@ -798,6 +825,7 @@
       }
       node.on('click tap', () => selectPart('producto'));
       productLayer.add(node);
+      if (state.selected === 'retoque') node.listening(false);   // en retoque el toque pinta, no selecciona
       // seleccionado: mover (arrastrar) + redimensionar desde los vértices
       if (state.selected === 'producto' && !exporting){
         node.draggable(true);
@@ -832,6 +860,9 @@
     // marca de agua en el PREVIEW en vivo (no solo al exportar): evita que se bajen la foto
     // limpia con click derecho o screenshot. En export se omite acá y se aplica nítida aparte.
     if (!exporting && wmOn()) mainLayer.add(new Konva.Image({ image: wmCanvas(), x: 0, y: 0, width: OUT.w, height: OUT.h, listening: false }));
+    // en modo Retoque: el fondo no captura clicks (para no deseleccionar) y el cursor es pincel
+    if (bgLayer) bgLayer.listening(state.selected !== 'retoque');
+    if (stage) stage.container().style.cursor = state.selected === 'retoque' ? 'crosshair' : 'default';
     stage.batchDraw();
   }
   const ink = '#241E1A';
@@ -1584,6 +1615,10 @@
       h('button', { class: 'add-btn', type: 'button', style: 'display:block;margin:-.4rem 0 .8rem', onclick(){ state.product.dx = 0; state.product.dy = 0; state.product.scale = 1; render(); renderPanel(); } }, '↺ Centrar y restablecer'),
       toggleRow('Sombra para que no flote', state.product.shadow, v => { state.product.shadow = v; render(); }),
       moreSection('producto', withHelp(sliderRow('Qué tan marcada es la sombra', state.product.shadowInt, 0, 100, v => { state.product.shadowInt = v; render(); }, v => v + '%'), 'Qué tan fuerte se aplica.'))),
+    retoque: root => { const rt = state.retoque; root.append(
+      hint('Pintá sobre la foto para BORRAR restos de fondo o un logo, o RESTAURAR lo que borraste de más. Soltá para aplicar.'),
+      segRow('Modo', [['borrar', 'Borrar'], ['restaurar', 'Restaurar']], rt.mode, v => { rt.mode = v; renderPanel(); }),
+      sliderRow('Tamaño del pincel', rt.size, 20, 200, v => { rt.size = v; }, v => v + 'px')); },
     realce: root => { const r = state.realce; root.append(
       hint('Hacé tu foto más nítida y vendedora. Tocá "Mejorar automáticamente" o ajustá a mano.'),
       h('button', { class: 'auto-btn', type: 'button', onclick(){ r.brillo = 108; r.contraste = 114; r.color = 116; r.nitidez = 35; render(); renderPanel(); } }, '✨ Mejorar automáticamente'),
@@ -2035,7 +2070,7 @@
     try {
       const img = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = dataUrl; });
       const c = document.createElement('canvas'); c.width = img.naturalWidth || img.width; c.height = img.naturalHeight || img.height;
-      c.getContext('2d').drawImage(img, 0, 0); productImg = c;
+      c.getContext('2d').drawImage(img, 0, 0); productImg = c; snapshotOriginal();
       if (saved) Object.assign(state, saved);
       startEditor();   // buildStage recomputa recorte + paleta
       return true;
@@ -2068,7 +2103,7 @@
     const img = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error('No pudimos abrir el recorte.')); im.src = URL.createObjectURL(blob); });
     const c = document.createElement('canvas'); c.width = img.naturalWidth || img.width; c.height = img.naturalHeight || img.height;
     c.getContext('2d').drawImage(img, 0, 0);
-    productImg = c; computeCutout(); extractPalette();
+    productImg = c; computeCutout(); extractPalette(); snapshotOriginal();
     state.layers.dims.pos = null; state.layers.feats.pos = null;   // re-ubicar cotas/puntos según el nuevo producto
     unlocked = false;   // foto nueva = arranca con marca de agua hasta gastar 1 crédito
     saveImage();        // persistir la foto recortada para no perderla al recargar
