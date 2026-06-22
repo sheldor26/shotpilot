@@ -462,6 +462,7 @@
   const state = {
     selected: null,
     platform: 'ml',   // ml | ig | tn — regla de portada (ML exige fondo blanco sin texto/logo)
+    theme:   { id: 'limpio', accent: '#d8381f', font: 'manrope' },   // preset de marca (color+tipografía coherentes)
     bg:      { color: '#ffffff' },
     product: { scale: 1, shadow: false, shadowInt: 60 },
     realce:  { brillo: 100, contraste: 100, color: 100, nitidez: 0 },
@@ -805,6 +806,7 @@
       if (!s.trim()) return;
       const p = f.pos[i], g = new Konva.Group({ x: p.x, y: p.y, draggable: true }), fs = f.fontSize, col = f.bulletColor;
       const ff = fontById(f.font);   // tipografía elegida para el texto del beneficio
+      const tInk = state.bg.color ? inkOn(state.bg.color) : ink;   // contraste del texto contra el fondo
       g.add(new Konva.Circle({ radius: px(22), fill: sel ? 'rgba(216,56,31,0.12)' : 'rgba(0,0,0,0.001)' }));   // 44px táctil
       // estilo del beneficio (galería de plantillas — E8); todos siguen siendo puntos arrastrables.
       // El texto se limita al ancho que entra hasta el borde del lienzo (envuelve, no se sale).
@@ -819,12 +821,12 @@
         const r = fs * (f.style === 'tag' ? 0.9 : 0.78), glyph = f.style === 'tag' ? String(i + 1) : '✓', off = r * 2 + 14;
         g.add(new Konva.Circle({ x: r, y: 0, radius: r, fill: col, listening: false }));
         g.add(new Konva.Text({ x: 0, y: -fs * 0.55, width: r * 2, align: 'center', text: glyph, fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: fs * 0.9, fill: '#fff', listening: false }));
-        const lbl = new Konva.Text({ x: off, text: s, fontFamily: ff.css, fontStyle: ff.w, fontSize: fs, fill: ink, listening: false });
+        const lbl = new Konva.Text({ x: off, text: s, fontFamily: ff.css, fontStyle: ff.w, fontSize: fs, fill: tInk, listening: false });
         const maxW = fitW(off); if (lbl.width() > maxW) lbl.width(maxW);
         lbl.y(-lbl.height() / 2); g.add(lbl);
       } else {
         g.add(new Konva.Circle({ radius: 13, fill: col, listening: false }));
-        const lbl = new Konva.Text({ x: 30, text: s, fontFamily: ff.css, fontStyle: ff.w, fontSize: fs, fill: ink, listening: false });
+        const lbl = new Konva.Text({ x: 30, text: s, fontFamily: ff.css, fontStyle: ff.w, fontSize: fs, fill: tInk, listening: false });
         const maxW = fitW(30); if (lbl.width() > maxW) lbl.width(maxW);
         lbl.y(-lbl.height() / 2); g.add(lbl);
       }
@@ -861,8 +863,23 @@
     });
     g.on('click tap', () => selectPart('incluye')); mainLayer.add(g);
   }
-  // color de acento para "qué incluye": el del producto si hay paleta, si no el de marca
-  const incluyeAccent = () => (productPalette && productPalette[0]) || '#d8381f';
+  // color de acento de marca (lo define el preset de tema; lo usan hero/incluye/etc.)
+  const incluyeAccent = () => state.theme.accent || '#d8381f';
+  // presets de marca: setean fondo + acento + tipografía juntos para que la galería sea una serie
+  const PRESETS = {
+    limpio: { name: 'Limpio', bg: '#f4f5f7', accent: '#d8381f', font: 'manrope' },
+    calido: { name: 'Cálido', bg: '#f6efe4', accent: '#c2410c', font: 'playfair' },
+    tech:   { name: 'Tech',   bg: '#14171c', accent: '#3b82f6', font: 'montserrat' },
+  };
+  function applyPreset(id){
+    const p = PRESETS[id]; if (!p) return;
+    state.theme = { id, accent: p.accent, font: p.font };
+    state.bg.color = p.bg;
+    const L = state.layers;
+    L.feats.bulletColor = p.accent; L.feats.font = p.font; L.hero.font = p.font;
+    L.banner.color = p.accent; L.garantia.accent = p.accent; L.compara.accent = p.accent;
+    loadFontThen(p.font, render); renderPanel();
+  }
   // alto de la tarjeta "qué incluye" (lo comparten el dibujo y la reserva de espacio del producto)
   function incluyeHeight(){
     const items = state.layers.incluye.items.filter(s => s.trim());
@@ -1133,6 +1150,19 @@
     sel.style.fontFamily = fontById(current).css;
     return field(label, sel);
   }
+  // selector de tema (preset de marca): fondo + acento + tipografía coordinados
+  function presetRow(){
+    const wrap = h('div', { class: 'swatches', style: 'gap:.6rem' });
+    Object.keys(PRESETS).forEach(id => {
+      const p = PRESETS[id], on = state.theme.id === id;
+      wrap.append(h('button', { type: 'button', 'aria-pressed': String(on), title: p.name,
+        style: `display:flex;flex-direction:column;align-items:center;gap:5px;border:2px solid ${on ? 'var(--accent)' : 'var(--line)'};border-radius:12px;padding:7px 9px;background:#fff;cursor:pointer`,
+        onclick(){ applyPreset(id); } },
+        h('span', { style: `width:52px;height:32px;border-radius:8px;background:${p.bg};border:1px solid var(--line);position:relative`, html: `<span style="position:absolute;right:5px;bottom:5px;width:13px;height:13px;border-radius:50%;background:${p.accent}"></span>` }),
+        h('span', { style: 'font-size:.78rem;font-weight:700;color:var(--ink-soft)' }, p.name)));
+    });
+    return field('Tema', wrap);
+  }
   const ICON_LABEL = { shield: 'Escudo', truck: 'Camión', ret: 'Devolución', star: 'Estrella', bolt: 'Rayo', drop: 'Gota', clock: 'Reloj', leaf: 'Hoja', lock: 'Candado', medal: 'Medalla', tag: 'Etiqueta', check: 'Tilde' };
   // editor de sellos de confianza: cada fila = ícono + texto
   function trustEditor(gl){
@@ -1221,6 +1251,7 @@
   // Cada panel: 2-4 Esenciales siempre visibles + moreSection() con lo avanzado plegado.
   const PROPS = {
     fondo: root => root.append(
+      presetRow(),
       segRow('Plataforma', [['ml', 'Mercado Libre'], ['ig', 'Instagram'], ['tn', 'Tienda Nube']], state.platform, v => { state.platform = v; render(); renderPanel(); }),
       state.platform === 'ml' ? hint('Para Mercado Libre la portada va en blanco puro, sin texto ni logo (regla de ML). El color de fondo se aplica al resto de las placas.') : '',
       colorRow('Color de fondo', withPalette(BG_COLORS), state.bg.color, v => { state.bg.color = v; render(); renderPanel(); }),
