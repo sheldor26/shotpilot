@@ -148,6 +148,11 @@
     .list-item{ display:flex; gap:.45rem; align-items:center; margin-bottom:.4rem }
     .list-item input{ flex:1 }
     .mini{ flex:none; width:32px; height:32px; border-radius:8px; border:1px solid var(--line); background:var(--white); color:var(--ink-soft); cursor:pointer; font-size:1rem; line-height:1 }
+    .tgl{ flex:none; min-width:58px; padding:.5rem .6rem; border-radius:10px; border:1.5px solid var(--line); background:var(--white); color:var(--ink-faint); cursor:pointer; font:inherit; font-size:.78rem; font-weight:700; line-height:1.1; text-align:center; white-space:nowrap; transition:background .12s,border-color .12s,color .12s }
+    .tgl[aria-pressed="true"]{ border-color:#1f9d55; background:#eafaef; color:#1f9d55 }
+    .row-col{ display:flex; flex-direction:column; gap:.45rem; margin-bottom:.7rem; padding-bottom:.7rem; border-bottom:1px solid var(--line) }
+    .tgl-row{ display:flex; gap:.45rem; align-items:center }
+    .tgl-row .tgl{ flex:1 }
     .add-btn{ font:inherit; font-size:.82rem; font-weight:700; color:var(--accent); background:none; border:0; cursor:pointer; padding:.3rem 0 }
     .val{ font-size:.8rem; font-weight:700; color:var(--ink-faint); min-width:42px; text-align:right }
     .note{ color:var(--ink-soft); font-size:.9rem; line-height:1.5 }
@@ -843,26 +848,39 @@
       // estilo del beneficio (galería de plantillas — E8); todos siguen siendo puntos arrastrables.
       // El texto se limita al ancho que entra hasta el borde del lienzo (envuelve, no se sale).
       const fitW = (offset) => Math.max(140, OUT.w - p.x - offset - 18);
+      const accent = col, aDark = accentDark(col);
       if (f.style === 'chips'){
-        const padX = 26, t = new Konva.Text({ text: s, fontFamily: ff.css, fontStyle: ff.w, fontSize: fs, fill: '#fff', listening: false });
+        // píldora con gradiente de acento + glow (no color plano)
+        const padX = 30, t = new Konva.Text({ text: s, fontFamily: ff.css, fontStyle: ff.w, fontSize: fs, fill: '#fff', listening: false });
         const maxW = fitW(padX * 2); if (t.width() > maxW) t.width(maxW);
-        const bh = t.height() + 22, bw = t.width() + padX * 2;
-        g.add(new Konva.Rect({ x: 0, y: -bh / 2, width: bw, height: bh, fill: col, cornerRadius: Math.min(bh / 2, 28), listening: false }));
+        const bh = t.height() + 28, bw = t.width() + padX * 2;
+        const pill = new Konva.Rect({ x: 0, y: -bh / 2, width: bw, height: bh, cornerRadius: bh / 2,
+          fillLinearGradientStartPoint: { x: 0, y: -bh / 2 }, fillLinearGradientEndPoint: { x: bw, y: bh / 2 },
+          fillLinearGradientColorStops: [0, accent, 1, aDark], listening: false });
+        pill.shadowColor(accent); pill.shadowBlur(26); pill.shadowOffsetY(10); pill.shadowOpacity(0.4); g.add(pill);
+        g.add(new Konva.Line({ points: [bh / 2, -bh / 2 + 4, bw - bh / 2, -bh / 2 + 4], stroke: 'rgba(255,255,255,0.4)', strokeWidth: 2, lineCap: 'round', listening: false }));
         t.position({ x: padX, y: -t.height() / 2 }); g.add(t);
-      } else if (f.style === 'tag' || f.style === 'check'){
-        const r = fs * (f.style === 'tag' ? 0.9 : 0.78), glyph = f.style === 'tag' ? String(i + 1) : '✓', off = r * 2 + 14;
-        g.add(new Konva.Circle({ x: r, y: 0, radius: r, fill: col, listening: false }));
-        g.add(new Konva.Text({ x: 0, y: -fs * 0.55, width: r * 2, align: 'center', text: glyph, fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: fs * 0.9, fill: '#fff', listening: false }));
-        const lbl = new Konva.Text({ x: off, text: s, fontFamily: ff.css, fontStyle: ff.w, fontSize: fs, fill: tInk, listening: false });
-        lbl.shadowColor(tInk === '#ffffff' ? '#000' : '#fff'); lbl.shadowBlur(7); lbl.shadowOpacity(0.5);   // scrim de legibilidad sobre la foto
-        const maxW = fitW(off); if (lbl.width() > maxW) lbl.width(maxW);
-        lbl.y(-lbl.height() / 2); g.add(lbl);
       } else {
-        g.add(new Konva.Circle({ radius: 13, fill: col, listening: false }));
-        const lbl = new Konva.Text({ x: 30, text: s, fontFamily: ff.css, fontStyle: ff.w, fontSize: fs, fill: tInk, listening: false });
-        lbl.shadowColor(tInk === '#ffffff' ? '#000' : '#fff'); lbl.shadowBlur(7); lbl.shadowOpacity(0.5);   // scrim de legibilidad sobre la foto
-        const maxW = fitW(30); if (lbl.width() > maxW) lbl.width(maxW);
-        lbl.y(-lbl.height() / 2); g.add(lbl);
+        // tarjeta blanca premium con badge de acento (puntos / numerado / con tilde)
+        const padX = 26, gapBT = 16, dot = f.style === 'dots';
+        const badgeR = dot ? 13 : fs * 0.7, leadW = badgeR * 2, contentX = padX + leadW + gapBT;
+        const t = new Konva.Text({ text: s, fontFamily: ff.css, fontStyle: ff.w, fontSize: fs, fill: INK, listening: false });
+        const maxW = fitW(contentX + padX); if (t.width() > maxW) t.width(maxW);
+        const innerH = Math.max(t.height(), leadW), ph = innerH + 30, pw = contentX + t.width() + padX;
+        const pill = new Konva.Rect({ x: 0, y: -ph / 2, width: pw, height: ph, cornerRadius: Math.min(ph / 2, 26), fill: '#ffffff', listening: false });
+        pill.shadowColor('#1A1614'); pill.shadowBlur(40); pill.shadowOffsetY(18); pill.shadowOpacity(0.12); g.add(pill);
+        const bx = padX + badgeR;
+        if (dot){
+          g.add(new Konva.Circle({ x: bx, y: 0, radius: badgeR, fill: accent, listening: false }));
+        } else {
+          const circ = new Konva.Circle({ x: bx, y: 0, radius: badgeR,
+            fillLinearGradientStartPoint: { x: -badgeR, y: -badgeR }, fillLinearGradientEndPoint: { x: badgeR, y: badgeR },
+            fillLinearGradientColorStops: [0, accent, 1, aDark], listening: false });
+          circ.shadowColor(accent); circ.shadowBlur(14); circ.shadowOffsetY(5); circ.shadowOpacity(0.45); g.add(circ);
+          if (f.style === 'tag') g.add(new Konva.Text({ x: bx - badgeR, y: -fs * 0.5, width: badgeR * 2, align: 'center', text: String(i + 1), fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: fs * 0.85, fill: '#fff', listening: false }));
+          else g.add(new Konva.Line({ points: [bx - badgeR * 0.42, 0, bx - badgeR * 0.1, badgeR * 0.34, bx + badgeR * 0.46, -badgeR * 0.4], stroke: '#fff', strokeWidth: 3.4, lineCap: 'round', lineJoin: 'round', listening: false }));
+        }
+        t.position({ x: contentX, y: -t.height() / 2 }); g.add(t);
       }
       g.on('dragmove', () => { const sn = applySnap(g.x(), g.y()); g.position({ x: sn.x, y: sn.y }); p.x = sn.x; p.y = sn.y; drawGuides(sn.guides); mainLayer.batchDraw(); });
       g.on('dragend', () => clearGuides());
@@ -914,6 +932,10 @@
   }
   // color de acento de marca (lo define el preset de tema; lo usan hero/incluye/etc.)
   const incluyeAccent = () => state.theme.accent || '#d8381f';
+  // tonos derivados del acento para gradientes/fondos premium
+  const accentDark = a => shade(a, -0.42);   // versión oscura (gradiente / texto)
+  const accentSoft = a => shade(a, 0.88);    // tinte muy claro (fondos sutiles)
+  const INK = '#1A1614';                      // casi-negro tintado (nunca negro puro)
   // presets de marca: setean fondo + acento + tipografía juntos para que la galería sea una serie
   const PRESETS = {
     limpio: { name: 'Limpio', bg: '#f4f5f7', accent: '#d8381f', font: 'manrope' },
@@ -1291,11 +1313,12 @@
     const redraw = () => {
       wrap.innerHTML = '';
       c.rows.forEach((r, i) => {
-        const tick = (key, label) => h('button', { class: 'mini', type: 'button', 'aria-pressed': String(r[key]), style: r[key] ? 'border-color:#1f9d55;color:#1f9d55' : '', onclick(){ r[key] = !r[key]; render(); redraw(); } }, label);
-        wrap.append(h('div', { class: 'list-item' },
+        const tick = (key, name) => h('button', { class: 'tgl', type: 'button', 'aria-pressed': String(r[key]), onclick(){ r[key] = !r[key]; render(); redraw(); } }, name + (r[key] ? ' ✓' : ''));
+        wrap.append(h('div', { class: 'row-col' },
           h('input', { type: 'text', value: r.label, placeholder: 'Ej: Materiales que duran', oninput(){ r.label = this.value; render(); } }),
-          tick('mine', 'Este ✓'), tick('other', 'Otro ✓'),
-          h('button', { class: 'mini', type: 'button', title: 'Quitar', onclick(){ c.rows.splice(i, 1); render(); redraw(); } }, '×')));
+          h('div', { class: 'tgl-row' },
+            tick('mine', 'Este'), tick('other', 'Otro'),
+            h('button', { class: 'mini', type: 'button', title: 'Quitar fila', onclick(){ c.rows.splice(i, 1); render(); redraw(); } }, '×'))));
       });
       if (c.rows.length < 6) wrap.append(h('button', { class: 'add-btn', type: 'button', onclick(){ c.rows.push({ label: '', mine: true, other: false }); render(); redraw(); } }, '+ Agregar fila'));
     };
