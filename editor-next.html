@@ -461,6 +461,7 @@
   // ============================ estado central (E2) ============================
   const state = {
     selected: null,
+    platform: 'ml',   // ml | ig | tn — regla de portada (ML exige fondo blanco sin texto/logo)
     bg:      { color: '#ffffff' },
     product: { scale: 1, shadow: false, shadowInt: 60 },
     realce:  { brillo: 100, contraste: 100, color: 100, nitidez: 0 },
@@ -687,10 +688,14 @@
   function render(){
     bgLayer.destroyChildren(); productLayer.destroyChildren(); mainLayer.destroyChildren(); guideLayer.destroyChildren();
     const box = productBox();
-    if (state.bg.color){
-      const base = state.bg.color, portada = isPortada();
+    const portada = isPortada(), cleanCover = portada && state.platform === 'ml';
+    if (cleanCover){
+      // GUARDRAIL ML: la portada va en blanco puro, sin gradiente/halo/logo (regla de Mercado Libre)
+      const r = new Konva.Rect({ x: 0, y: 0, width: OUT.w, height: OUT.h, fill: '#ffffff' });
+      r.on('click tap', () => selectPart('fondo')); bgLayer.add(r);
+    } else if (state.bg.color){
+      const base = state.bg.color;
       // fondo con profundidad: gradiente radial sutil (centro apenas más claro, bordes más oscuros).
-      // En la portada lo dejamos casi plano para no romper la regla de fondo blanco de ML.
       const r = new Konva.Rect({ x: 0, y: 0, width: OUT.w, height: OUT.h,
         fillRadialGradientStartPoint: { x: OUT.w / 2, y: OUT.h * 0.42 },
         fillRadialGradientEndPoint: { x: OUT.w / 2, y: OUT.h * 0.42 },
@@ -735,7 +740,7 @@
     if (state.layers.hero.on    && vp === 'hero')    drawHero(box);
     if (state.layers.garantia.on&& vp === 'garantia')drawGarantia(box);
     if (state.layers.compara.on && vp === 'compara') drawCompara();
-    if (state.layers.logo.on)    drawLogo();
+    if (state.layers.logo.on && !cleanCover) drawLogo();   // sin logo en la portada ML
     drawSelection(box);
     stage.batchDraw();
   }
@@ -1216,6 +1221,8 @@
   // Cada panel: 2-4 Esenciales siempre visibles + moreSection() con lo avanzado plegado.
   const PROPS = {
     fondo: root => root.append(
+      segRow('Plataforma', [['ml', 'Mercado Libre'], ['ig', 'Instagram'], ['tn', 'Tienda Nube']], state.platform, v => { state.platform = v; render(); renderPanel(); }),
+      state.platform === 'ml' ? hint('Para Mercado Libre la portada va en blanco puro, sin texto ni logo (regla de ML). El color de fondo se aplica al resto de las placas.') : '',
       colorRow('Color de fondo', withPalette(BG_COLORS), state.bg.color, v => { state.bg.color = v; render(); renderPanel(); }),
       moreSection('fondo', colorPick('Color personalizado', state.bg.color, v => { state.bg.color = v; render(); renderPanel(); }))),
     producto: root => root.append(
