@@ -1241,11 +1241,18 @@
     }
     g.add(new Konva.Text({ text: c.other || 'Lo común', x: colOtherX, y: top, width: colW, height: headH, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '700', fontSize: 30, fill: st.label }));
     g.add(new Konva.Text({ text: c.mine || 'Este', x: mineX, y: mineTop, width: mineW, height: headH, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 32, fill: st.headerInk }));
+    // celda: si hay valor escrito, mostramos el dato (convence más que un tilde); si no, ✓/✗
+    const cell = (cx, mid, yes, val, mineCol) => {
+      if (val && val.trim()){
+        const w2 = colW - 12;
+        g.add(new Konva.Text({ text: val.trim(), x: cx - w2 / 2, y: mid - rowH / 2, width: w2, height: rowH, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: mineCol ? '800' : '600', fontSize: 27, lineHeight: 1.1, fill: mineCol ? st.title : st.noX, listening: false }));
+      } else comparaMark(g, cx, mid, yes, st);
+    };
     rows.forEach((r, i) => {
       const ry = top + headH + i * rowH, mid = ry + rowH / 2;
       g.add(new Konva.Text({ text: r.label, x: x0 + 4, y: ry, width: labelW - 20, height: rowH, verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '600', fontSize: 30, fill: st.label, listening: false }));
-      comparaMark(g, colOtherX + colW / 2, mid, r.other, st);
-      comparaMark(g, colMineX + colW / 2, mid, r.mine, st);
+      cell(colOtherX + colW / 2, mid, r.other, r.otherVal, false);
+      cell(colMineX + colW / 2, mid, r.mine, r.mineVal, true);
     });
     g.on('click tap', () => selectPart('compara')); mainLayer.add(g);
   }
@@ -1633,6 +1640,9 @@
         const tick = (key, name) => h('button', { class: 'tgl', type: 'button', 'aria-pressed': String(r[key]), onclick(){ r[key] = !r[key]; render(); redraw(); } }, name + (r[key] ? ' ✓' : ''));
         wrap.append(h('div', { class: 'row-col' },
           h('input', { type: 'text', value: r.label, placeholder: 'Ej: Materiales que duran', oninput(){ r.label = this.value; render(); } }),
+          h('div', { class: 'tgl-row' },
+            h('input', { type: 'text', value: r.mineVal || '', placeholder: 'Este (ej: Acero)', style: 'flex:1', oninput(){ r.mineVal = this.value; render(); } }),
+            h('input', { type: 'text', value: r.otherVal || '', placeholder: 'Otro (ej: Plástico)', style: 'flex:1', oninput(){ r.otherVal = this.value; render(); } })),
           h('div', { class: 'tgl-row' },
             tick('mine', 'Este'), tick('other', 'Otro'),
             h('button', { class: 'mini', type: 'button', title: 'Quitar fila', onclick(){ c.rows.splice(i, 1); render(); redraw(); } }, '×'))));
