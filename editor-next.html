@@ -705,7 +705,7 @@
     stage.on('click tap', e => { if (state.selected === 'retoque') return; if (e.target === stage || e.target.getLayer() === bgLayer) selectPart(null); });
     // ---- pincel de Retoque (borrar / restaurar) con cursor en vivo + borde suave + trazo interpolado ----
     let painting = false;
-    stage.on('mousedown touchstart', () => { if (state.selected !== 'retoque') return; painting = true; lastPt = null; retoquePaint(); });
+    stage.on('mousedown touchstart', () => { if (state.selected !== 'retoque') return; painting = true; lastPt = null; pushImgHistory(); retoquePaint(); });
     stage.on('mousemove touchmove', () => { if (state.selected !== 'retoque') return; updateBrushCursor(); if (painting) retoquePaint(); });
     stage.on('mouseup touchend', () => { if (painting){ painting = false; lastPt = null; saveImage(); render(); } });
     stage.on('mouseleave', () => { if (state.selected === 'retoque') clearBrushCursor(); });
@@ -2294,20 +2294,30 @@
   });
 
   // deshacer a un tap — historial por snapshots del estado (desacoplado de cada control)
+  // historial unificado: cambios de layout (estado) Y pinceladas de retoque (imagen)
   const history = []; let lastSnap = null, undoing = false;
+  function cloneCanvas(cv){ const c = document.createElement('canvas'); c.width = cv.width; c.height = cv.height; c.getContext('2d').drawImage(cv, 0, 0); return c; }
   function updateUndoBtn(){ $('undo-btn').disabled = history.length === 0; }
+  function pushImgHistory(){ if (!productImg) return; history.push({ k: 'img', img: cloneCanvas(productImg), pi: activePhoto }); if (history.length > 50) history.shift(); updateUndoBtn(); }   // snapshot ANTES de pintar
   function pollHistory(){
     if (!ready || undoing) return;
     const s = JSON.stringify(state);
     if (lastSnap === null){ lastSnap = s; return; }
-    if (s !== lastSnap){ history.push(lastSnap); if (history.length > 50) history.shift(); lastSnap = s; updateUndoBtn(); saveState(); }
+    if (s !== lastSnap){ history.push({ k: 'state', s: lastSnap }); if (history.length > 50) history.shift(); lastSnap = s; updateUndoBtn(); saveState(); }
   }
   function undo(){
     if (!history.length) return;
     undoing = true;
-    const prev = history.pop();
-    Object.assign(state, JSON.parse(prev)); lastSnap = prev;
-    render(); renderToolbar(); renderPanel(); updateUndoBtn();
+    const e = history.pop();
+    if (e.k === 'img'){
+      const ph = photos[e.pi];
+      if (ph){ ph.img = e.img; const sv = productImg; productImg = e.img; computeCutout(); ph.cutout = cutout; productImg = sv; if (e.pi === activePhoto){ setPhotoRefs(activePhoto); extractPalette(); } }
+      render(); renderStrip(); saveSession();
+    } else {
+      Object.assign(state, JSON.parse(e.s)); lastSnap = e.s;
+      render(); renderToolbar(); renderPanel();
+    }
+    updateUndoBtn();
     undoing = false;
   }
   $('undo-btn').addEventListener('click', undo);
