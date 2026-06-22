@@ -635,6 +635,10 @@
     computeCutout(); extractPalette();
     // tocar el vacío deselecciona
     stage.on('click tap', e => { if (e.target === stage || e.target.getLayer() === bgLayer) selectPart(null); });
+    // seguridad: bloquear click derecho sobre el lienzo (que no puedan "Guardar imagen" sin procesar)
+    const cont = stage.container();
+    cont.addEventListener('contextmenu', e => e.preventDefault());
+    cont.style.userSelect = 'none'; cont.style.webkitUserSelect = 'none';
     fitStage();
     window.addEventListener('resize', fitStage, { passive: true });
   }
@@ -807,6 +811,9 @@
     if (state.layers.logo.on && !cleanCover) drawLogo();   // sin logo en la portada ML
     if (!cleanCover) drawPlateNumber();                    // numeración (no en la portada ML)
     drawSelection(box);
+    // marca de agua en el PREVIEW en vivo (no solo al exportar): evita que se bajen la foto
+    // limpia con click derecho o screenshot. En export se omite acá y se aplica nítida aparte.
+    if (!exporting && wmOn()) mainLayer.add(new Konva.Image({ image: wmCanvas(), x: 0, y: 0, width: OUT.w, height: OUT.h, listening: false }));
     stage.batchDraw();
   }
   const ink = '#241E1A';
@@ -1757,6 +1764,9 @@
     ctx.restore();
   }
   function downloadBlob(blob, name){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0); }
+  // watermark cacheado para el preview en vivo (se genera una vez a 1200×1200)
+  let _wmCanvas = null, exporting = false;
+  function wmCanvas(){ if (_wmCanvas) return _wmCanvas; const c = document.createElement('canvas'); c.width = OUT.w; c.height = OUT.h; drawWatermark(c.getContext('2d'), OUT.w, OUT.h); _wmCanvas = c; return c; }
 
   // value-first/créditos (PR3): marca de agua salvo que la foto esté desbloqueada (1 crédito gastado) o sea pago.
   // Igual criterio que el editor viejo (wmOn). El gasto real ocurre en ensureUnlocked() al descargar.
@@ -1770,8 +1780,10 @@
     exportPlaca = placaId || null;   // fuerza la placa visible (independiente de la selección)
     state.selected = null;
     const ds = stage.scaleX();
+    exporting = true;   // que el render NO meta el watermark del preview (lo aplicamos nítido abajo)
     stage.scale({ x: 1, y: 1 }); stage.size({ width: OUT.w, height: OUT.h }); render();
     const cv = stage.toCanvas();   // 1200×1200 limpio
+    exporting = false;
     exportPlaca = undefined; state.selected = savedSel;
     stage.scale({ x: ds, y: ds }); fitStage();   // restaura la vista
     if (!noWm && wmOn()) drawWatermark(cv.getContext('2d'), cv.width, cv.height);
