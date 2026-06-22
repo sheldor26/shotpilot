@@ -317,6 +317,7 @@
       <a href="/marca">Mi marca</a>
       <a href="/cuenta">Cuenta</a>
       <button type="button" id="help-btn-m">¿Cómo funciona?</button>
+      <button type="button" id="order-btn">↕ Ordenar galería</button>
       <button type="button" id="new-prod" style="color:var(--accent)">＋ Producto nuevo</button>
     </div>
   </header>
@@ -495,6 +496,7 @@
     selected: null,
     platform: 'ml',   // ml | ig | tn — regla de portada (ML exige fondo blanco sin texto/logo)
     theme:   { id: 'limpio', accent: '#d8381f', font: 'manrope', head: 'manrope' },   // look de marca (color+tipografía coherentes)
+    placaOrder: [],   // orden custom de las placas en la galería (claves); vacío = orden por defecto
     bg:      { color: '#ffffff', style: 'gradiente' },   // gradiente | plano | estudio | foco
     product: { scale: 1, shadow: false, shadowInt: 60, dx: 0, dy: 0 },
     realce:  { brillo: 100, contraste: 100, color: 100, nitidez: 0 },
@@ -2036,7 +2038,41 @@
     if (L.social.on) out.push({ k: 'social', label: 'resenas' });
     if (L.garantia.on) out.push({ k: 'garantia', label: 'confianza' });
     if (L.incluye.on) out.push({ k: 'incluye', label: 'que-incluye' });
+    const ord = state.placaOrder || [];
+    if (ord.length){   // respetar el orden custom; lo no listado va al final
+      const clean = out.filter(o => o.k === 'clean'), info = out.filter(o => o.k !== 'clean');
+      info.sort((a, b) => { const ia = ord.indexOf(a.k), ib = ord.indexOf(b.k); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); });
+      return clean.concat(info);
+    }
     return out;
+  }
+  // modal para elegir el orden de las placas en la galería (↑/↓)
+  function openOrderModal(){
+    const info = galleryOrder().filter(o => o.k !== 'clean');
+    if (!info.length){ showToast('Activá alguna placa primero (Medidas, Beneficios, etc.).', 'err'); return; }
+    const NICE = { barra: 'Barra', lateral: 'Barra lateral', pack: 'Cantidad', hero: 'Titular', panel: 'Panel', feats: 'Beneficios', banner: 'Banner', dims: 'Medidas', compara: 'Comparativa', social: 'Reseñas', garantia: 'Confianza', incluye: 'Qué incluye' };
+    let keys = info.map(o => o.k);
+    const bd = h('div', { class: 'modal-bd', style: 'display:flex' });
+    const box = h('div', { class: 'modal', style: 'max-width:380px' });
+    const list = h('div', {});
+    const redraw = () => {
+      list.innerHTML = '';
+      keys.forEach((k, i) => {
+        list.append(h('div', { class: 'list-item', style: 'gap:.5rem' },
+          h('span', { style: 'flex:1;font-weight:600' }, (i + 2) + '. ' + (NICE[k] || k)),
+          h('button', { class: 'mini', type: 'button', title: 'Subir', disabled: i === 0, onclick(){ [keys[i - 1], keys[i]] = [keys[i], keys[i - 1]]; redraw(); } }, '↑'),
+          h('button', { class: 'mini', type: 'button', title: 'Bajar', disabled: i === keys.length - 1, onclick(){ [keys[i + 1], keys[i]] = [keys[i], keys[i + 1]]; redraw(); } }, '↓')));
+      });
+    };
+    redraw();
+    box.append(
+      h('h3', { style: 'margin:0 0 .3rem;font-family:Manrope;font-weight:800' }, 'Orden de la galería'),
+      h('p', { class: 'note', style: 'margin:0 0 .8rem' }, 'La portada (y tus fotos) van primero. Ordená el resto: en ML el orden vende.'),
+      list,
+      h('div', { class: 'tgl-row', style: 'margin-top:1rem' },
+        h('button', { class: 'add-btn', type: 'button', style: 'flex:1', onclick(){ bd.remove(); } }, 'Cancelar'),
+        h('button', { class: 'dl-btn', type: 'button', style: 'flex:1', onclick(){ state.placaOrder = keys.slice(); saveState(); bd.remove(); showToast('Orden guardado.'); } }, 'Guardar orden')));
+    bd.append(box); bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); }); document.body.append(bd);
   }
   async function downloadGallery(){
     if (!stage) return;
@@ -2197,6 +2233,7 @@
   $('help-btn').addEventListener('click', openHelp);
   $('help-btn-m').addEventListener('click', openHelp);
 
+  $('order-btn').addEventListener('click', () => { toggleMenu(false); openOrderModal(); });
   // empezar un producto nuevo (descarta foto + placas, con confirmación)
   $('new-prod').addEventListener('click', () => {
     toggleMenu(false);
