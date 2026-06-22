@@ -253,17 +253,27 @@
 
     /* ===== desktop: toolbar izquierda · lienzo centro · inspector derecha ===== */
     @media(min-width:860px){
-      .editor{ display:grid; grid-template-columns:104px 1fr 340px; grid-template-areas:"tb cv ins"; gap:22px; padding:24px; }
+      .editor{ display:grid; grid-template-columns:140px 1fr 340px; grid-template-areas:"tb cv ins"; gap:22px; padding:24px; }
       .toolbar{
-        grid-area:tb; position:sticky; top:80px; bottom:auto; flex-direction:column; align-items:stretch; gap:.15rem;
+        grid-area:tb; position:sticky; top:80px; bottom:auto; flex-direction:column; align-items:stretch; gap:.12rem;
         overflow:visible; background:none; backdrop-filter:none; border:0; padding:0;
       }
-      .group-label{ align-self:stretch; width:100%; justify-content:space-between; padding:.5rem .35rem .15rem }
+      /* títulos de sección legibles + separador fino arriba de cada grupo */
+      .group-label{ align-self:stretch; width:100%; justify-content:space-between; padding:.9rem .5rem .35rem; font-size:.66rem; font-weight:800; letter-spacing:.07em; border-top:1px solid var(--line) }
+      .toolbar > .group-label:first-child{ border-top:0; padding-top:.15rem }
+      .gl-chev{ display:none }   /* en desktop no se pliega (se ven todas) */
       .tb-div{ display:none }
-      .tool{ flex-direction:row; gap:.6rem; min-width:0; width:100%; padding:.35rem .4rem; border-radius:12px; font-size:.82rem; justify-content:flex-start }
-      .tool:hover{ background:var(--white) }
-      .tool[aria-current="true"]{ background:var(--white) }
-      .tool .ic{ width:34px; height:34px }
+      /* item: default apagado, hover crema, activo con ícono de acento, seleccionado blanco + barrita */
+      .tool{ position:relative; flex-direction:row; gap:.55rem; min-width:0; width:100%; padding:.42rem .5rem; border-radius:11px; font-size:.82rem; font-weight:600; justify-content:flex-start; color:var(--ink-soft); transition:background .14s, color .14s }
+      .tool .ic{ width:34px; height:34px; border-radius:10px; color:var(--ink-faint); transition:background .14s, color .14s }
+      .tool:hover{ background:var(--cream-2); color:var(--ink) }
+      .tool:hover .ic{ color:var(--ink) }
+      .tool.is-on{ color:var(--ink) }
+      .tool.is-on .ic{ color:var(--accent) }
+      .tool[aria-current="true"]{ background:var(--white); color:var(--ink); font-weight:700; box-shadow:0 1px 3px rgba(40,24,16,.08) }
+      .tool[aria-current="true"] .ic{ background:var(--accent-tint); color:var(--accent) }
+      .tool[aria-current="true"]::before{ content:""; position:absolute; left:-3px; top:50%; width:3px; height:58%; border-radius:3px; background:var(--accent); transform:translateY(-50%) }
+      .tool .dot{ left:24px; right:auto; top:-2px; box-shadow:0 0 0 2px var(--cream) }
       .canvas-col{ grid-area:cv; min-width:0 }
       .canvas-box{ max-width:none }
       .inspector{ grid-area:ins; display:block; position:sticky; top:80px; background:var(--white); border:1px solid var(--line); border-radius:var(--radius); padding:1.1rem; min-height:55vh }
@@ -1366,11 +1376,11 @@
   function renderToolbar(){
     const tb = $('toolbar'); tb.innerHTML = '';
     GROUPS.forEach((g, gi) => {
-      const collapsed = !!tbCollapsed[g.label];
+      const collapsed = !isDesktop() && !!tbCollapsed[g.label];   // plegado solo en mobile
       if (gi > 0){ const d = document.createElement('div'); d.className = 'tb-div'; tb.appendChild(d); }
       const lab = document.createElement('button'); lab.type = 'button'; lab.className = 'group-label' + (collapsed ? ' is-collapsed' : '');
       lab.innerHTML = `<span>${g.label}</span><span class="gl-chev">▾</span>`;
-      lab.addEventListener('click', () => { tbCollapsed[g.label] = !tbCollapsed[g.label]; renderToolbar(); });
+      if (!isDesktop()) lab.addEventListener('click', () => { tbCollapsed[g.label] = !tbCollapsed[g.label]; renderToolbar(); });
       tb.appendChild(lab);
       if (collapsed) return;   // grupo plegado: no dibujamos sus herramientas
       g.tools.forEach(id => {
