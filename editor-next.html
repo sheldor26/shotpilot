@@ -426,6 +426,28 @@
   function luminance(hex){ const [r,g,b] = _rgb(hex).map(v => { v/=255; return v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); }); return 0.2126*r + 0.7152*g + 0.0722*b; }
   // tinta legible (oscura o clara) según el fondo
   const inkOn = (bg, dark = '#1d2024', light = '#ffffff') => luminance(bg) > 0.45 ? dark : light;
+
+  // ---- íconos de línea (paths 24×24) reutilizables en confianza/beneficios ----
+  const GLYPH = {
+    check:  'M5 13l4 4L19 7',
+    shield: 'M12 3 5 6v5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z',
+    truck:  'M3 7h11v9H3zM14 10h4l3 3v3h-7zM7.5 16.5a1.6 1.6 0 1 0 0 .01M17.5 16.5a1.6 1.6 0 1 0 0 .01',
+    ret:    'M9 7 4 12l5 5M4 12h10a5 5 0 0 1 5 5',
+    star:   'M12 3l2.6 6.3 6.4.5-4.9 4.2 1.6 6.3L12 17l-5.7 3.6 1.6-6.3L3 9.8l6.4-.5z',
+    bolt:   'M13 2 4 14h6l-1 8 9-12h-6z',
+    drop:   'M12 3c4 5 6 8 6 11a6 6 0 0 1-12 0c0-3 2-6 6-11z',
+    clock:  'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z',
+    leaf:   'M5 19c8 1 14-4 14-14C9 5 4 11 5 19zM5 19c2-5 5-7 9-9',
+    lock:   'M6 11h12v9H6zM9 11V8a3 3 0 0 1 6 0v3',
+    medal:  'M12 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM9 12l-2 8 5-3 5 3-2-8',
+    tag:    'M12 3H5v7l9 9 7-7-9-9zM8 8h.01',
+  };
+  const ICON_OPTS = ['shield', 'truck', 'ret', 'star', 'bolt', 'drop', 'clock', 'leaf', 'lock', 'medal', 'tag', 'check'];
+  // dibuja un glifo de línea dentro de un grupo, escalado a `size` y centrado en (x,y)
+  function drawGlyph(group, name, x, y, size, color, sw){
+    const s = size / 24;
+    group.add(new Konva.Path({ x: x - size / 2, y: y - size / 2, data: GLYPH[name] || GLYPH.check, stroke: color, strokeWidth: (sw || 2) / s, lineCap: 'round', lineJoin: 'round', scaleX: s, scaleY: s, listening: false }));
+  }
   // El canvas (Konva) solo dibuja una fuente si YA está cargada. Pedimos la fuente y recién
   // ahí redibujamos; igual redibujamos al toque con el fallback para que se sienta instantáneo.
   function loadFontThen(id, cb){
@@ -449,11 +471,18 @@
       banner:  { on: false, text: 'ENVÍO GRATIS', color: '#1B49B8', pos: 'top', place: null, textColor: '#ffffff', fontSize: 52, textShadow: false, opacity: 100, style: 'solid' },
       feats:   { on: false, items: ['Larga duración', 'Fragancia amaderada', 'Frasco de vidrio'], pos: null, bulletColor: '#d8381f', fontSize: 30, style: 'dots', font: 'manrope' },
       incluye: { on: false, items: ['Perfume 100 ml', 'Estuche original'], title: 'INCLUYE' },
+      // placas de conversión (E12)
+      hero:    { on: false, eyebrow: '', headline: 'El detalle que se nota', sub: '', font: 'manrope', pos: 'left' },
+      garantia:{ on: false, items: [{ icon: 'shield', text: 'Garantía 6 meses' }, { icon: 'truck', text: 'Envío a todo el país' }, { icon: 'ret', text: 'Devolución 30 días' }], accent: '#1f9d55' },
+      compara: { on: false, mine: 'Este', other: 'Lo común', accent: '#1f9d55',
+        rows: [{ label: 'Materiales que duran', mine: true, other: false }, { label: 'Listo para usar', mine: true, other: false }, { label: 'Garantía y soporte', mine: true, other: false }, { label: 'Precio justo', mine: true, other: true }] },
       logo:    { on: false, text: 'TU MARCA', corner: 'br', size: 18, opacity: 100, place: null },
     },
   };
   // partes con presencia en el lienzo (las que tienen capa propia)
-  const LAYER_IDS = ['dims', 'banner', 'feats', 'incluye', 'logo'];
+  const LAYER_IDS = ['dims', 'banner', 'feats', 'incluye', 'hero', 'garantia', 'compara', 'logo'];
+  // placas de "composición completa": ocultan el producto grande (dibujan lo suyo)
+  const FULL_PLACAS = ['compara'];
   const isLayer = id => LAYER_IDS.includes(id);
   const isOn = id => isLayer(id) ? state.layers[id].on : true;
 
@@ -468,11 +497,15 @@
     incluye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>',
     logo:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></svg>',
     banner:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>',
+    hero:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h9M4 10h7M4 15h12"/><path d="m17 4 1.5 3.5L22 9l-3.5 1.5L17 14l-1.5-3.5L12 9l3.5-1.5z"/></svg>',
+    garantia:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z"/><path d="m9 12 2 2 4-4"/></svg>',
+    compara: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h7v16H4zM13 4h7v16h-7z"/><path d="M6.5 9.5 8 11l2-2.5"/><path d="m16 9 2 2M18 9l-2 2"/></svg>',
   };
-  const TLABEL = { fondo:'Fondo', realce:'Realce', producto:'Fotos', escena:'Escena IA', dims:'Medidas', feats:'Beneficios', incluye:'Qué incluye', logo:'Logo', banner:'Banner' };
+  const TLABEL = { fondo:'Fondo', realce:'Realce', producto:'Fotos', escena:'Escena IA', dims:'Medidas', feats:'Beneficios', incluye:'Qué incluye', logo:'Logo', banner:'Banner', hero:'Titular', garantia:'Confianza', compara:'Comparativa' };
   const GROUPS = [
     { label: 'Foto',        tools: ['fondo', 'realce', 'producto'] },
     { label: 'Información',  tools: ['dims', 'feats', 'incluye', 'banner'] },
+    { label: 'Vender',      tools: ['hero', 'garantia', 'compara'] },
     { label: 'Marca',       tools: ['logo'] },
   ];
   // Escena IA se ocultó (E10): no mostrar features "pronto" hasta que funcionen. Vuelve cuando esté lista.
@@ -632,10 +665,12 @@
     }
     if (L.feats.on   && vp === 'feats')   res.right += OUT.w * 0.30;
     if (L.incluye.on && vp === 'incluye') res.bottom += incluyeHeight() + 36 + OUT.h * 0.03;
+    if (L.hero.on    && vp === 'hero')    res[L.hero.pos === 'right' ? 'right' : 'left'] += OUT.w * 0.46;
+    if (L.garantia.on&& vp === 'garantia')res.bottom += OUT.h * 0.18;
     const aw = OUT.w - res.left - res.right, ah = OUT.h - res.top - res.bottom;
     const bw = cutout.w, bh = cutout.h;   // bbox ajustado (sin padding transparente)
-    // con banner el producto se maximiza (igual que la foto sola); con beneficios/incluye/dims, más chico
-    const otherInfo = (L.feats.on && vp === 'feats') || (L.incluye.on && vp === 'incluye') || (L.dims.on && vp === 'dims');
+    // con banner/garantía el producto se maximiza; con beneficios/incluye/dims/hero, más chico
+    const otherInfo = (L.feats.on && vp === 'feats') || (L.incluye.on && vp === 'incluye') || (L.dims.on && vp === 'dims') || (L.hero.on && vp === 'hero');
     const fill = (bannerSide || !otherInfo) ? FILL_PHOTO : FILL_INFO;
     const base = Math.min(aw * fill / bw, ah * fill / bh) * state.product.scale;
     const dw = bw * base, dh = bh * base;
@@ -647,7 +682,8 @@
   }
   // ¿esta placa exige fondo blanco puro? (portada ML: sin gradiente/halo). El guardrail real
   // de plataforma se decide en otra fase; acá ya dejamos la portada limpia.
-  const isPortada = () => { const vp = visiblePlaca(); return !(vp === 'dims' || vp === 'banner' || vp === 'feats' || vp === 'incluye'); };
+  const PLACA_IDS = ['dims', 'banner', 'feats', 'incluye', 'hero', 'garantia', 'compara'];
+  const isPortada = () => !PLACA_IDS.includes(visiblePlaca());
   function render(){
     bgLayer.destroyChildren(); productLayer.destroyChildren(); mainLayer.destroyChildren(); guideLayer.destroyChildren();
     const box = productBox();
@@ -671,28 +707,34 @@
           listening: false }));
       }
     }
+    const vp = visiblePlaca();
+    const hideProduct = FULL_PLACAS.includes(vp);   // placas de composición completa dibujan lo suyo
     // sombra de CONTACTO: elipse achatada y borrosa bajo el producto (lo ancla al piso, no flota).
-    if (state.product.shadow){
+    if (state.product.shadow && !hideProduct){
       const cx = box.x + box.w / 2, cy = box.y + box.h - box.h * 0.015;
       const sh = new Konva.Ellipse({ x: cx, y: cy, radiusX: box.w * 0.40, radiusY: box.h * 0.045,
         fill: 'rgba(0,0,0,' + (0.10 + (state.product.shadowInt / 100) * 0.28) + ')', listening: false });
       sh.shadowColor('#000'); sh.shadowBlur(45); sh.shadowOpacity(0.45);
       productLayer.add(sh);
     }
-    const node = new Konva.Image({ image: productImg, x: box.x, y: box.y, width: box.w, height: box.h, crop: { x: cutout.x, y: cutout.y, width: cutout.w, height: cutout.h } });
-    const r2 = state.realce;
-    if (r2.brillo !== 100 || r2.contraste !== 100 || r2.color !== 100 || r2.nitidez){
-      node.filters([Konva.Filters.Brighten, Konva.Filters.Contrast, Konva.Filters.HSL, Konva.Filters.Enhance]);
-      node.brightness((r2.brillo - 100) / 250); node.contrast(r2.contraste - 100); node.saturation((r2.color - 100) / 60); node.enhance(r2.nitidez / 100); node.cache();
+    if (!hideProduct){
+      const node = new Konva.Image({ image: productImg, x: box.x, y: box.y, width: box.w, height: box.h, crop: { x: cutout.x, y: cutout.y, width: cutout.w, height: cutout.h } });
+      const r2 = state.realce;
+      if (r2.brillo !== 100 || r2.contraste !== 100 || r2.color !== 100 || r2.nitidez){
+        node.filters([Konva.Filters.Brighten, Konva.Filters.Contrast, Konva.Filters.HSL, Konva.Filters.Enhance]);
+        node.brightness((r2.brillo - 100) / 250); node.contrast(r2.contraste - 100); node.saturation((r2.color - 100) / 60); node.enhance(r2.nitidez / 100); node.cache();
+      }
+      node.on('click tap', () => selectPart('producto'));
+      productLayer.add(node);
     }
-    node.on('click tap', () => selectPart('producto'));
-    productLayer.add(node);
     // solo la placa de info seleccionada (cada una es una imagen aparte). El logo va en todas.
-    const vp = visiblePlaca();
     if (state.layers.dims.on    && vp === 'dims')    drawDims(box);
     if (state.layers.banner.on  && vp === 'banner')  drawBanner();
     if (state.layers.feats.on   && vp === 'feats')   drawFeats();
     if (state.layers.incluye.on && vp === 'incluye') drawIncluye();
+    if (state.layers.hero.on    && vp === 'hero')    drawHero(box);
+    if (state.layers.garantia.on&& vp === 'garantia')drawGarantia(box);
+    if (state.layers.compara.on && vp === 'compara') drawCompara();
     if (state.layers.logo.on)    drawLogo();
     drawSelection(box);
     stage.batchDraw();
@@ -821,6 +863,85 @@
     const items = state.layers.incluye.items.filter(s => s.trim());
     const twoCol = items.length >= 4, rows = twoCol ? Math.ceil(items.length / 2) : items.length;
     return Math.min(OUT.h * 0.42, 150 + rows * 64);
+  }
+
+  // ---------- HERO: titular grande + propuesta de valor (producto al costado) ----------
+  function drawHero(){
+    const hL = state.layers.hero, ff = fontById(hL.font), g = new Konva.Group();
+    const tInk = state.bg.color ? inkOn(state.bg.color) : ink, accent = incluyeAccent();
+    const safe = OUT.w * 0.07, zoneW = OUT.w * 0.46 - safe * 1.2;
+    const zx = hL.pos === 'right' ? OUT.w * 0.54 + safe * 0.2 : safe;
+    const bar = new Konva.Rect({ width: 96, height: 8, cornerRadius: 4, fill: accent });
+    const parts = [];
+    if (hL.eyebrow && hL.eyebrow.trim())
+      parts.push(new Konva.Text({ text: hL.eyebrow.toUpperCase(), width: zoneW, fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 30, letterSpacing: 3, fill: accent }));
+    const head = new Konva.Text({ text: hL.headline || '', width: zoneW, fontFamily: ff.css, fontStyle: ff.w, fontSize: 96, lineHeight: 1.05, fill: tInk });
+    let hs = 96; while (head.height() > OUT.h * 0.46 && hs > 44){ hs -= 6; head.fontSize(hs); }
+    parts.push(head);
+    if (hL.sub && hL.sub.trim())
+      parts.push(new Konva.Text({ text: hL.sub, width: zoneW, fontFamily: 'Manrope, sans-serif', fontStyle: '500', fontSize: 36, lineHeight: 1.25, fill: tInk }));
+    const gap = 26, total = parts.reduce((s, p) => s + p.height(), 0) + gap * (parts.length - 1) + 24 + bar.height();
+    let cy = (OUT.h - total) / 2;
+    bar.position({ x: zx, y: cy }); g.add(bar); cy += bar.height() + 24;
+    parts.forEach(p => { p.position({ x: zx, y: cy }); g.add(p); cy += p.height() + gap; });
+    g.on('click tap', () => selectPart('hero')); mainLayer.add(g);
+  }
+
+  // ---------- CONFIANZA: barra inferior con sellos (garantía/envío/devolución) ----------
+  function drawGarantia(){
+    const gl = state.layers.garantia, items = gl.items.filter(it => it.text && it.text.trim());
+    const accent = gl.accent || '#1f9d55', g = new Konva.Group();
+    const barH = OUT.h * 0.18, y = OUT.h - barH;
+    g.add(new Konva.Rect({ x: 0, y, width: OUT.w, height: barH,
+      fillLinearGradientStartPoint: { x: 0, y }, fillLinearGradientEndPoint: { x: OUT.w, y },
+      fillLinearGradientColorStops: [0, accent, 1, shade(accent, -0.16)] }));
+    const n = items.length || 1, colW = OUT.w / n;
+    items.forEach((it, i) => {
+      const cx = colW * i + colW / 2, iconY = y + barH * 0.34;
+      g.add(new Konva.Circle({ x: cx, y: iconY, radius: 36, fill: 'rgba(255,255,255,0.18)', listening: false }));
+      drawGlyph(g, it.icon, cx, iconY, 40, '#ffffff', 2.4);
+      g.add(new Konva.Text({ text: it.text, x: cx - colW / 2 + 18, y: y + barH * 0.62, width: colW - 36, align: 'center', fontFamily: 'Manrope, sans-serif', fontStyle: '700', fontSize: 30, fill: '#ffffff', listening: false }));
+      if (i > 0) g.add(new Konva.Line({ points: [colW * i, y + barH * 0.24, colW * i, y + barH * 0.76], stroke: 'rgba(255,255,255,0.28)', strokeWidth: 2, listening: false }));
+    });
+    g.on('click tap', () => selectPart('garantia')); mainLayer.add(g);
+  }
+
+  // ---------- COMPARATIVA: tabla "Este vs. lo común" (placa de composición completa) ----------
+  function comparaMark(g, cx, cy, yes, accent){
+    if (yes){
+      g.add(new Konva.Circle({ x: cx, y: cy, radius: 23, fill: accent, listening: false }));
+      g.add(new Konva.Line({ points: [cx - 10, cy + 1, cx - 3, cy + 8, cx + 11, cy - 8], stroke: '#fff', strokeWidth: 4.2, lineCap: 'round', lineJoin: 'round', listening: false }));
+    } else {
+      g.add(new Konva.Circle({ x: cx, y: cy, radius: 23, fill: '#e6e3de', listening: false }));
+      g.add(new Konva.Line({ points: [cx - 8, cy - 8, cx + 8, cy + 8], stroke: '#9a948c', strokeWidth: 4, lineCap: 'round', listening: false }));
+      g.add(new Konva.Line({ points: [cx + 8, cy - 8, cx - 8, cy + 8], stroke: '#9a948c', strokeWidth: 4, lineCap: 'round', listening: false }));
+    }
+  }
+  function drawCompara(){
+    const c = state.layers.compara, accent = c.accent || '#1f9d55', g = new Konva.Group();
+    const rows = c.rows.filter(r => r.label && r.label.trim());
+    const tInk = state.bg.color ? inkOn(state.bg.color) : ink;
+    const safe = OUT.w * 0.08, top = OUT.h * 0.18;
+    const tableW = OUT.w - safe * 2, x0 = safe;
+    const labelW = tableW * 0.50, colW = tableW * 0.25;
+    const colOtherX = x0 + labelW, colMineX = x0 + labelW + colW;
+    const headH = 92, rowH = Math.min(120, (OUT.h * 0.60) / Math.max(rows.length, 1)), tableH = headH + rows.length * rowH;
+    g.add(new Konva.Text({ text: 'POR QUÉ ESTE', x: x0, y: top - 74, width: tableW, align: 'center', fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 36, letterSpacing: 4, fill: accent }));
+    // columna "Este" resaltada (cuerpo claro + header sólido)
+    g.add(new Konva.Rect({ x: colMineX - 6, y: top, width: colW + 12, height: tableH, fill: shade(accent, 0.84), cornerRadius: 22 }));
+    g.add(new Konva.Rect({ x: colMineX - 6, y: top, width: colW + 12, height: headH, fill: accent, cornerRadius: 22 }));
+    g.add(new Konva.Rect({ x: colMineX - 6, y: top + headH - 24, width: colW + 12, height: 24, fill: accent }));
+    g.add(new Konva.Text({ text: c.other || 'Lo común', x: colOtherX, y: top, width: colW, height: headH, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '700', fontSize: 30, fill: tInk }));
+    g.add(new Konva.Text({ text: c.mine || 'Este', x: colMineX, y: top, width: colW, height: headH, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 32, fill: '#fff' }));
+    rows.forEach((r, i) => {
+      const ry = top + headH + i * rowH, mid = ry + rowH / 2;
+      if (i > 0) g.add(new Konva.Line({ points: [x0, ry, colOtherX, ry], stroke: 'rgba(0,0,0,0.08)', strokeWidth: 2, listening: false }));
+      const lbl = new Konva.Text({ text: r.label, x: x0 + 4, y: ry, width: labelW - 20, height: rowH, verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '600', fontSize: 30, fill: tInk, listening: false });
+      g.add(lbl);
+      comparaMark(g, colOtherX + colW / 2, mid, r.other, accent);
+      comparaMark(g, colMineX + colW / 2, mid, r.mine, accent);
+    });
+    g.on('click tap', () => selectPart('compara')); mainLayer.add(g);
   }
 
   // ---------- Banner: barra arrastrable en vertical + Transformer para la altura ----------
@@ -1007,6 +1128,41 @@
     sel.style.fontFamily = fontById(current).css;
     return field(label, sel);
   }
+  const ICON_LABEL = { shield: 'Escudo', truck: 'Camión', ret: 'Devolución', star: 'Estrella', bolt: 'Rayo', drop: 'Gota', clock: 'Reloj', leaf: 'Hoja', lock: 'Candado', medal: 'Medalla', tag: 'Etiqueta', check: 'Tilde' };
+  // editor de sellos de confianza: cada fila = ícono + texto
+  function trustEditor(gl){
+    const wrap = h('div', {});
+    const redraw = () => {
+      wrap.innerHTML = '';
+      gl.items.forEach((it, i) => {
+        const sel = h('select', { class: 'font-select', style: 'flex:none;width:120px', onchange(){ it.icon = this.value; render(); } });
+        ICON_OPTS.forEach(ic => { const o = h('option', { value: ic }, ICON_LABEL[ic] || ic); if (ic === it.icon) o.selected = true; sel.append(o); });
+        wrap.append(h('div', { class: 'list-item' }, sel,
+          h('input', { type: 'text', value: it.text, placeholder: 'Ej: Garantía 6 meses', oninput(){ it.text = this.value; render(); } }),
+          h('button', { class: 'mini', type: 'button', title: 'Quitar', onclick(){ gl.items.splice(i, 1); render(); redraw(); } }, '×')));
+      });
+      if (gl.items.length < 4) wrap.append(h('button', { class: 'add-btn', type: 'button', onclick(){ gl.items.push({ icon: 'star', text: '' }); render(); redraw(); } }, '+ Agregar sello'));
+    };
+    redraw();
+    return field('Sellos', wrap);
+  }
+  // editor de filas de comparativa: texto + tu columna ✓ + la otra ✓
+  function comparaEditor(c){
+    const wrap = h('div', {});
+    const redraw = () => {
+      wrap.innerHTML = '';
+      c.rows.forEach((r, i) => {
+        const tick = (key, label) => h('button', { class: 'mini', type: 'button', 'aria-pressed': String(r[key]), style: r[key] ? 'border-color:#1f9d55;color:#1f9d55' : '', onclick(){ r[key] = !r[key]; render(); redraw(); } }, label);
+        wrap.append(h('div', { class: 'list-item' },
+          h('input', { type: 'text', value: r.label, placeholder: 'Ej: Materiales que duran', oninput(){ r.label = this.value; render(); } }),
+          tick('mine', 'Este ✓'), tick('other', 'Otro ✓'),
+          h('button', { class: 'mini', type: 'button', title: 'Quitar', onclick(){ c.rows.splice(i, 1); render(); redraw(); } }, '×')));
+      });
+      if (c.rows.length < 6) wrap.append(h('button', { class: 'add-btn', type: 'button', onclick(){ c.rows.push({ label: '', mine: true, other: false }); render(); redraw(); } }, '+ Agregar fila'));
+    };
+    redraw();
+    return field('Filas', wrap);
+  }
   // lista editable con empty-state que enseña (mensaje + ejemplo + botón grande) y placeholders reales
   function listEditor(label, items, onChange, addLabel, placeholder, emptyMsg){
     const wrap = h('div', {});
@@ -1114,6 +1270,26 @@
       listEditor('Qué incluye', c.items, () => render(), 'Agregar ítem', 'Ej: 1 parlante, cable USB, manual',
         'Sumá lo que viene en la caja, uno por línea (ej: “1 parlante”, “cable USB”, “manual”). Aparece como una lista sobre tu foto.'),
       moreSection('incluye', textRow('Título', c.title, v => { c.title = v; render(); }, 'Ej: INCLUYE'))); },
+    hero: root => { const hL = state.layers.hero; root.append(
+      toggleRow('Mostrar titular', hL.on, v => { hL.on = v; render(); renderToolbar(); }),
+      hL.on ? hint('Una promesa corta y fuerte: el resultado que se lleva el comprador, no la descripción del producto.') : '',
+      textRow('Titular', hL.headline, v => { hL.headline = v; render(); }, 'Ej: Pisos brillantes sin agacharte'),
+      textRow('Bajada (opcional)', hL.sub, v => { hL.sub = v; render(); }, 'Ej: en la mitad de tiempo'),
+      fontRow('Tipografía', hL.font, v => { hL.font = v; loadFontThen(v, render); }),
+      segRow('Texto a la', [['left', 'Izquierda'], ['right', 'Derecha']], hL.pos, v => { hL.pos = v; render(); renderPanel(); }),
+      moreSection('hero', textRow('Antetítulo (opcional)', hL.eyebrow, v => { hL.eyebrow = v; render(); }, 'Ej: NUEVO'))); },
+    garantia: root => { const gl = state.layers.garantia; root.append(
+      toggleRow('Mostrar barra de confianza', gl.on, v => { gl.on = v; render(); renderToolbar(); }),
+      gl.on ? hint('Sellos que sacan el miedo a comprar: garantía, envío, devolución. Solo lo que cumplís de verdad.') : '',
+      trustEditor(gl),
+      colorRow('Color', withPalette(['#1f9d55', '#1B49B8', '#d8381f', '#241E1A']), gl.accent, v => { gl.accent = v; render(); renderPanel(); })); },
+    compara: root => { const c = state.layers.compara; root.append(
+      toggleRow('Mostrar comparativa', c.on, v => { c.on = v; render(); renderToolbar(); }),
+      c.on ? hint('Mostrá por qué tu producto gana. No nombres marcas de la competencia (ML lo penaliza).') : '',
+      textRow('Tu columna', c.mine, v => { c.mine = v; render(); }, 'Ej: Este'),
+      textRow('La otra', c.other, v => { c.other = v; render(); }, 'Ej: Lo común'),
+      comparaEditor(c),
+      colorRow('Color', withPalette(['#1f9d55', '#1B49B8', '#d8381f', '#241E1A']), c.accent, v => { c.accent = v; render(); renderPanel(); })); },
     logo: root => { const l = state.layers.logo; root.append(
       toggleRow('Mostrar logo', l.on, v => { l.on = v; render(); renderToolbar(); }),
       l.on ? hint('Arrastrá el logo para moverlo. Seleccionado, redimensionalo o giralo desde las esquinas.') : '',
@@ -1240,9 +1416,13 @@
   // orden de la galería: portada + solo las placas activas (mismo criterio que zipOrder del viejo)
   function galleryOrder(){
     const L = state.layers, out = [{ k: 'clean', label: 'portada' }];
-    if (L.dims.on) out.push({ k: 'dims', label: 'medidas' });
+    // orden del embudo: captar → desear → resolver → confianza → cerrar
+    if (L.hero.on) out.push({ k: 'hero', label: 'titular' });
+    if (L.feats.on) out.push({ k: 'feats', label: 'beneficios' });
     if (L.banner.on) out.push({ k: 'banner', label: 'banner' });
-    if (L.feats.on) out.push({ k: 'feats', label: 'caracteristicas' });
+    if (L.dims.on) out.push({ k: 'dims', label: 'medidas' });
+    if (L.compara.on) out.push({ k: 'compara', label: 'comparativa' });
+    if (L.garantia.on) out.push({ k: 'garantia', label: 'confianza' });
     if (L.incluye.on) out.push({ k: 'incluye', label: 'que-incluye' });
     return out;
   }
