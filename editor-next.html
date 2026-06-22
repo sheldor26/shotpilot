@@ -850,16 +850,19 @@
       const fitW = (offset) => Math.max(140, OUT.w - p.x - offset - 18);
       const accent = col, aDark = accentDark(col);
       if (f.style === 'chips'){
-        // píldora con gradiente de acento + glow (no color plano)
-        const padX = 30, t = new Konva.Text({ text: s, fontFamily: ff.css, fontStyle: ff.w, fontSize: fs, fill: '#fff', listening: false });
-        const maxW = fitW(padX * 2); if (t.width() > maxW) t.width(maxW);
-        const bh = t.height() + 28, bw = t.width() + padX * 2;
-        const pill = new Konva.Rect({ x: 0, y: -bh / 2, width: bw, height: bh, cornerRadius: bh / 2,
-          fillLinearGradientStartPoint: { x: 0, y: -bh / 2 }, fillLinearGradientEndPoint: { x: bw, y: bh / 2 },
-          fillLinearGradientColorStops: [0, accent, 1, aDark], listening: false });
-        pill.shadowColor(accent); pill.shadowBlur(26); pill.shadowOffsetY(10); pill.shadowOpacity(0.4); g.add(pill);
-        g.add(new Konva.Line({ points: [bh / 2, -bh / 2 + 4, bw - bh / 2, -bh / 2 + 4], stroke: 'rgba(255,255,255,0.4)', strokeWidth: 2, lineCap: 'round', listening: false }));
-        t.position({ x: padX, y: -t.height() / 2 }); g.add(t);
+        // píldora de vidrio oscuro premium: sombra neutra suave (sin glow de color),
+        // filo de luz arriba y un punto de acento sutil → elegante sobre cualquier foto.
+        const padX = 30, dotR = 9, gapD = 18;
+        const t = new Konva.Text({ text: s, fontFamily: ff.css, fontStyle: ff.w, fontSize: fs, fill: '#fff', listening: false });
+        const maxW = fitW(padX * 2 + dotR * 2 + gapD); if (t.width() > maxW) t.width(maxW);
+        const bh = t.height() + 30, contentX = padX + dotR * 2 + gapD, bw = contentX + t.width() + padX;
+        const pill = new Konva.Rect({ x: 0, y: -bh / 2, width: bw, height: bh, cornerRadius: bh / 2, fill: 'rgba(22,18,16,0.82)', listening: false });
+        pill.shadowColor('#1A1614'); pill.shadowBlur(30); pill.shadowOffsetY(14); pill.shadowOpacity(0.24); g.add(pill);
+        g.add(new Konva.Line({ points: [bh / 2, -bh / 2 + 3, bw - bh / 2, -bh / 2 + 3], stroke: 'rgba(255,255,255,0.16)', strokeWidth: 1.5, lineCap: 'round', listening: false }));
+        g.add(new Konva.Circle({ x: padX + dotR, y: 0, radius: dotR,
+          fillLinearGradientStartPoint: { x: -dotR, y: -dotR }, fillLinearGradientEndPoint: { x: dotR, y: dotR },
+          fillLinearGradientColorStops: [0, accent, 1, aDark], listening: false }));
+        t.position({ x: contentX, y: -t.height() / 2 }); g.add(t);
       } else {
         // tarjeta blanca premium con badge de acento (puntos / numerado / con tilde)
         const padX = 26, gapBT = 16, dot = f.style === 'dots';
