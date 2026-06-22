@@ -5,6 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>shotpilot — Editor</title>
 <meta name="robots" content="noindex">
+<script>
+/* Cutover ShotPilot (E11): decide editor viejo (este) vs nuevo. Default = viejo. Síncrono y a prueba de fallos:
+   ante cualquier error se queda el viejo. Rollback por usuario = ?editor=old o limpiar localStorage. */
+(function(){
+  try{
+    var q = new URLSearchParams(location.search);
+    var pin = q.get('editor');                                   // ?editor=next | old  → fija la elección
+    if (pin === 'next' || pin === 'old'){ try{ localStorage.setItem('sp_editor', pin); }catch(e){} }
+    var choice = pin || (function(){ try{ return localStorage.getItem('sp_editor'); }catch(e){ return null; } })();
+    var ROLLOUT = 0;                                              // % global. 0 = solo opt-in (sin exponer). Subir tras el OK.
+    if (!choice && ROLLOUT > 0){
+      var b; try{ b = +localStorage.getItem('sp_bucket'); if (!(b >= 0)){ b = Math.floor(Math.random()*100); localStorage.setItem('sp_bucket', b); } }catch(e){ b = 100; }
+      choice = (b < ROLLOUT) ? 'next' : 'old';
+    }
+    if (choice === 'next'){ location.replace('/editor-next.html' + location.search + location.hash); }
+  }catch(e){ /* se queda el viejo */ }
+})();
+</script>
 <link rel="icon" type="image/png" href="/logo-shotpilot.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
