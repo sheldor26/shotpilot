@@ -138,14 +138,16 @@
     .brand{font-size:1.15rem;gap:.45rem}
     .brand .mark{width:30px;height:30px}
     .nav-cta{gap:.5rem}
-    .nav-cta .btn-primary{padding:.55rem 1rem;font-size:.9rem}
+    .nav-cta .btn-primary,.nav-cta .btn-ghost{padding:.55rem 1rem;font-size:.9rem}
     .lang a{padding:.3rem .5rem}
   }
+  /* en pantallas chicas, login + probar mandan: ocultamos el selector de idioma del header (sigue en el pie) */
+  @media(max-width:560px){ .nav-cta .lang{display:none} }
   @media(max-width:390px){
     .nav-inner{gap:.4rem}
     .brand{font-size:1.05rem}
     .nav-cta{gap:.4rem}
-    .nav-cta .btn-primary{padding:.5rem .8rem;font-size:.84rem}
+    .nav-cta .btn-primary,.nav-cta .btn-ghost{padding:.5rem .8rem;font-size:.84rem}
     .lang{font-size:.72rem}
     .lang a{padding:.28rem .42rem}
   }
@@ -555,7 +557,8 @@
         <a href="index.html" aria-current="true">ES</a>
         <a href="en.html" hreflang="en">EN</a>
       </span>
-      <a href="/editor" class="btn btn-primary">Quiero mis 5 fotos gratis</a>
+      <a href="/cuenta" class="btn btn-ghost" id="nav-auth">Iniciar sesión</a>
+      <a href="/editor" class="btn btn-primary" id="nav-try">Probar gratis</a>
     </div>
   </div>
 </header>
@@ -588,6 +591,7 @@
             </span>
           </div>
           <a href="#como" class="text-link">o mirá cómo funciona</a>
+          <a href="#contacto" class="text-link">¿Preferís que te escribamos? Dejanos tus datos</a>
         </div>
         <p class="hero-note">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
@@ -1148,15 +1152,16 @@
     });
   })();
 
-  // Gate nombre+mail antes del editor: captura el lead y después abre el editor.
+  // Value-first (L1): el CTA va DIRECTO al editor — ya no interceptamos con el gate nombre+mail.
+  // El form de contacto (#contacto) queda como camino secundario. El gate sigue disponible por si
+  // se quiere abrir explícitamente (data-gate), pero no bloquea el acceso al editor.
   (function(){
     var gate = document.getElementById('gate'); if(!gate) return;
-    var doneLead = false; try{ doneLead = localStorage.getItem('sp_lead')==='1'; }catch(e){}
     function openGate(){ gate.hidden=false; setTimeout(function(){ var n=document.getElementById('gate-name'); if(n)n.focus(); },30); }
     function closeGate(){ gate.hidden=true; }
     document.addEventListener('click', function(e){
-      var a = e.target.closest ? e.target.closest('a[href="/editor"]') : null;
-      if(!a || doneLead) return;
+      var t = e.target.closest ? e.target.closest('[data-gate]') : null;   // opt-in explícito, no por defecto
+      if(!t) return;
       e.preventDefault(); openGate();
     });
     document.getElementById('gate-x').addEventListener('click', closeGate);
@@ -1167,9 +1172,23 @@
       if(!gf.checkValidity()){ gf.reportValidity(); return; }
       var btn = gf.querySelector('[type=submit]'); if(btn) btn.disabled=true;
       var payload = { name:document.getElementById('gate-name').value.trim(), email:document.getElementById('gate-email').value.trim(), sells:'', msg:'(gate editor)', website:document.getElementById('gate-hp').value, lang:'es' };
-      var go = function(){ try{ localStorage.setItem('sp_lead','1'); }catch(e){} doneLead=true; if(window.va) window.va('event',{name:'lead_gate'}); location.href='/editor'; };
+      var go = function(){ try{ localStorage.setItem('sp_lead','1'); }catch(e){} if(window.va) window.va('event',{name:'lead_gate'}); location.href='/editor'; };
       fetch('/api/contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(go).catch(go);
     });
+
+    // Coherencia de sesión (L1): si hay sesión de Supabase, el header invita a volver, no a registrarse.
+    try{
+      var raw = localStorage.getItem('sb-ntybvdfyxesxpoukyqpf-auth-token');
+      if(raw){
+        var s = JSON.parse(raw), sess = s && (s.currentSession || s), exp = sess && sess.expires_at;
+        if(exp && exp*1000 > Date.now()){
+          var auth = document.getElementById('nav-auth');
+          if(auth){ auth.textContent='Mis galerías'; auth.href='/galerias'; }
+          var tryb = document.getElementById('nav-try');
+          if(tryb){ tryb.textContent='Ir al editor'; }
+        }
+      }
+    }catch(e){}
   })();
 
   // Barra CTA fija en mobile: aparece al pasar el hero

@@ -138,14 +138,15 @@
     .brand{font-size:1.15rem;gap:.45rem}
     .brand .mark{width:30px;height:30px}
     .nav-cta{gap:.5rem}
-    .nav-cta .btn-primary{padding:.55rem 1rem;font-size:.9rem}
+    .nav-cta .btn-primary,.nav-cta .btn-ghost{padding:.55rem 1rem;font-size:.9rem}
     .lang a{padding:.3rem .5rem}
   }
+  @media(max-width:560px){ .nav-cta .lang{display:none} }
   @media(max-width:390px){
     .nav-inner{gap:.4rem}
     .brand{font-size:1.05rem}
     .nav-cta{gap:.4rem}
-    .nav-cta .btn-primary{padding:.5rem .8rem;font-size:.84rem}
+    .nav-cta .btn-primary,.nav-cta .btn-ghost{padding:.5rem .8rem;font-size:.84rem}
     .lang{font-size:.72rem}
     .lang a{padding:.28rem .42rem}
   }
@@ -553,7 +554,8 @@
         <a href="index.html" hreflang="es-AR">ES</a>
         <a href="en.html" aria-current="true">EN</a>
       </span>
-      <a href="/editor" class="btn btn-primary">Get my 5 free photos</a>
+      <a href="/cuenta" class="btn btn-ghost" id="nav-auth">Log in</a>
+      <a href="/editor" class="btn btn-primary" id="nav-try">Try free</a>
     </div>
   </div>
 </header>
@@ -586,6 +588,7 @@
             </span>
           </div>
           <a href="#how" class="text-link">or see how it works</a>
+          <a href="#contact" class="text-link">Prefer we write to you? Leave your details</a>
         </div>
         <p class="hero-note">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
@@ -1282,15 +1285,15 @@
     });
   })();
 
-  // Name+email gate before the editor: capture the lead, then open the editor.
+  // Value-first (L1): the CTA goes STRAIGHT to the editor — no name+email gate interception.
+  // The contact form (#contact) stays as the secondary path. The gate only opens via [data-gate].
   (function(){
     var gate = document.getElementById('gate'); if(!gate) return;
-    var doneLead = false; try{ doneLead = localStorage.getItem('sp_lead')==='1'; }catch(e){}
     function openGate(){ gate.hidden=false; setTimeout(function(){ var n=document.getElementById('gate-name'); if(n)n.focus(); },30); }
     function closeGate(){ gate.hidden=true; }
     document.addEventListener('click', function(e){
-      var a = e.target.closest ? e.target.closest('a[href="/editor"]') : null;
-      if(!a || doneLead) return;
+      var t = e.target.closest ? e.target.closest('[data-gate]') : null;
+      if(!t) return;
       e.preventDefault(); openGate();
     });
     document.getElementById('gate-x').addEventListener('click', closeGate);
@@ -1301,9 +1304,23 @@
       if(!gf.checkValidity()){ gf.reportValidity(); return; }
       var btn = gf.querySelector('[type=submit]'); if(btn) btn.disabled=true;
       var payload = { name:document.getElementById('gate-name').value.trim(), email:document.getElementById('gate-email').value.trim(), sells:'', msg:'(editor gate)', website:document.getElementById('gate-hp').value, lang:'en' };
-      var go = function(){ try{ localStorage.setItem('sp_lead','1'); }catch(e){} doneLead=true; if(window.va) window.va('event',{name:'lead_gate'}); location.href='/editor'; };
+      var go = function(){ try{ localStorage.setItem('sp_lead','1'); }catch(e){} if(window.va) window.va('event',{name:'lead_gate'}); location.href='/editor'; };
       fetch('/api/contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(go).catch(go);
     });
+
+    // Session coherence (L1): if there's a Supabase session, the header invites the returner back.
+    try{
+      var raw = localStorage.getItem('sb-ntybvdfyxesxpoukyqpf-auth-token');
+      if(raw){
+        var s = JSON.parse(raw), sess = s && (s.currentSession || s), exp = sess && sess.expires_at;
+        if(exp && exp*1000 > Date.now()){
+          var auth = document.getElementById('nav-auth');
+          if(auth){ auth.textContent='My galleries'; auth.href='/galerias'; }
+          var tryb = document.getElementById('nav-try');
+          if(tryb){ tryb.textContent='Go to editor'; }
+        }
+      }
+    }catch(e){}
   })();
 
   // Barra CTA fija en mobile: aparece al pasar el hero
