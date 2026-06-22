@@ -603,6 +603,15 @@
     x.fillStyle = cg; x.beginPath(); x.roundRect(bx + 100, 90, bw - 200, 180, 14); x.fill();
     return c;
   }
+  // textura de grano (se genera una sola vez): mata el banding y da terminación premium al fondo
+  let _grain = null;
+  function grainImage(){
+    if (_grain) return _grain;
+    const n = 180, c = document.createElement('canvas'); c.width = n; c.height = n;
+    const ctx = c.getContext('2d'), img = ctx.createImageData(n, n), d = img.data;
+    for (let i = 0; i < d.length; i += 4){ const v = 118 + Math.floor(Math.random() * 36); d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; }
+    ctx.putImageData(img, 0, 0); _grain = c; return c;
+  }
   function buildStage(){
     stage = new Konva.Stage({ container: 'stage', width: OUT.w, height: OUT.h });
     bgLayer = new Konva.Layer(); productLayer = new Konva.Layer(); mainLayer = new Konva.Layer(); guideLayer = new Konva.Layer({ listening: false });
@@ -676,15 +685,18 @@
     if (L.social.on  && vp === 'social')  res.bottom += socialHeight() + 40 + OUT.h * 0.03;
     const aw = OUT.w - res.left - res.right, ah = OUT.h - res.top - res.bottom;
     const bw = cutout.w, bh = cutout.h;   // bbox ajustado (sin padding transparente)
-    // con banner/garantía el producto se maximiza; con beneficios/incluye/dims/hero, más chico
-    const otherInfo = (L.feats.on && vp === 'feats') || (L.incluye.on && vp === 'incluye') || (L.dims.on && vp === 'dims') || (L.hero.on && vp === 'hero') || (L.social.on && vp === 'social');
-    const fill = (bannerSide || !otherInfo) ? FILL_PHOTO : FILL_INFO;
+    // con banner/garantía/hero el producto se maximiza; con beneficios/incluye/dims/social, más chico
+    const heroOn = L.hero.on && vp === 'hero';
+    const otherInfo = (L.feats.on && vp === 'feats') || (L.incluye.on && vp === 'incluye') || (L.dims.on && vp === 'dims') || (L.social.on && vp === 'social');
+    const fill = (bannerSide || heroOn || !otherInfo) ? FILL_PHOTO : FILL_INFO;
     const base = Math.min(aw * fill / bw, ah * fill / bh) * state.product.scale;
     const dw = bw * base, dh = bh * base;
     let x = res.left + (aw - dw) / 2, y = res.top + (ah - dh) / 2;
     // pegar el producto al borde del banner (menos espacio muerto entre imagen y banner)
     if (bannerSide === 'top')    y = res.top;
     if (bannerSide === 'bottom') y = res.top + ah - dh;
+    // hero: el producto sangra fuera del borde de su lado (más dinámico, se ve aviso)
+    if (heroOn) x += (L.hero.pos === 'right' ? -1 : 1) * OUT.w * 0.07;
     return (productBoxCache = { x, y, w: dw, h: dh });
   }
   // ¿esta placa exige fondo blanco puro? (portada ML: sin gradiente/halo). El guardrail real
@@ -708,6 +720,14 @@
         fillRadialGradientStartRadius: 0, fillRadialGradientEndRadius: OUT.w * 0.72,
         fillRadialGradientColorStops: [0, shade(base, portada ? 0.0 : 0.05), 1, shade(base, portada ? -0.02 : -0.08)] });
       r.on('click tap', () => selectPart('fondo')); bgLayer.add(r);
+      // mesh: blob de acento difuso en una esquina → fondo con color de marca, no plano
+      if (!portada){
+        const acc = state.theme.accent, br = OUT.w * 0.62;
+        bgLayer.add(new Konva.Circle({ x: OUT.w * 0.92, y: OUT.h * 0.08, radius: br,
+          fillRadialGradientStartPoint: { x: 0, y: 0 }, fillRadialGradientEndPoint: { x: 0, y: 0 },
+          fillRadialGradientStartRadius: 0, fillRadialGradientEndRadius: br,
+          fillRadialGradientColorStops: [0, rgba(acc, 0.14), 1, rgba(acc, 0)], listening: false }));
+      }
       // halo: brillo suave detrás del producto (foco). Invisible sobre blanco, ayuda en color/oscuro.
       if (!portada){
         const hr = Math.max(box.w, box.h) * 0.95;   // glow claro de foco que se desvanece (sin anillo)
@@ -717,6 +737,8 @@
           fillRadialGradientColorStops: [0, 'rgba(255,255,255,0.38)', 0.6, 'rgba(255,255,255,0.12)', 1, 'rgba(255,255,255,0)'],
           listening: false }));
       }
+      // grano: textura sutil que mata el banding y da terminación premium
+      if (!portada) bgLayer.add(new Konva.Rect({ x: 0, y: 0, width: OUT.w, height: OUT.h, fillPatternImage: grainImage(), fillPatternRepeat: 'repeat', opacity: 0.05, listening: false }));
     }
     const vp = visiblePlaca();
     const hideProduct = FULL_PLACAS.includes(vp);   // placas de composición completa dibujan lo suyo
@@ -868,12 +890,27 @@
     items.forEach((s, i) => {
       const col = twoCol ? i % 2 : 0, row = twoCol ? Math.floor(i / 2) : i;
       const ix = cardX + 40 + col * colW, iy = startY + row * rowH;
+      const { qty, label } = parseQty(s);   // "2 Repuestos" / "Cable x2" → chip ×2
       g.add(new Konva.Circle({ x: ix + 16, y: iy + 16, radius: 16, fill: accent, listening: false }));
       g.add(new Konva.Line({ points: [ix + 9, iy + 16, ix + 14, iy + 21, ix + 23, iy + 10], stroke: '#fff', strokeWidth: 3.4, lineCap: 'round', lineJoin: 'round', listening: false }));
-      const lbl = new Konva.Text({ text: s, x: ix + 46, y: iy, width: colW - 56, fontFamily: 'Manrope, sans-serif', fontStyle: '600', fontSize: 28, fill: ink, listening: false });
+      const chipW = qty ? 58 : 0;
+      const lbl = new Konva.Text({ text: label, x: ix + 46, y: iy, width: colW - 56 - chipW, fontFamily: 'Manrope, sans-serif', fontStyle: '600', fontSize: 28, fill: ink, listening: false });
       lbl.y(iy + 16 - lbl.height() / 2); g.add(lbl);
+      if (qty){
+        const cw = 50, cx = ix + colW - 56 - cw + 6, cy = iy + 16 - 17;
+        g.add(new Konva.Rect({ x: cx, y: cy, width: cw, height: 34, cornerRadius: 17, fill: rgba(accent, 0.13), listening: false }));
+        g.add(new Konva.Text({ text: '×' + qty, x: cx, y: cy, width: cw, height: 34, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 24, fill: accent, listening: false }));
+      }
     });
     g.on('click tap', () => selectPart('incluye')); mainLayer.add(g);
+  }
+  // detecta cantidad: "2 Repuestos", "Cable USB x2", "Filtro ×3" → { qty, label }
+  function parseQty(s){
+    let m = s.match(/^\s*(\d+)\s*[x×]?\s+(.+)$/i);
+    if (m && +m[1] > 1) return { qty: m[1], label: m[2].trim() };
+    m = s.match(/^(.+?)\s*[x×]\s*(\d+)\s*$/i);
+    if (m && +m[2] > 1) return { qty: m[2], label: m[1].trim() };
+    return { qty: null, label: s };
   }
   // color de acento de marca (lo define el preset de tema; lo usan hero/incluye/etc.)
   const incluyeAccent = () => state.theme.accent || '#d8381f';
@@ -959,17 +996,24 @@
     const tableW = OUT.w - safe * 2, x0 = safe;
     const labelW = tableW * 0.50, colW = tableW * 0.25;
     const colOtherX = x0 + labelW, colMineX = x0 + labelW + colW;
-    const headH = 92, rowH = Math.min(120, (OUT.h * 0.60) / Math.max(rows.length, 1)), tableH = headH + rows.length * rowH;
-    g.add(new Konva.Text({ text: 'POR QUÉ ESTE', x: x0, y: top - 74, width: tableW, align: 'center', fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 36, letterSpacing: 4, fill: accent }));
-    // columna "Este" resaltada (cuerpo claro + header sólido)
-    g.add(new Konva.Rect({ x: colMineX - 6, y: top, width: colW + 12, height: tableH, fill: shade(accent, 0.84), cornerRadius: 22 }));
-    g.add(new Konva.Rect({ x: colMineX - 6, y: top, width: colW + 12, height: headH, fill: accent, cornerRadius: 22 }));
-    g.add(new Konva.Rect({ x: colMineX - 6, y: top + headH - 24, width: colW + 12, height: 24, fill: accent }));
+    const headH = 92, rowH = Math.min(118, (OUT.h * 0.56) / Math.max(rows.length, 1)), tableH = headH + rows.length * rowH;
+    const elev = 28, mineX = colMineX - 8, mineW = colW + 16, mineTop = top - elev;   // columna propia elevada
+    g.add(new Konva.Text({ text: 'POR QUÉ ESTE', x: x0, y: top - 92, width: tableW, align: 'center', fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 34, letterSpacing: 4, fill: accent }));
+    // zebra striping en las filas (lado izquierdo, no bajo la columna resaltada)
+    rows.forEach((r, i) => { if (i % 2 === 1) g.add(new Konva.Rect({ x: x0, y: top + headH + i * rowH, width: mineX - x0, height: rowH, fill: 'rgba(0,0,0,0.035)', listening: false })); });
+    // columna "Este" resaltada y FLOTANDO (cuerpo claro + header sólido + sombra)
+    const mineBody = new Konva.Rect({ x: mineX, y: mineTop, width: mineW, height: tableH + elev, fill: shade(accent, 0.86), cornerRadius: 24 });
+    mineBody.shadowColor(accent); mineBody.shadowBlur(28); mineBody.shadowOpacity(0.28); mineBody.shadowOffsetY(8); g.add(mineBody);
+    g.add(new Konva.Rect({ x: mineX, y: mineTop, width: mineW, height: headH, fill: accent, cornerRadius: 24 }));
+    g.add(new Konva.Rect({ x: mineX, y: mineTop + headH - 24, width: mineW, height: 24, fill: accent }));
+    // badge "RECOMENDADO" sobre la columna
+    const bg2 = new Konva.Rect({ x: mineX + mineW / 2 - 110, y: mineTop - 50, width: 220, height: 44, cornerRadius: 22, fill: accent });
+    bg2.shadowColor('#000'); bg2.shadowBlur(12); bg2.shadowOpacity(0.18); g.add(bg2);
+    g.add(new Konva.Text({ text: 'RECOMENDADO', x: mineX + mineW / 2 - 110, y: mineTop - 50, width: 220, height: 44, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 22, letterSpacing: 1, fill: '#fff', listening: false }));
     g.add(new Konva.Text({ text: c.other || 'Lo común', x: colOtherX, y: top, width: colW, height: headH, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '700', fontSize: 30, fill: tInk }));
-    g.add(new Konva.Text({ text: c.mine || 'Este', x: colMineX, y: top, width: colW, height: headH, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 32, fill: '#fff' }));
+    g.add(new Konva.Text({ text: c.mine || 'Este', x: mineX, y: mineTop, width: mineW, height: headH, align: 'center', verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 32, fill: '#fff' }));
     rows.forEach((r, i) => {
       const ry = top + headH + i * rowH, mid = ry + rowH / 2;
-      if (i > 0) g.add(new Konva.Line({ points: [x0, ry, colOtherX, ry], stroke: 'rgba(0,0,0,0.08)', strokeWidth: 2, listening: false }));
       const lbl = new Konva.Text({ text: r.label, x: x0 + 4, y: ry, width: labelW - 20, height: rowH, verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '600', fontSize: 30, fill: tInk, listening: false });
       g.add(lbl);
       comparaMark(g, colOtherX + colW / 2, mid, r.other, accent);
@@ -1019,8 +1063,11 @@
     const vp = visiblePlaca(), key = PLACA_IDS.includes(vp) ? vp : 'clean';
     const i = order.findIndex(o => o.k === key); if (i < 0) return;
     const tInk = state.bg.color ? inkOn(state.bg.color) : ink;
+    // por defecto arriba a la derecha; en el hero va del lado del texto (el producto sangra al otro lado)
+    let nx = OUT.w - 220, align = 'right';
+    if (key === 'hero' && state.layers.hero.pos === 'left'){ nx = 56; align = 'left'; }
     mainLayer.add(new Konva.Text({ text: `${String(i + 1).padStart(2, '0')} / ${String(order.length).padStart(2, '0')}`,
-      x: OUT.w - 220, y: 56, width: 164, align: 'right', fontFamily: 'Manrope, sans-serif', fontStyle: '700', fontSize: 28, letterSpacing: 2, fill: tInk, opacity: 0.4, listening: false }));
+      x: nx, y: 56, width: 164, align, fontFamily: 'Manrope, sans-serif', fontStyle: '700', fontSize: 28, letterSpacing: 2, fill: tInk, opacity: 0.4, listening: false }));
   }
 
   // ---------- Banner: barra arrastrable en vertical + Transformer para la altura ----------
