@@ -469,7 +469,7 @@
   const state = {
     selected: null,
     platform: 'ml',   // ml | ig | tn — regla de portada (ML exige fondo blanco sin texto/logo)
-    theme:   { id: 'limpio', accent: '#d8381f', font: 'manrope' },   // preset de marca (color+tipografía coherentes)
+    theme:   { id: 'limpio', accent: '#d8381f', font: 'manrope', head: 'manrope' },   // look de marca (color+tipografía coherentes)
     bg:      { color: '#ffffff' },
     product: { scale: 1, shadow: false, shadowInt: 60 },
     realce:  { brillo: 100, contraste: 100, color: 100, nitidez: 0 },
@@ -909,10 +909,13 @@
       const col = twoCol ? i % 2 : 0, row = twoCol ? Math.floor(i / 2) : i;
       const ix = cardX + 40 + col * colW, iy = startY + row * rowH;
       const { qty, label } = parseQty(s);   // "2 Repuestos" / "Cable x2" → chip ×2
-      g.add(new Konva.Circle({ x: ix + 16, y: iy + 16, radius: 16, fill: accent, listening: false }));
+      const circ = new Konva.Circle({ x: ix + 16, y: iy + 16, radius: 16,
+        fillLinearGradientStartPoint: { x: ix, y: iy }, fillLinearGradientEndPoint: { x: ix + 32, y: iy + 32 },
+        fillLinearGradientColorStops: [0, accent, 1, accentDark(accent)], listening: false });
+      circ.shadowColor(accent); circ.shadowBlur(10); circ.shadowOffsetY(3); circ.shadowOpacity(0.4); g.add(circ);
       g.add(new Konva.Line({ points: [ix + 9, iy + 16, ix + 14, iy + 21, ix + 23, iy + 10], stroke: '#fff', strokeWidth: 3.4, lineCap: 'round', lineJoin: 'round', listening: false }));
       const chipW = qty ? 58 : 0;
-      const lbl = new Konva.Text({ text: label, x: ix + 46, y: iy, width: colW - 56 - chipW, fontFamily: 'Manrope, sans-serif', fontStyle: '600', fontSize: 28, fill: ink, listening: false });
+      const lbl = new Konva.Text({ text: label, x: ix + 46, y: iy, width: colW - 56 - chipW, fontFamily: 'Manrope, sans-serif', fontStyle: '600', fontSize: 28, fill: INK, listening: false });
       lbl.y(iy + 16 - lbl.height() / 2); g.add(lbl);
       if (qty){
         const cw = 50, cx = ix + colW - 56 - cw + 6, cy = iy + 16 - 17;
@@ -936,20 +939,22 @@
   const accentDark = a => shade(a, -0.42);   // versión oscura (gradiente / texto)
   const accentSoft = a => shade(a, 0.88);    // tinte muy claro (fondos sutiles)
   const INK = '#1A1614';                      // casi-negro tintado (nunca negro puro)
-  // presets de marca: setean fondo + acento + tipografía juntos para que la galería sea una serie
+  // looks de campaña premium: fondo + acento + tipografía de cuerpo + tipografía "héroe" (titular/dato)
   const PRESETS = {
-    limpio: { name: 'Limpio', bg: '#f4f5f7', accent: '#d8381f', font: 'manrope' },
-    calido: { name: 'Cálido', bg: '#f6efe4', accent: '#c2410c', font: 'playfair' },
-    tech:   { name: 'Tech',   bg: '#14171c', accent: '#3b82f6', font: 'montserrat' },
+    limpio:   { name: 'Limpio',   bg: '#F4F1EC', accent: '#D8381F', font: 'manrope',    head: 'manrope' },
+    boutique: { name: 'Boutique', bg: '#F3ECE0', accent: '#B8924A', font: 'manrope',    head: 'playfair' },
+    tech:     { name: 'Tech',     bg: '#15181E', accent: '#00C2A8', font: 'montserrat', head: 'montserrat' },
   };
+  const headFont = () => fontById(state.theme.head || state.theme.font || 'manrope');
   function applyPreset(id){
     const p = PRESETS[id]; if (!p) return;
-    state.theme = { id, accent: p.accent, font: p.font };
+    state.theme = { id, accent: p.accent, font: p.font, head: p.head };
     state.bg.color = p.bg;
     const L = state.layers;
-    L.feats.bulletColor = p.accent; L.feats.font = p.font; L.hero.font = p.font;
+    L.feats.bulletColor = p.accent; L.feats.font = p.font;
+    L.hero.font = p.head;   // el titular usa la tipografía héroe (serif en Boutique)
     L.banner.color = p.accent; L.garantia.accent = p.accent; L.compara.accent = p.accent;
-    loadFontThen(p.font, render); renderPanel();
+    loadFontThen(p.head, () => loadFontThen(p.font, render)); renderPanel();
   }
   // alto de la tarjeta "qué incluye" (lo comparten el dibujo y la reserva de espacio del producto)
   function incluyeHeight(){
@@ -1064,17 +1069,20 @@
       const f = Math.max(0, Math.min(1, rating - i));
       if (f > 0){ const clip = new Konva.Group({ clip: { x: cx - ss / 2, y: cy - ss / 2, width: ss * f, height: ss } }); drawStar(clip, cx, cy, ss / 2, '#FFB400'); g.add(clip); }
     }
-    const starsW = 5 * ss + 4 * sgap;
-    g.add(new Konva.Text({ text: rating.toFixed(1).replace('.', ','), x: sx + starsW + 28, y: sy - 8, fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: 70, fill: ink, listening: false }));
+    const starsW = 5 * ss + 4 * sgap, hf = headFont();
+    g.add(new Konva.Text({ text: rating.toFixed(1).replace('.', ','), x: sx + starsW + 28, y: sy - 12, fontFamily: hf.css, fontStyle: hf.w, fontSize: 78, fill: INK, listening: false }));
     g.add(new Konva.Text({ text: '(' + (s.count || '0') + ' opiniones)', x: sx, y: sy + ss + 14, fontFamily: 'Manrope, sans-serif', fontStyle: '600', fontSize: 30, fill: '#6B7280', listening: false }));
     if (s.quote && s.quote.trim())
       g.add(new Konva.Text({ text: '“' + s.quote.trim() + '”', x: cardX + 48, y: cardY + cardH * 0.58, width: cardW - 360, fontFamily: 'Manrope, sans-serif', fontStyle: '500', fontSize: 34, lineHeight: 1.25, fill: ink, listening: false }));
     // chip "+N vendidos"
     if (s.sold && String(s.sold).trim()){
-      const chipText = '+' + String(s.sold).trim() + ' vendidos', tw = chipText.length * 17 + 90, ch = 72, chx = cardX + cardW - tw - 40, chy = cardY + cardH - ch - 36;
-      g.add(new Konva.Rect({ x: chx, y: chy, width: tw, height: ch, cornerRadius: ch / 2, fill: rgba(accent, 0.12) }));
-      drawGlyph(g, 'check', chx + 36, chy + ch / 2, 34, accent);
-      g.add(new Konva.Text({ text: chipText, x: chx + 60, y: chy, width: tw - 70, height: ch, verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '700', fontSize: 30, fill: accent, listening: false }));
+      const chipText = '+' + String(s.sold).trim() + ' vendidos', tw = chipText.length * 17 + 96, ch = 72, chx = cardX + cardW - tw - 40, chy = cardY + cardH - ch - 36;
+      const chip = new Konva.Rect({ x: chx, y: chy, width: tw, height: ch, cornerRadius: ch / 2,
+        fillLinearGradientStartPoint: { x: chx, y: chy }, fillLinearGradientEndPoint: { x: chx + tw, y: chy + ch },
+        fillLinearGradientColorStops: [0, accent, 1, accentDark(accent)] });
+      chip.shadowColor(accent); chip.shadowBlur(20); chip.shadowOffsetY(8); chip.shadowOpacity(0.4); g.add(chip);
+      drawGlyph(g, 'check', chx + 38, chy + ch / 2, 34, '#ffffff');
+      g.add(new Konva.Text({ text: chipText, x: chx + 62, y: chy, width: tw - 74, height: ch, verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: '700', fontSize: 30, fill: '#ffffff', listening: false }));
     }
     g.on('click tap', () => selectPart('social')); mainLayer.add(g);
   }
