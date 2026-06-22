@@ -517,11 +517,12 @@
       barra:   { on: false, left: 'NEGRO', right: '2 LTS', dark: true },
       lateral: { on: false, brand: 'AROMA INTENSO', size: '500 ML', soft: false, seal: '' },
       pack:    { on: false, qty: '6', label: 'UNIDADES', dark: true },
+      texto:   { on: false, sel: 0, items: [{ text: 'OFERTA', color: '#d8381f', font: 'manrope', size: 90, place: null }] },
       logo:    { on: false, text: 'TU MARCA', corner: 'br', size: 18, opacity: 100, place: null },
     },
   };
   // partes con presencia en el lienzo (las que tienen capa propia)
-  const LAYER_IDS = ['dims', 'banner', 'feats', 'incluye', 'hero', 'garantia', 'compara', 'social', 'panel', 'barra', 'lateral', 'pack', 'logo'];
+  const LAYER_IDS = ['dims', 'banner', 'feats', 'incluye', 'hero', 'garantia', 'compara', 'social', 'panel', 'barra', 'lateral', 'pack', 'texto', 'logo'];
   // placas de "composición completa": ocultan el producto grande (dibujan lo suyo)
   const FULL_PLACAS = ['compara'];
   const isLayer = id => LAYER_IDS.includes(id);
@@ -533,6 +534,7 @@
     realce:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M19 14v4"/><path d="M17 16h4"/></svg>',
     producto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3"/></svg>',
     retoque: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 7-9 9-4 1 1-4 9-9a1.8 1.8 0 0 1 2.5 0L20 4.5a1.8 1.8 0 0 1 0 2.5z"/><path d="M5 21h14"/></svg>',
+    texto:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg>',
     escena:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8 19 13M15 9h.01M17.8 6.2 19 5M3 21l9-9M12.2 6.2 11 5"/></svg>',
     dims:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 8.7 8.7 21.3a1 1 0 0 1-1.4 0l-4.6-4.6a1 1 0 0 1 0-1.4L15.3 2.7a1 1 0 0 1 1.4 0l4.6 4.6a1 1 0 0 1 0 1.4Z"/><path d="m7.5 10.5 2 2M10.5 7.5l2 2M13.5 4.5l2 2M4.5 13.5l2 2"/></svg>',
     feats:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4M3 7l2 2 4-4M13 6h8M13 12h8M13 18h8"/></svg>',
@@ -548,13 +550,13 @@
     lateral: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="12" height="18" rx="2"/><rect x="18" y="3" width="3" height="18" rx="1.5" fill="currentColor"/></svg>',
     pack:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9.5 12 8v8M12 16h-1.5m1.5 0h1.5"/></svg>',
   };
-  const TLABEL = { fondo:'Fondo', realce:'Realce', producto:'Fotos', retoque:'Retoque', escena:'Escena IA', dims:'Medidas', feats:'Beneficios', incluye:'Qué incluye', logo:'Logo', banner:'Banner', hero:'Titular', garantia:'Confianza', compara:'Comparativa', social:'Reseñas', panel:'Panel', barra:'Barra', lateral:'Barra lateral', pack:'Cantidad' };
+  const TLABEL = { fondo:'Fondo', realce:'Realce', producto:'Fotos', retoque:'Retoque', texto:'Texto', escena:'Escena IA', dims:'Medidas', feats:'Beneficios', incluye:'Qué incluye', logo:'Logo', banner:'Banner', hero:'Titular', garantia:'Confianza', compara:'Comparativa', social:'Reseñas', panel:'Panel', barra:'Barra', lateral:'Barra lateral', pack:'Cantidad' };
   const GROUPS = [
     { label: 'Foto',        tools: ['fondo', 'realce', 'producto', 'retoque'] },
     { label: 'Información',  tools: ['dims', 'feats', 'incluye', 'banner'] },
     { label: 'Vender',      tools: ['hero', 'panel', 'garantia', 'compara', 'social'] },
     { label: 'Marketplace', tools: ['barra', 'lateral', 'pack'] },
-    { label: 'Marca',       tools: ['logo'] },
+    { label: 'Marca',       tools: ['texto', 'logo'] },
   ];
   // Escena IA se ocultó (E10): no mostrar features "pronto" hasta que funcionen. Vuelve cuando esté lista.
 
@@ -928,6 +930,7 @@
     if (state.layers.barra.on   && vp === 'barra')   drawBarra();
     if (state.layers.lateral.on && vp === 'lateral') drawLateral();
     if (state.layers.pack.on    && vp === 'pack')    drawPack();
+    if (state.layers.texto.on && !cleanCover) drawTexto();   // texto libre (no en la portada ML)
     if (state.layers.logo.on && !cleanCover) drawLogo();   // sin logo en la portada ML
     if (!cleanCover) drawPlateNumber();                    // numeración (no en la portada ML)
     drawSelection(box);
@@ -1467,6 +1470,29 @@
     }
   }
 
+  // ---------- TEXTO LIBRE: varios textos arrastrables/redimensionables sobre la placa ----------
+  function drawTexto(){
+    const t = state.layers.texto;
+    t.items.forEach((it, i) => {
+      const ff = fontById(it.font), sel = state.selected === 'texto' && t.sel === i;
+      if (!it.place){ it.place = { x: OUT.w * 0.5, y: OUT.h * (0.18 + i * 0.12), scale: 1, rot: 0 }; }
+      const node = new Konva.Text({ x: it.place.x, y: it.place.y, text: it.text || ' ', fontFamily: ff.css, fontStyle: ff.w, fontSize: it.size, fill: it.color, align: 'center', draggable: true, scaleX: it.place.scale, scaleY: it.place.scale, rotation: it.place.rot });
+      node.offsetX(node.width() / 2); node.offsetY(node.height() / 2);
+      node.shadowColor('rgba(0,0,0,0.35)'); node.shadowBlur(6); node.shadowOpacity(it.color && luminance(it.color) > 0.6 ? 0.5 : 0);   // halo si el texto es claro
+      node.on('dragmove', () => { const sn = applySnap(node.x(), node.y()); node.position({ x: sn.x, y: sn.y }); it.place.x = sn.x; it.place.y = sn.y; drawGuides(sn.guides); mainLayer.batchDraw(); });
+      node.on('dragend', () => clearGuides());
+      node.on('click tap', () => { t.sel = i; selectPart('texto'); });
+      node.on('mouseenter', () => stage.container().style.cursor = 'grab');
+      node.on('mouseleave', () => stage.container().style.cursor = 'default');
+      mainLayer.add(node);
+      if (sel){
+        const tr = new Konva.Transformer({ rotateEnabled: true, enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'], anchorSize: px(24), anchorStroke: '#d8381f', anchorFill: '#fff', anchorCornerRadius: px(6), borderStroke: '#d8381f', borderStrokeWidth: px(2), rotateAnchorOffset: px(30) });
+        mainLayer.add(tr); tr.nodes([node]);
+        node.on('transformend', () => { it.place.scale = node.scaleX(); it.place.rot = node.rotation(); });
+      }
+    });
+  }
+
   // contorno punteado solo para lo que NO tiene handles propios (fondo/producto/realce/incluye)
   function drawSelection(box){
     let reg = null; const L = state.layers, s = state.selected;
@@ -1855,6 +1881,17 @@
       textRow('Cantidad', p.qty, v => { p.qty = v; render(); }, 'Ej: 6'),
       textRow('Etiqueta', p.label, v => { p.label = v; render(); }, 'Ej: UNIDADES'),
       segRow('Color', [['true', 'Negro'], ['false', 'De marca']], String(p.dark), v => { p.dark = v === 'true'; render(); renderPanel(); })); },
+    texto: root => { const t = state.layers.texto; const it = t.items[t.sel] || t.items[0]; root.append(
+      toggleRow('Mostrar texto', t.on, v => { t.on = v; render(); renderToolbar(); }),
+      t.on ? hint('Tocá un texto en la imagen para editarlo. Arrastralo y estiralo o giralo desde las esquinas.') : '',
+      t.items.length > 1 ? segRow('Editando', t.items.map((x, i) => [String(i), 'T' + (i + 1)]), String(t.sel), v => { t.sel = +v; render(); renderPanel(); }) : '',
+      textRow('Texto', it.text, v => { it.text = v; render(); }, 'Ej: OFERTA -20%'),
+      colorRow('Color', withPalette(['#d8381f', '#111111', '#ffffff', '#1f9d55', '#1B49B8', '#b8924a']), it.color, v => { it.color = v; render(); renderPanel(); }),
+      fontRow('Tipografía', it.font, v => { it.font = v; loadFontThen(v, render); }),
+      sliderRow('Tamaño', it.size, 30, 240, v => { it.size = v; render(); }, v => v + 'px'),
+      h('div', { class: 'tgl-row' },
+        h('button', { class: 'add-btn', type: 'button', onclick(){ t.items.push({ text: 'Texto', color: '#111111', font: 'manrope', size: 80, place: null }); t.sel = t.items.length - 1; render(); renderPanel(); } }, '+ Agregar texto'),
+        t.items.length > 1 ? h('button', { class: 'mini', type: 'button', title: 'Quitar este texto', onclick(){ t.items.splice(t.sel, 1); t.sel = Math.max(0, t.sel - 1); render(); renderPanel(); } }, '×') : '')); },
     logo: root => { const l = state.layers.logo; root.append(
       toggleRow('Mostrar logo', l.on, v => { l.on = v; render(); renderToolbar(); }),
       l.on ? hint('Arrastrá el logo para moverlo. Seleccionado, redimensionalo o giralo desde las esquinas.') : '',
