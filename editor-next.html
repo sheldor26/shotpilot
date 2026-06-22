@@ -23,6 +23,11 @@
   <!-- Supabase (auth) — misma sesión que la landing y /cuenta -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <!-- Tipografías para los beneficios (variedad: sans, serif, condensadas, manuscritas) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@600;700;800&family=Poppins:wght@600;700;800&family=Montserrat:wght@600;700;800&family=Oswald:wght@500;700&family=Bebas+Neue&family=Anton&family=Archivo+Black&family=Playfair+Display:wght@600;700;800&family=Lora:wght@600;700&family=Merriweather:wght@700;900&family=Pacifico&family=Dancing+Script:wght@600;700&family=Caveat:wght@600;700&family=Fredoka:wght@500;600;700&family=Bricolage+Grotesque:wght@600;700;800&display=swap">
+
   <style>
     :root{
       --ink:#241E1A; --ink-soft:#5b5048; --ink-faint:#938678;
@@ -128,6 +133,7 @@
     .row{ display:flex; align-items:center; justify-content:space-between; gap:.7rem }
     input[type=text]{ width:100%; font:inherit; font-size:.92rem; padding:.55rem .7rem; border:1.5px solid var(--line); border-radius:10px; background:var(--white); color:var(--ink) }
     input[type=range]{ width:100%; accent-color:var(--accent) }
+    .font-select{ width:100%; font-size:1rem; padding:.55rem .7rem; border:1.5px solid var(--line); border-radius:10px; background:var(--white); color:var(--ink); cursor:pointer }
     .seg{ display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden }
     .seg button{ font:inherit; font-size:.82rem; font-weight:600; padding:.45rem .8rem; border:0; background:var(--white); color:var(--ink-soft); cursor:pointer }
     .seg button[aria-pressed="true"]{ background:var(--ink); color:#fff }
@@ -232,8 +238,8 @@
     .ex{ margin-top:1rem } .ex a{ color:var(--ink-soft); font-size:.88rem; text-decoration:underline }
     @media(max-width:430px){ .import-row{ flex-wrap:wrap } .btn-import{ width:100% } }
     .up-err{ color:var(--accent); font-size:.86rem; margin:.9rem 0 0 }
-    .proc{ max-width:300px; margin:12vh auto 0; text-align:center; color:var(--ink-soft); font-size:.95rem }
-    .scanbox{ position:relative; width:200px; aspect-ratio:3/4; margin:0 auto 1.2rem; border-radius:14px; overflow:hidden; border:1px solid var(--line); background:#f3ece2 }
+    .proc{ max-width:460px; margin:9vh auto 0; text-align:center; color:var(--ink-soft); font-size:1.02rem }
+    .scanbox{ position:relative; width:min(360px,82vw); aspect-ratio:3/4; margin:0 auto 1.4rem; border-radius:16px; overflow:hidden; border:1px solid var(--line); background:#f3ece2 }
     .scanbox img{ width:100%; height:100%; object-fit:contain }
     .scanbox .ln{ position:absolute; top:0; bottom:0; left:6%; width:3px; background:var(--accent); box-shadow:0 0 16px 3px rgba(216,56,31,.6); animation:scan 1.4s ease-in-out infinite }
     @keyframes scan{ 0%,100%{ left:6% } 50%{ left:92% } }
@@ -384,8 +390,41 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const OUT = { w: 1200, h: 1200 };
-  const FILL = 0.82;
+  // Cuánto del lienzo llena el producto. En la foto SOLA lo maximizamos (que destaque),
+  // en placas con info dejamos aire para que entre el texto/cotas.
+  const FILL_PHOTO = 0.94;   // foto de producto: maximizar
+  const FILL_INFO  = 0.82;   // con info (medidas/beneficios/incluye/banner): más chico
   const isDesktop = () => matchMedia('(min-width:860px)').matches;
+
+  // Tipografías disponibles para los beneficios. `w` = peso que se usa al dibujar.
+  const FONTS = [
+    { id: 'manrope',   name: 'Manrope',           css: '"Manrope", sans-serif',            w: '700' },
+    { id: 'inter',     name: 'Inter',             css: '"Inter", sans-serif',              w: '700' },
+    { id: 'poppins',   name: 'Poppins',           css: '"Poppins", sans-serif',            w: '700' },
+    { id: 'montserrat',name: 'Montserrat',        css: '"Montserrat", sans-serif',         w: '700' },
+    { id: 'oswald',    name: 'Oswald',            css: '"Oswald", sans-serif',             w: '700' },
+    { id: 'bebas',     name: 'Bebas Neue',        css: '"Bebas Neue", sans-serif',         w: '400' },
+    { id: 'anton',     name: 'Anton',             css: '"Anton", sans-serif',              w: '400' },
+    { id: 'archivo',   name: 'Archivo Black',     css: '"Archivo Black", sans-serif',      w: '400' },
+    { id: 'playfair',  name: 'Playfair Display',  css: '"Playfair Display", serif',        w: '700' },
+    { id: 'lora',      name: 'Lora',              css: '"Lora", serif',                    w: '700' },
+    { id: 'merri',     name: 'Merriweather',      css: '"Merriweather", serif',            w: '700' },
+    { id: 'pacifico',  name: 'Pacifico',          css: '"Pacifico", cursive',              w: '400' },
+    { id: 'dancing',   name: 'Dancing Script',    css: '"Dancing Script", cursive',        w: '700' },
+    { id: 'caveat',    name: 'Caveat',            css: '"Caveat", cursive',                w: '700' },
+    { id: 'fredoka',   name: 'Fredoka',           css: '"Fredoka", sans-serif',            w: '600' },
+    { id: 'bricolage', name: 'Bricolage Grotesque', css: '"Bricolage Grotesque", sans-serif', w: '700' },
+  ];
+  const fontById = id => FONTS.find(f => f.id === id) || FONTS[0];
+  // El canvas (Konva) solo dibuja una fuente si YA está cargada. Pedimos la fuente y recién
+  // ahí redibujamos; igual redibujamos al toque con el fallback para que se sienta instantáneo.
+  function loadFontThen(id, cb){
+    const f = fontById(id);
+    cb();   // redibujo inmediato (fallback mientras baja la fuente)
+    if (document.fonts && document.fonts.load){
+      document.fonts.load(`${f.w} 40px ${f.css}`).then(() => cb()).catch(() => {});
+    }
+  }
 
   // ============================ estado central (E2) ============================
   const state = {
@@ -398,7 +437,7 @@
       // Arrancan en null y se inicializan la 1ª vez desde el layout; después mandan lo arrastrado.
       dims:    { on: false, unit: 'cm', alto: '14', ancho: '6', prof: '', pos: null, stroke: 3, labelSize: 34 },
       banner:  { on: false, text: 'ENVÍO GRATIS', color: '#1B49B8', pos: 'top', place: null, textColor: '#ffffff', fontSize: 52, textShadow: false, opacity: 100, style: 'solid' },
-      feats:   { on: false, items: ['Larga duración', 'Fragancia amaderada', 'Frasco de vidrio'], pos: null, bulletColor: '#d8381f', fontSize: 30, style: 'dots' },
+      feats:   { on: false, items: ['Larga duración', 'Fragancia amaderada', 'Frasco de vidrio'], pos: null, bulletColor: '#d8381f', fontSize: 30, style: 'dots', font: 'manrope' },
       incluye: { on: false, items: ['Perfume 100 ml', 'Estuche original'], title: 'INCLUYE' },
       logo:    { on: false, text: 'TU MARCA', corner: 'br', size: 18, opacity: 100, place: null },
     },
@@ -532,12 +571,22 @@
   const visiblePlaca = () => exportPlaca !== undefined ? exportPlaca : state.selected;
   function productBox(){
     const res = { top: 0, right: 0, bottom: 0, left: 0 }, L = state.layers, vp = visiblePlaca();
-    if (L.banner.on  && vp === 'banner')  res[L.banner.pos] += OUT.h * 0.13;
+    // El banner reserva la banda REAL que ocupa (según su posición y alto, que el usuario puede
+    // mover/agrandar) + un margen, así el producto se acomoda y nunca queda tapado ni cortado.
+    if (L.banner.on && vp === 'banner'){
+      const bb = bannerBand(), gap = OUT.h * 0.04;
+      if (bb.y + bb.h / 2 < OUT.h / 2) res.top    = Math.max(res.top,    bb.y + bb.h + gap);
+      else                             res.bottom = Math.max(res.bottom, OUT.h - bb.y + gap);
+    }
     if (L.feats.on   && vp === 'feats')   res.right += OUT.w * 0.30;
     if (L.incluye.on && vp === 'incluye') res.bottom += OUT.h * 0.16;
     const aw = OUT.w - res.left - res.right, ah = OUT.h - res.top - res.bottom;
     const bw = cutout.w, bh = cutout.h;   // bbox ajustado (sin padding transparente)
-    const base = Math.min(aw * FILL / bw, ah * FILL / bh) * state.product.scale;
+    // foto sola → maximizar; cualquier placa de info activa → dejar aire
+    const infoOn = (L.banner.on && vp === 'banner') || (L.feats.on && vp === 'feats') ||
+                   (L.incluye.on && vp === 'incluye') || (L.dims.on && vp === 'dims');
+    const fill = infoOn ? FILL_INFO : FILL_PHOTO;
+    const base = Math.min(aw * fill / bw, ah * fill / bh) * state.product.scale;
     const dw = bw * base, dh = bh * base;
     const x = res.left + (aw - dw) / 2, y = res.top + (ah - dh) / 2;
     return (productBoxCache = { x, y, w: dw, h: dh });
@@ -623,12 +672,13 @@
     f.items.forEach((s, i) => {
       if (!s.trim()) return;
       const p = f.pos[i], g = new Konva.Group({ x: p.x, y: p.y, draggable: true }), fs = f.fontSize, col = f.bulletColor;
+      const ff = fontById(f.font);   // tipografía elegida para el texto del beneficio
       g.add(new Konva.Circle({ radius: px(22), fill: sel ? 'rgba(216,56,31,0.12)' : 'rgba(0,0,0,0.001)' }));   // 44px táctil
       // estilo del beneficio (galería de plantillas — E8); todos siguen siendo puntos arrastrables.
       // El texto se limita al ancho que entra hasta el borde del lienzo (envuelve, no se sale).
       const fitW = (offset) => Math.max(140, OUT.w - p.x - offset - 18);
       if (f.style === 'chips'){
-        const padX = 26, t = new Konva.Text({ text: s, fontFamily: 'Manrope, sans-serif', fontStyle: '700', fontSize: fs, fill: '#fff', listening: false });
+        const padX = 26, t = new Konva.Text({ text: s, fontFamily: ff.css, fontStyle: ff.w, fontSize: fs, fill: '#fff', listening: false });
         const maxW = fitW(padX * 2); if (t.width() > maxW) t.width(maxW);
         const bh = t.height() + 22, bw = t.width() + padX * 2;
         g.add(new Konva.Rect({ x: 0, y: -bh / 2, width: bw, height: bh, fill: col, cornerRadius: Math.min(bh / 2, 28), listening: false }));
@@ -637,12 +687,12 @@
         const r = fs * (f.style === 'tag' ? 0.9 : 0.78), glyph = f.style === 'tag' ? String(i + 1) : '✓', off = r * 2 + 14;
         g.add(new Konva.Circle({ x: r, y: 0, radius: r, fill: col, listening: false }));
         g.add(new Konva.Text({ x: 0, y: -fs * 0.55, width: r * 2, align: 'center', text: glyph, fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: fs * 0.9, fill: '#fff', listening: false }));
-        const lbl = new Konva.Text({ x: off, text: s, fontFamily: 'Manrope, sans-serif', fontStyle: '600', fontSize: fs, fill: ink, listening: false });
+        const lbl = new Konva.Text({ x: off, text: s, fontFamily: ff.css, fontStyle: ff.w, fontSize: fs, fill: ink, listening: false });
         const maxW = fitW(off); if (lbl.width() > maxW) lbl.width(maxW);
         lbl.y(-lbl.height() / 2); g.add(lbl);
       } else {
         g.add(new Konva.Circle({ radius: 13, fill: col, listening: false }));
-        const lbl = new Konva.Text({ x: 30, text: s, fontFamily: 'Manrope, sans-serif', fontStyle: '600', fontSize: fs, fill: ink, listening: false });
+        const lbl = new Konva.Text({ x: 30, text: s, fontFamily: ff.css, fontStyle: ff.w, fontSize: fs, fill: ink, listening: false });
         const maxW = fitW(30); if (lbl.width() > maxW) lbl.width(maxW);
         lbl.y(-lbl.height() / 2); g.add(lbl);
       }
@@ -669,6 +719,12 @@
     const b = state.layers.banner; if (b.place) return;
     const h = OUT.h * 0.13; b.place = { y: b.pos === 'top' ? 0 : OUT.h - h, h };
   }
+  // banda vertical {y, h} que ocupa el banner (la ya arrastrada/redimensionada, o la default)
+  function bannerBand(){
+    const b = state.layers.banner;
+    if (b.place) return { y: b.place.y, h: b.place.h };
+    const h = OUT.h * 0.13; return { y: b.pos === 'top' ? 0 : OUT.h - h, h };
+  }
   function drawBanner(){
     ensureBannerPlace();
     const b = state.layers.banner, sel = state.selected === 'banner', bp = b.place, w = OUT.w, hh = bp.h;
@@ -681,7 +737,7 @@
     if (b.textShadow){ txt.shadowColor('rgba(0,0,0,.55)'); txt.shadowBlur(10); txt.shadowOffsetY(4); }
     g.add(txt);
     g.on('dragmove', () => { const sn = applySnap(OUT.w / 2, g.y()); g.y(sn.y); bp.y = sn.y; drawGuides(sn.guides.filter(x => x.type === 'h')); mainLayer.batchDraw(); });
-    g.on('dragend', () => clearGuides());
+    g.on('dragend', () => { clearGuides(); render(); });   // el producto se reacomoda a la nueva posición del banner
     g.on('click tap', () => selectPart('banner'));
     mainLayer.add(g);
     if (sel){
@@ -831,6 +887,17 @@
     });
     return field(label, wrap);
   }
+  // selector de tipografía: cada opción se ve en su propia fuente; el select muestra la elegida.
+  function fontRow(label, current, onPick){
+    const sel = h('select', { class: 'font-select', onchange(){ onPick(this.value); sel.style.fontFamily = fontById(this.value).css; } });
+    FONTS.forEach(f => {
+      const o = h('option', { value: f.id, style: 'font-family:' + f.css }, f.name);
+      if (f.id === current) o.selected = true;
+      sel.append(o);
+    });
+    sel.style.fontFamily = fontById(current).css;
+    return field(label, sel);
+  }
   // lista editable con empty-state que enseña (mensaje + ejemplo + botón grande) y placeholders reales
   function listEditor(label, items, onChange, addLabel, placeholder, emptyMsg){
     const wrap = h('div', {});
@@ -929,6 +996,7 @@
       listEditor('Beneficios', f.items, () => { state.layers.feats.pos = null; render(); }, 'Agregar beneficio', 'Ej: Batería 12 horas',
         'Tocá + para agregar un beneficio (ej: “Batería 12 horas”). Va a aparecer un puntito sobre tu foto que podés mover.'),
       f.items.length ? thumbGrid('Estilo', FEAT_TPLS.map(o => ({ id: o.id, name: o.name, svg: featThumbSVG(o.id, f.bulletColor) })), f.style, v => { f.style = v; render(); renderPanel(); }) : '',
+      f.items.length ? fontRow('Tipografía', f.font, v => { f.font = v; loadFontThen(v, render); }) : '',
       moreSection('feats',
         colorRow('Color del punto', ['#d8381f', '#1B49B8', '#1f9d55', '#241E1A'], f.bulletColor, v => { f.bulletColor = v; render(); renderPanel(); }),
         sliderRow('Tamaño de letra', f.fontSize, 22, 44, v => { f.fontSize = v; render(); }))); },
@@ -1347,6 +1415,8 @@
     if (!stage){
       buildStage(); ready = true;
       $('dl-btn').addEventListener('click', downloadGallery);
+      // cuando terminan de bajar las tipografías, redibujamos por si alguna placa ya las usa
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (ready) render(); });
       setInterval(pollHistory, 600);
     }
     $('dl-btn').disabled = false;
