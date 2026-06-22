@@ -93,7 +93,9 @@
       padding:.45rem .6rem calc(.45rem + env(safe-area-inset-bottom));
     }
     .toolbar::-webkit-scrollbar{ display:none }
-    .group-label{ align-self:center; flex:none; font-size:.6rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint); padding:0 .35rem; white-space:nowrap }
+    .group-label{ align-self:center; flex:none; display:inline-flex; align-items:center; gap:.25rem; font-size:.6rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint); padding:0 .35rem; white-space:nowrap; border:0; background:none; cursor:pointer }
+    .gl-chev{ font-size:.7rem; line-height:1; transition:transform .15s }
+    .group-label.is-collapsed .gl-chev{ transform:rotate(-90deg) }
     .tb-div{ flex:none; width:1px; align-self:stretch; background:var(--line); margin:.25rem .1rem }
     .tool{
       flex:none; display:flex; flex-direction:column; align-items:center; gap:.2rem; min-width:62px;
@@ -256,7 +258,7 @@
         grid-area:tb; position:sticky; top:80px; bottom:auto; flex-direction:column; align-items:stretch; gap:.15rem;
         overflow:visible; background:none; backdrop-filter:none; border:0; padding:0;
       }
-      .group-label{ align-self:flex-start; padding:.5rem .2rem .15rem }
+      .group-label{ align-self:stretch; width:100%; justify-content:space-between; padding:.5rem .35rem .15rem }
       .tb-div{ display:none }
       .tool{ flex-direction:row; gap:.6rem; min-width:0; width:100%; padding:.35rem .4rem; border-radius:12px; font-size:.82rem; justify-content:flex-start }
       .tool:hover{ background:var(--white) }
@@ -471,7 +473,7 @@
     platform: 'ml',   // ml | ig | tn — regla de portada (ML exige fondo blanco sin texto/logo)
     theme:   { id: 'limpio', accent: '#d8381f', font: 'manrope', head: 'manrope' },   // look de marca (color+tipografía coherentes)
     bg:      { color: '#ffffff', style: 'gradiente' },   // gradiente | plano | estudio | foco
-    product: { scale: 1, shadow: false, shadowInt: 60 },
+    product: { scale: 1, shadow: false, shadowInt: 60, dx: 0, dy: 0 },
     realce:  { brillo: 100, contraste: 100, color: 100, nitidez: 0 },
     layers: {
       // `pos`/`place` guardan las posiciones que el usuario arrastra (coords del lienzo 1200×1200).
@@ -719,6 +721,8 @@
     if (bannerSide === 'bottom') y = res.top + ah - dh;
     // hero: el producto sangra fuera del borde de su lado (más dinámico, se ve aviso)
     if (heroOn) x += (L.hero.pos === 'right' ? -1 : 1) * OUT.w * 0.07;
+    // ajuste manual del usuario (mover/redimensionar desde los vértices)
+    x += state.product.dx || 0; y += state.product.dy || 0;
     return (productBoxCache = { x, y, w: dw, h: dh });
   }
   // ¿esta placa exige fondo blanco puro? (portada ML: sin gradiente/halo). El guardrail real
@@ -794,6 +798,20 @@
       }
       node.on('click tap', () => selectPart('producto'));
       productLayer.add(node);
+      // seleccionado: mover (arrastrar) + redimensionar desde los vértices
+      if (state.selected === 'producto' && !exporting){
+        node.draggable(true);
+        node.on('dragend', () => { state.product.dx = (state.product.dx || 0) + (node.x() - box.x); state.product.dy = (state.product.dy || 0) + (node.y() - box.y); render(); });
+        const tr = new Konva.Transformer({ rotateEnabled: false, keepRatio: true, enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'], anchorSize: px(26), anchorStroke: '#d8381f', anchorFill: '#fff', anchorCornerRadius: px(6), borderStroke: '#d8381f', borderStrokeWidth: px(2) });
+        productLayer.add(tr); tr.nodes([node]);
+        node.on('transformend', () => {
+          const f = node.scaleX(); node.scaleX(1); node.scaleY(1);
+          state.product.scale = Math.max(0.4, Math.min(2.6, (state.product.scale || 1) * f));
+          state.product.dx = (state.product.dx || 0) + (node.x() - box.x);
+          state.product.dy = (state.product.dy || 0) + (node.y() - box.y);
+          render(); renderPanel();
+        });
+      }
     }
     // solo la placa de info seleccionada (cada una es una imagen aparte). El logo va en todas.
     if (state.layers.dims.on    && vp === 'dims')    drawDims(box);
@@ -1304,7 +1322,7 @@
   // contorno punteado solo para lo que NO tiene handles propios (fondo/producto/realce/incluye)
   function drawSelection(box){
     let reg = null; const L = state.layers, s = state.selected;
-    if (s === 'producto' || s === 'realce') reg = box;
+    if (s === 'realce') reg = box;   // el producto se marca con su Transformer (vértices)
     else if (s === 'fondo') reg = { x: 6, y: 6, w: OUT.w - 12, h: OUT.h - 12 };
     else if (s === 'incluye' && L.incluye.on){ const ch = incluyeHeight(); reg = { x: 48, y: OUT.h - ch - 36, w: OUT.w - 96, h: ch }; }
     if (reg) mainLayer.add(new Konva.Rect({ x: reg.x, y: reg.y, width: reg.w, height: reg.h, stroke: '#d8381f', strokeWidth: px(2), dash: [px(8), px(6)], cornerRadius: 8, listening: false }));
@@ -1313,11 +1331,17 @@
   // ============================ selección única + paneles ============================
   function selectPart(id){ state.selected = id; renderToolbar(); render(); renderPanel(); if (id) maybeCoach(id); }
 
+  const tbCollapsed = {};   // grupos plegados de la toolbar (por etiqueta)
   function renderToolbar(){
     const tb = $('toolbar'); tb.innerHTML = '';
     GROUPS.forEach((g, gi) => {
+      const collapsed = !!tbCollapsed[g.label];
       if (gi > 0){ const d = document.createElement('div'); d.className = 'tb-div'; tb.appendChild(d); }
-      const lab = document.createElement('div'); lab.className = 'group-label'; lab.textContent = g.label; tb.appendChild(lab);
+      const lab = document.createElement('button'); lab.type = 'button'; lab.className = 'group-label' + (collapsed ? ' is-collapsed' : '');
+      lab.innerHTML = `<span>${g.label}</span><span class="gl-chev">▾</span>`;
+      lab.addEventListener('click', () => { tbCollapsed[g.label] = !tbCollapsed[g.label]; renderToolbar(); });
+      tb.appendChild(lab);
+      if (collapsed) return;   // grupo plegado: no dibujamos sus herramientas
       g.tools.forEach(id => {
         const b = document.createElement('button');
         b.className = 'tool' + (isLayer(id) && state.layers[id].on ? ' is-on' : '');
@@ -1555,7 +1579,9 @@
       segRow('Estilo de fondo', [['gradiente', 'Degradé'], ['plano', 'Plano'], ['estudio', 'Estudio'], ['foco', 'Foco']], state.bg.style, v => { state.bg.style = v; render(); renderPanel(); }),
       moreSection('fondo', colorPick('Color personalizado', state.bg.color, v => { state.bg.color = v; render(); renderPanel(); }))),
     producto: root => root.append(
-      sliderRow('Qué tan grande se ve el producto', Math.round(state.product.scale * 100), 60, 130, v => { state.product.scale = v / 100; render(); }, v => v + '%'),
+      hint('Arrastrá el producto para moverlo y estiralo desde los vértices para agrandar o achicar.'),
+      sliderRow('Qué tan grande se ve el producto', Math.round(state.product.scale * 100), 40, 260, v => { state.product.scale = v / 100; render(); }, v => v + '%'),
+      h('button', { class: 'add-btn', type: 'button', style: 'display:block;margin:-.4rem 0 .8rem', onclick(){ state.product.dx = 0; state.product.dy = 0; state.product.scale = 1; render(); renderPanel(); } }, '↺ Centrar y restablecer'),
       toggleRow('Sombra para que no flote', state.product.shadow, v => { state.product.shadow = v; render(); }),
       moreSection('producto', withHelp(sliderRow('Qué tan marcada es la sombra', state.product.shadowInt, 0, 100, v => { state.product.shadowInt = v; render(); }, v => v + '%'), 'Qué tan fuerte se aplica.'))),
     realce: root => { const r = state.realce; root.append(
