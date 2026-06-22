@@ -432,13 +432,28 @@
   let stage, bgLayer, productLayer, mainLayer, guideLayer, productImg, productBoxCache, cutout = null, ready = false;
   // bbox ajustado del recorte (igual que cutoutBox del editor viejo): se escala el producto SIN el
   // padding transparente, así llena igual que la descarga actual. Sin esto el producto sale chico.
+  // bbox del objeto PRINCIPAL (mismo algoritmo que computeBox del editor viejo): cuenta píxeles
+  // opacos por columna/fila con ALPHA alto (ignora halos) y descarta columnas/filas con muy pocos
+  // (motas sueltas del recorte). Sin esto, un pixel casi-transparente lejano agrandaba el bbox y el
+  // producto salía diminuto.
   function computeCutout(){
-    const c = productImg, d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-    let minX = c.width, minY = c.height, maxX = 0, maxY = 0, found = false;
-    for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++){
-      if (d[(y * c.width + x) * 4 + 3] > 8){ found = true; if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y; }
+    const c = productImg, w = c.width, h = c.height;
+    let data; try { data = c.getContext('2d').getImageData(0, 0, w, h).data; } catch (e){ cutout = { x: 0, y: 0, w, h }; return; }
+    const step = Math.max(1, Math.floor(Math.max(w, h) / 600)), ALPHA = 48;
+    const colCount = new Float32Array(w), rowCount = new Float32Array(h);
+    let total = 0;
+    for (let yy = 0; yy < h; yy += step) for (let xx = 0; xx < w; xx += step){
+      if (data[(yy * w + xx) * 4 + 3] > ALPHA){ colCount[xx] += 1; rowCount[yy] += 1; total += 1; }
     }
-    cutout = found ? { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 } : { x: 0, y: 0, w: c.width, h: c.height };
+    if (!total){ cutout = { x: 0, y: 0, w, h }; return; }
+    let colMax = 0, rowMax = 0;
+    for (let i = 0; i < w; i++) if (colCount[i] > colMax) colMax = colCount[i];
+    for (let i = 0; i < h; i++) if (rowCount[i] > rowMax) rowMax = rowCount[i];
+    const colThr = colMax * 0.008, rowThr = rowMax * 0.008;   // tira motas sueltas sin comer partes finas reales
+    let minX = w, maxX = -1, minY = h, maxY = -1;
+    for (let xx = 0; xx < w; xx++) if (colCount[xx] > colThr){ if (xx < minX) minX = xx; if (xx > maxX) maxX = xx; }
+    for (let yy = 0; yy < h; yy++) if (rowCount[yy] > rowThr){ if (yy < minY) minY = yy; if (yy > maxY) maxY = yy; }
+    cutout = (maxX < minX || maxY < minY) ? { x: 0, y: 0, w, h } : { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
   }
   const px = v => v / (stage ? stage.scaleX() : 1);   // px de pantalla → unidades del lienzo (handles de tamaño constante)
 
