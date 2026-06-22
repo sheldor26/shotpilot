@@ -1251,7 +1251,7 @@
     $('empty').hidden = true; $('proc').hidden = false;
     const srcBlob = await resizeForUpload(blob);
     const fd = new FormData();
-    fd.append('image', srcBlob, 'foto.jpg'); fd.append('model', 'isnet'); fd.append('white_bg', 'false');
+    fd.append('image', srcBlob, 'foto.jpg'); fd.append('model', 'isnet-general-use'); fd.append('white_bg', 'false');
     fd.append('enhance', 'false'); fd.append('wb', 'false'); fd.append('main_only', 'true');
     const resp = await removeBg(fd);
     if (!resp.ok) throw new Error('El motor no pudo terminar (' + resp.status + '). Probá de nuevo en un toque.');
