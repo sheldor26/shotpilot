@@ -512,7 +512,7 @@
       // placas de conversión (E12)
       hero:    { on: false, eyebrow: '', headline: 'El detalle que se nota', sub: '', font: 'manrope', pos: 'left' },
       garantia:{ on: false, items: [{ icon: 'shield', text: 'Garantía 6 meses' }, { icon: 'truck', text: 'Envío a todo el país' }, { icon: 'ret', text: 'Devolución 30 días' }], accent: '#1f9d55' },
-      compara: { on: false, mine: 'Este', other: 'Lo común', accent: '#1f9d55', style: 'tarjeta', font: 'manrope', badge: 'RECOMENDADO', title: 'Por qué elegir este producto',
+      compara: { on: false, mine: 'Este', other: 'Lo común', accent: '#1f9d55', style: 'tarjeta', font: 'manrope', badge: 'RECOMENDADO', title: 'Por qué elegir este producto', rating: '', ratingCount: '',
         rows: [{ label: 'Materiales que duran', mine: true, other: false }, { label: 'Listo para usar', mine: true, other: false }, { label: 'Garantía y soporte', mine: true, other: false }, { label: 'Precio justo', mine: true, other: true }] },
       social:  { on: false, rating: '4.6', count: '128', quote: 'Llegó en 2 días, igual que la foto.', sold: '500' },
       panel:   { on: false, dark: true, items: [{ icon: 'bolt', title: 'Carga rápida', sub: '100% en 90 min' }, { icon: 'drop', title: 'Resistente al agua', sub: 'Norma IPX7' }, { icon: 'clock', title: '12 h de batería', sub: 'por carga' }, { icon: 'shield', title: 'Garantía 1 año', sub: '' }] },
@@ -1251,16 +1251,17 @@
     const tableW = OUT.w - safe * 2, x0 = safe;
     const labelW = tableW * 0.50, colW = tableW * 0.25;
     const colOtherX = x0 + labelW, colMineX = x0 + labelW + colW;
-    const headH = 92, rowH = Math.min(118, (OUT.h * 0.56) / Math.max(rows.length, 1)), tableH = headH + rows.length * rowH;
+    const headH = 92, rowH = Math.min(118, (OUT.h * 0.52) / Math.max(rows.length, 1)), tableH = headH + rows.length * rowH;
+    const ratingH = (c.rating && c.rating.trim()) ? 100 : 0;   // mini-ficha de respaldo en la columna ganadora
     const elev = 28, mineX = colMineX - 8, mineW = colW + 16, mineTop = top - elev;
     g.add(new Konva.Text({ text: (c.title || 'Por qué elegir este producto').toUpperCase(), x: x0, y: top - 92, width: tableW, align: 'center', fontFamily: tf.css, fontStyle: tf.w, fontSize: 34, letterSpacing: 2, fill: st.title }));
     rows.forEach((r, i) => { if (i % 2 === 1) g.add(new Konva.Rect({ x: x0, y: top + headH + i * rowH, width: mineX - x0, height: rowH, fill: st.zebra, listening: false })); });
     // columna ganadora: tarjeta flotante / borde+glow (oscuro) / divisor (editorial)
     if (st.divider){
-      g.add(new Konva.Line({ points: [mineX, top + 6, mineX, top + tableH ], stroke: '#D8CFC0', strokeWidth: 1.5, listening: false }));
-      g.add(new Konva.Line({ points: [mineX + mineW, top + 6, mineX + mineW, top + tableH], stroke: '#D8CFC0', strokeWidth: 1.5, listening: false }));
+      g.add(new Konva.Line({ points: [mineX, top + 6, mineX, top + tableH + ratingH ], stroke: '#D8CFC0', strokeWidth: 1.5, listening: false }));
+      g.add(new Konva.Line({ points: [mineX + mineW, top + 6, mineX + mineW, top + tableH + ratingH], stroke: '#D8CFC0', strokeWidth: 1.5, listening: false }));
     } else {
-      const mineBody = new Konva.Rect({ x: mineX, y: mineTop, width: mineW, height: tableH + elev, fill: st.card, cornerRadius: 24 });
+      const mineBody = new Konva.Rect({ x: mineX, y: mineTop, width: mineW, height: tableH + elev + ratingH, fill: st.card, cornerRadius: 24 });
       if (st.glow){ mineBody.stroke(accent); mineBody.strokeWidth(1.5); mineBody.shadowColor(accent); mineBody.shadowBlur(50); mineBody.shadowOpacity(0.4); }
       else if (st.hairline){ mineBody.stroke('#E6E6E6'); mineBody.strokeWidth(1.5); }
       else { mineBody.shadowColor(accent); mineBody.shadowBlur(28); mineBody.shadowOpacity(0.28); mineBody.shadowOffsetY(8); }
@@ -1289,10 +1290,24 @@
         g.add(new Konva.Rect({ x: x0 - 8, y: ry, width: mineX - x0, height: rowH, fill: rgba(accent, 0.12), cornerRadius: 10, listening: false }));
         g.add(new Konva.Rect({ x: x0 - 8, y: ry + 9, width: 5, height: rowH - 18, fill: accent, cornerRadius: 3, listening: false }));
       }
-      g.add(new Konva.Text({ text: r.label, x: x0 + 8, y: ry, width: labelW - 24, height: rowH, verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: r.featured ? '800' : '600', fontSize: 30, fill: st.label, listening: false }));
+      let lx = x0 + 8;
+      if (r.icon && r.icon !== 'ninguno'){ drawGlyph(g, r.icon, x0 + 22, mid, 34, st.label, 2.4); lx = x0 + 52; }
+      g.add(new Konva.Text({ text: r.label, x: lx, y: ry, width: colOtherX - lx - 12, height: rowH, verticalAlign: 'middle', fontFamily: 'Manrope, sans-serif', fontStyle: r.featured ? '800' : '600', fontSize: 30, fill: st.label, listening: false }));
       cell(colOtherX + colW / 2, mid, r.other, r.otherVal, false);
       cell(colMineX + colW / 2, mid, r.mine, r.mineVal, true);
     });
+    // mini-ficha de respaldo: estrellas + rating real dentro de la columna ganadora
+    if (ratingH){
+      const rating = Math.max(0, Math.min(5, parseFloat(String(c.rating).replace(',', '.')) || 0));
+      const fy = top + tableH + 30, mcx = mineX + mineW / 2, ss = 26, sgap = 5, sw = 5 * ss + 4 * sgap, sx0 = mcx - sw / 2;
+      for (let i = 0; i < 5; i++){
+        const scx = sx0 + i * (ss + sgap) + ss / 2;
+        drawStar(g, scx, fy, ss / 2, st.glow ? '#3a3a44' : '#E0D9CC');
+        const f = Math.max(0, Math.min(1, rating - i));
+        if (f > 0){ const clip = new Konva.Group({ clip: { x: scx - ss / 2, y: fy - ss / 2, width: ss * f, height: ss } }); drawStar(clip, scx, fy, ss / 2, '#FFB400'); g.add(clip); }
+      }
+      g.add(new Konva.Text({ text: rating.toFixed(1).replace('.', ',') + (c.ratingCount ? '  ·  ' + c.ratingCount + ' opiniones' : ''), x: mineX, y: fy + 22, width: mineW, align: 'center', fontFamily: 'Manrope, sans-serif', fontStyle: '700', fontSize: 22, fill: st.mineInk, listening: false }));
+    }
     g.on('click tap', () => selectPart('compara')); mainLayer.add(g);
   }
 
@@ -1706,8 +1721,12 @@
       wrap.innerHTML = '';
       c.rows.forEach((r, i) => {
         const tick = (key, name) => h('button', { class: 'tgl', type: 'button', 'aria-pressed': String(r[key]), onclick(){ r[key] = !r[key]; render(); redraw(); } }, name + (r[key] ? ' ✓' : ''));
+        const iconSel = h('select', { class: 'font-select', style: 'flex:none;width:110px', onchange(){ r.icon = this.value; render(); } });
+        ['ninguno'].concat(ICON_OPTS).forEach(ic => { const o = h('option', { value: ic }, ic === 'ninguno' ? 'Sin ícono' : (ICON_LABEL[ic] || ic)); if ((r.icon || 'ninguno') === ic) o.selected = true; iconSel.append(o); });
         wrap.append(h('div', { class: 'row-col' },
-          h('input', { type: 'text', value: r.label, placeholder: 'Ej: Materiales que duran', oninput(){ r.label = this.value; render(); } }),
+          h('div', { class: 'tgl-row' },
+            iconSel,
+            h('input', { type: 'text', value: r.label, placeholder: 'Ej: Materiales que duran', style: 'flex:1', oninput(){ r.label = this.value; render(); } })),
           h('div', { class: 'tgl-row' },
             h('input', { type: 'text', value: r.mineVal || '', placeholder: 'Este (ej: Acero)', style: 'flex:1', oninput(){ r.mineVal = this.value; render(); } }),
             h('input', { type: 'text', value: r.otherVal || '', placeholder: 'Otro (ej: Plástico)', style: 'flex:1', oninput(){ r.otherVal = this.value; render(); } })),
@@ -1871,6 +1890,9 @@
       comparaEditor(c),
       colorRow('Color', withPalette(['#1f9d55', '#1B49B8', '#d8381f', '#241E1A', '#b8924a']), c.accent, v => { c.accent = v; render(); renderPanel(); }),
       moreSection('compara',
+        hint('Respaldo en la columna ganadora: usá el rating REAL de tu publicación (un 4,5 vende más que un 5,0).'),
+        textRow('Puntaje (0 a 5)', c.rating, v => { c.rating = v; render(); }, 'Ej: 4,7'),
+        textRow('Cantidad de opiniones', c.ratingCount, v => { c.ratingCount = v; render(); }, 'Ej: 320'),
         fontRow('Tipografía del título', c.font, v => { c.font = v; loadFontThen(v, render); }),
         textRow('Etiqueta destacada', c.badge, v => { c.badge = v; render(); }, 'Ej: LA QUE CONVIENE'))); },
     social: root => { const s = state.layers.social; root.append(
