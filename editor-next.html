@@ -145,6 +145,8 @@
     .add-btn{ font:inherit; font-size:.82rem; font-weight:700; color:var(--accent); background:none; border:0; cursor:pointer; padding:.3rem 0 }
     .val{ font-size:.8rem; font-weight:700; color:var(--ink-faint); min-width:42px; text-align:right }
     .note{ color:var(--ink-soft); font-size:.9rem; line-height:1.5 }
+    .auto-btn{ display:flex; align-items:center; justify-content:center; gap:.4rem; width:100%; font:inherit; font-weight:800; font-size:.9rem; color:var(--accent); background:var(--accent-tint); border:0; border-radius:11px; padding:.7rem 1rem; cursor:pointer; margin-bottom:1rem }
+    .auto-btn:hover{ background:#fbd5cd }
     .more-toggle{ display:flex; align-items:center; gap:.35rem; background:none; border:0; color:var(--accent); font:inherit; font-size:.82rem; font-weight:700; cursor:pointer; padding:.55rem 0 .2rem }
     .more-toggle .chev{ transition:transform .18s }
     .more-toggle[aria-expanded="true"] .chev{ transform:rotate(180deg) }
@@ -421,8 +423,8 @@
   const TLABEL = { fondo:'Fondo', realce:'Realce', producto:'Fotos', escena:'Escena IA', dims:'Medidas', feats:'Beneficios', incluye:'Qué incluye', logo:'Logo', banner:'Banner' };
   const GROUPS = [
     { label: 'Foto',        tools: ['fondo', 'realce', 'producto'] },
-    { label: 'Información',  tools: ['dims', 'feats', 'incluye'] },
-    { label: 'Marca',       tools: ['logo', 'banner'] },
+    { label: 'Información',  tools: ['dims', 'feats', 'incluye', 'banner'] },
+    { label: 'Marca',       tools: ['logo'] },
   ];
   // Escena IA se ocultó (E10): no mostrar features "pronto" hasta que funcionen. Vuelve cuando esté lista.
 
@@ -550,10 +552,16 @@
   // ---------- Medidas: cotas con líneas + 2 handles de punta arrastrables ----------
   function ensureDimPos(box){
     const d = state.layers.dims; if (d.pos) return;
+    // las cotas arrancan al lado del producto, pero clampeadas dentro del lienzo (con margen para
+    // que la etiqueta no quede cortada). Si el producto es grande, la cota se acomoda hacia adentro.
+    const M = 70;
+    const cx = v => Math.max(M, Math.min(OUT.w - M, v));
+    const cy = v => Math.max(M, Math.min(OUT.h - M, v));
+    const altoX = cx(box.x - 60), anchoY = cy(box.y + box.h + 60), profY = cy(box.y + box.h * 0.2);
     d.pos = {
-      alto:  { p1: { x: box.x - 60, y: box.y }, p2: { x: box.x - 60, y: box.y + box.h } },
-      ancho: { p1: { x: box.x, y: box.y + box.h + 60 }, p2: { x: box.x + box.w, y: box.y + box.h + 60 } },
-      prof:  { p1: { x: box.x + box.w + 20, y: box.y + box.h * 0.2 }, p2: { x: box.x + box.w + 120, y: box.y + box.h * 0.2 - 80 } },
+      alto:  { p1: { x: altoX, y: cy(box.y) }, p2: { x: altoX, y: cy(box.y + box.h) } },
+      ancho: { p1: { x: cx(box.x), y: anchoY }, p2: { x: cx(box.x + box.w), y: anchoY } },
+      prof:  { p1: { x: cx(box.x + box.w + 20), y: profY }, p2: { x: cx(box.x + box.w + 120), y: cy(box.y + box.h * 0.2 - 80) } },
     };
   }
   function drawDims(box){
@@ -855,7 +863,8 @@
       toggleRow('Sombra para que no flote', state.product.shadow, v => { state.product.shadow = v; render(); }),
       moreSection('producto', withHelp(sliderRow('Qué tan marcada es la sombra', state.product.shadowInt, 0, 100, v => { state.product.shadowInt = v; render(); }, v => v + '%'), 'Qué tan fuerte se aplica.'))),
     realce: root => { const r = state.realce; root.append(
-      hint('Hacé tu foto más nítida y vendedora — movés los controles y se ve mejor al toque.'),
+      hint('Hacé tu foto más nítida y vendedora. Tocá "Mejorar automáticamente" o ajustá a mano.'),
+      h('button', { class: 'auto-btn', type: 'button', onclick(){ r.brillo = 108; r.contraste = 114; r.color = 116; r.nitidez = 35; render(); renderPanel(); } }, '✨ Mejorar automáticamente'),
       sliderRow('Brillo', r.brillo, 60, 140, v => { r.brillo = v; render(); }, v => v + '%'),
       sliderRow('Contraste', r.contraste, 60, 140, v => { r.contraste = v; render(); }, v => v + '%'),
       withHelp(sliderRow('Color', r.color, 0, 200, v => { r.color = v; render(); }, v => v + '%'), 'Si la foto salió amarillenta o apagada, ajustá acá. Subilo para colores más vivos.'),
