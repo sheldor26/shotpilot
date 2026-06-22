@@ -511,11 +511,15 @@
     g.on('mouseleave', () => stage.container().style.cursor = 'default');
     return g;
   }
+  // qué placa de info se ve en el lienzo: SOLO la seleccionada (cada placa = una imagen aparte de la galería).
+  // En la descarga, exportPlaca fuerza la placa de esa variante (undefined = usar la selección).
+  let exportPlaca = undefined;
+  const visiblePlaca = () => exportPlaca !== undefined ? exportPlaca : state.selected;
   function productBox(){
-    const res = { top: 0, right: 0, bottom: 0, left: 0 }, L = state.layers;
-    if (L.banner.on)  res[L.banner.pos] += OUT.h * 0.13;
-    if (L.feats.on)   res.right += OUT.w * 0.30;
-    if (L.incluye.on) res.bottom += OUT.h * 0.16;
+    const res = { top: 0, right: 0, bottom: 0, left: 0 }, L = state.layers, vp = visiblePlaca();
+    if (L.banner.on  && vp === 'banner')  res[L.banner.pos] += OUT.h * 0.13;
+    if (L.feats.on   && vp === 'feats')   res.right += OUT.w * 0.30;
+    if (L.incluye.on && vp === 'incluye') res.bottom += OUT.h * 0.16;
     const aw = OUT.w - res.left - res.right, ah = OUT.h - res.top - res.bottom;
     const bw = cutout.w, bh = cutout.h;   // bbox ajustado (sin padding transparente)
     const base = Math.min(aw * FILL / bw, ah * FILL / bh) * state.product.scale;
@@ -539,10 +543,12 @@
     }
     node.on('click tap', () => selectPart('producto'));
     productLayer.add(node);
-    if (state.layers.dims.on)    drawDims(box);
-    if (state.layers.banner.on)  drawBanner();
-    if (state.layers.feats.on)   drawFeats();
-    if (state.layers.incluye.on) drawIncluye();
+    // solo la placa de info seleccionada (cada una es una imagen aparte). El logo va en todas.
+    const vp = visiblePlaca();
+    if (state.layers.dims.on    && vp === 'dims')    drawDims(box);
+    if (state.layers.banner.on  && vp === 'banner')  drawBanner();
+    if (state.layers.feats.on   && vp === 'feats')   drawFeats();
+    if (state.layers.incluye.on && vp === 'incluye') drawIncluye();
     if (state.layers.logo.on)    drawLogo();
     drawSelection(box);
     stage.batchDraw();
@@ -603,20 +609,27 @@
       if (!s.trim()) return;
       const p = f.pos[i], g = new Konva.Group({ x: p.x, y: p.y, draggable: true }), fs = f.fontSize, col = f.bulletColor;
       g.add(new Konva.Circle({ radius: px(22), fill: sel ? 'rgba(216,56,31,0.12)' : 'rgba(0,0,0,0.001)' }));   // 44px táctil
-      // estilo del beneficio (galería de plantillas — E8); todos siguen siendo puntos arrastrables
+      // estilo del beneficio (galería de plantillas — E8); todos siguen siendo puntos arrastrables.
+      // El texto se limita al ancho que entra hasta el borde del lienzo (envuelve, no se sale).
+      const fitW = (offset) => Math.max(140, OUT.w - p.x - offset - 18);
       if (f.style === 'chips'){
-        const t = new Konva.Text({ text: s, fontFamily: 'Manrope, sans-serif', fontStyle: '700', fontSize: fs, fill: '#fff', listening: false });
-        const padX = 26, bh = fs + 22, bw = t.width() + padX * 2;
-        g.add(new Konva.Rect({ x: 0, y: -bh / 2, width: bw, height: bh, fill: col, cornerRadius: bh / 2, listening: false }));
+        const padX = 26, t = new Konva.Text({ text: s, fontFamily: 'Manrope, sans-serif', fontStyle: '700', fontSize: fs, fill: '#fff', listening: false });
+        const maxW = fitW(padX * 2); if (t.width() > maxW) t.width(maxW);
+        const bh = t.height() + 22, bw = t.width() + padX * 2;
+        g.add(new Konva.Rect({ x: 0, y: -bh / 2, width: bw, height: bh, fill: col, cornerRadius: Math.min(bh / 2, 28), listening: false }));
         t.position({ x: padX, y: -t.height() / 2 }); g.add(t);
       } else if (f.style === 'tag' || f.style === 'check'){
-        const r = fs * (f.style === 'tag' ? 0.9 : 0.78), glyph = f.style === 'tag' ? String(i + 1) : '✓';
+        const r = fs * (f.style === 'tag' ? 0.9 : 0.78), glyph = f.style === 'tag' ? String(i + 1) : '✓', off = r * 2 + 14;
         g.add(new Konva.Circle({ x: r, y: 0, radius: r, fill: col, listening: false }));
         g.add(new Konva.Text({ x: 0, y: -fs * 0.55, width: r * 2, align: 'center', text: glyph, fontFamily: 'Manrope, sans-serif', fontStyle: '800', fontSize: fs * 0.9, fill: '#fff', listening: false }));
-        g.add(new Konva.Text({ x: r * 2 + 14, y: -fs / 2 - 3, width: 360, text: s, fontFamily: 'Manrope, sans-serif', fontStyle: '600', fontSize: fs, fill: ink, listening: false }));
+        const lbl = new Konva.Text({ x: off, text: s, fontFamily: 'Manrope, sans-serif', fontStyle: '600', fontSize: fs, fill: ink, listening: false });
+        const maxW = fitW(off); if (lbl.width() > maxW) lbl.width(maxW);
+        lbl.y(-lbl.height() / 2); g.add(lbl);
       } else {
         g.add(new Konva.Circle({ radius: 13, fill: col, listening: false }));
-        g.add(new Konva.Text({ x: 30, y: -fs / 2 - 3, text: s, width: 360, fontFamily: 'Manrope, sans-serif', fontStyle: '600', fontSize: fs, fill: ink, listening: false }));
+        const lbl = new Konva.Text({ x: 30, text: s, fontFamily: 'Manrope, sans-serif', fontStyle: '600', fontSize: fs, fill: ink, listening: false });
+        const maxW = fitW(30); if (lbl.width() > maxW) lbl.width(maxW);
+        lbl.y(-lbl.height() / 2); g.add(lbl);
       }
       g.on('dragmove', () => { const sn = applySnap(g.x(), g.y()); g.position({ x: sn.x, y: sn.y }); p.x = sn.x; p.y = sn.y; drawGuides(sn.guides); mainLayer.batchDraw(); });
       g.on('dragend', () => clearGuides());
@@ -1018,16 +1031,16 @@
   let paid = false, unlocked = false, authProfile = null;
   function wmOn(){ return !paid && !unlocked; }
 
-  const VARIANTS = { clean: {}, dims: { dims: true }, banner: { banner: true }, feats: { feats: true }, incluye: { incluye: true } };
-  // renderiza UNA variante a 1200×1200 desde el lienzo Konva, sin handles/guías (selected=null)
-  function exportVariantCanvas(flags, noWm){
-    const L = state.layers, saved = { sel: state.selected, dims: L.dims.on, banner: L.banner.on, feats: L.feats.on, incluye: L.incluye.on };
+  // renderiza UNA placa a 1200×1200 desde el lienzo Konva, sin handles/guías.
+  // placaId: null = portada (solo producto); 'dims'/'banner'/'feats'/'incluye' = esa placa.
+  function exportVariantCanvas(placaId, noWm){
+    const savedSel = state.selected;
+    exportPlaca = placaId || null;   // fuerza la placa visible (independiente de la selección)
     state.selected = null;
-    L.dims.on = !!flags.dims; L.banner.on = !!flags.banner; L.feats.on = !!flags.feats; L.incluye.on = !!flags.incluye;
     const ds = stage.scaleX();
     stage.scale({ x: 1, y: 1 }); stage.size({ width: OUT.w, height: OUT.h }); render();
     const cv = stage.toCanvas();   // 1200×1200 limpio
-    L.dims.on = saved.dims; L.banner.on = saved.banner; L.feats.on = saved.feats; L.incluye.on = saved.incluye; state.selected = saved.sel;
+    exportPlaca = undefined; state.selected = savedSel;
     stage.scale({ x: ds, y: ds }); fitStage();   // restaura la vista
     if (!noWm && wmOn()) drawWatermark(cv.getContext('2d'), cv.width, cv.height);
     return cv;
@@ -1048,7 +1061,7 @@
       await ensureUnlocked();   // value-first: empuja a login/spend; igual baja (con marca si sigue anónimo/sin crédito)
       const order = galleryOrder(), files = [];
       for (let i = 0; i < order.length; i++){
-        const cv = exportVariantCanvas(VARIANTS[order[i].k]);
+        const cv = exportVariantCanvas(order[i].k === 'clean' ? null : order[i].k);
         const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
         files.push({ name: `${String(i + 1).padStart(2, '0')}-${order[i].label}-${OUT.w}x${OUT.h}.png`, data: new Uint8Array(await blob.arrayBuffer()) });
       }
